@@ -2,6 +2,25 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.1.2 — Unreleased
+
+### Fixed
+
+- **Assets 404 behind Ingress (blank page, continued).** Setting the ASGI
+  `root_path` from `X-Ingress-Path` interfered with static-mount routing in
+  current Starlette, so `/assets/*` returned 404 behind real Ingress. The app
+  uses only relative paths and never needs `root_path`, so it is no longer set
+  (leading-slash normalization is kept). Verified in-container with an
+  `X-Ingress-Path` header: `//assets/*.js` now returns `text/javascript`.
+- `index.html` is now served with `Cache-Control: no-cache, no-store,
+  must-revalidate` so a stale cached page can never point at removed,
+  content-hashed assets after an update.
+
+### Changed
+
+- Dockerfile uses `npm ci` against the committed lockfile for reproducible
+  frontend builds (stable asset hashes across hosts).
+
 ## 0.1.1 — Unreleased
 
 ### Fixed

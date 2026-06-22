@@ -31,14 +31,18 @@ log = logging.getLogger("api")
 STATIC_DIR = Path(__file__).parent / "static"
 
 
-class IngressRootPathMiddleware:
-    """Normalise the request path and set ``root_path`` from ``X-Ingress-Path``.
+class IngressPathMiddleware:
+    """Normalise duplicated leading slashes in the request path.
 
     Home Assistant Ingress can forward requests with a duplicated leading slash
     (e.g. ``//`` and ``//assets/...``). Left untouched, those bypass the static
     mount and the SPA route would serve ``index.html`` for JS/CSS, breaking the
-    page. We collapse duplicate leading slashes so routing works normally, and
-    set ``root_path`` so any generated URLs stay ingress-aware.
+    page. We collapse duplicate leading slashes so routing works normally.
+
+    We deliberately do NOT set ``root_path`` from ``X-Ingress-Path``: the whole
+    frontend uses relative asset/API paths, so no absolute URLs are generated,
+    and setting ``root_path`` interferes with sub-app (static mount) routing in
+    current Starlette versions (it made ``/assets/*`` 404 behind Ingress).
     """
 
     def __init__(self, app: ASGIApp) -> None:
@@ -46,14 +50,10 @@ class IngressRootPathMiddleware:
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] == "http":
-            scope = dict(scope)
             path = scope.get("path", "")
             if path.startswith("//"):
+                scope = dict(scope)
                 scope["path"] = "/" + path.lstrip("/")
-            headers = dict(scope.get("headers") or [])
-            ingress_path = headers.get(b"x-ingress-path")
-            if ingress_path:
-                scope["root_path"] = ingress_path.decode("latin-1").rstrip("/")
         await self.app(scope, receive, send)
 
 
@@ -101,7 +101,7 @@ def create_app() -> FastAPI:
         openapi_url="/api/openapi.json",
     )
 
-    app.add_middleware(IngressRootPathMiddleware)
+    app.add_middleware(IngressPathMiddleware)
     app.add_exception_handler(AppError, app_error_handler)
 
     # Health is intentionally registered at the root (watchdog target).
@@ -118,6 +118,11 @@ def create_app() -> FastAPI:
 def _mount_frontend(app: FastAPI) -> None:
     index_file = STATIC_DIR / "index.html"
 
+    # index.html must never be cached: it references content-hashed assets that
+    # change on every build. A stale cached index.html would point at assets that
+    # no longer exist (404) and leave a blank page after an update.
+    _html_headers = {"Cache-Control": "no-cache, no-store, must-revalidate"}
+
     if STATIC_DIR.is_dir() and index_file.exists():
         # Serve hashed assets (Vite emits them under /assets) and index.html.
         app.mount(
@@ -128,7 +133,7 @@ def _mount_frontend(app: FastAPI) -> None:
 
         @app.get("/", include_in_schema=False)
         async def index() -> FileResponse:
-            return FileResponse(index_file)
+            return FileResponse(index_file, headers=_html_headers)
 
         @app.get("/{path:path}", include_in_schema=False)
         async def spa_fallback(path: str, request: Request):
@@ -144,7 +149,7 @@ def _mount_frontend(app: FastAPI) -> None:
                 and candidate.is_file()
             ):
                 return FileResponse(candidate)
-            return FileResponse(index_file)
+            return FileResponse(index_file, headers=_html_headers)
     else:
 
         @app.get("/", include_in_schema=False)
