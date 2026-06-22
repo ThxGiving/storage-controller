@@ -2,6 +2,24 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.1.3 — Unreleased
+
+### Added
+
+- A visible startup error overlay: if the SPA throws during boot (e.g. inside
+  the Ingress iframe), the error and stack are rendered in `#root` instead of a
+  blank white page, and reported via `window.onerror` / `unhandledrejection`.
+
+### Fixed / Hardened
+
+- All `localStorage` access (i18n language preference) is wrapped in try/catch so
+  a restricted iframe/privacy context can no longer crash startup.
+- Removed the `crossorigin` attribute from built asset tags (unnecessary for
+  same-origin assets behind Ingress; avoids a potential iframe loading issue).
+- Asset filename hashes changed, which sidesteps a stale Home Assistant
+  service-worker cache that could otherwise keep serving the previous build's
+  broken responses after an update.
+
 ## 0.1.2 — Unreleased
 
 ### Fixed

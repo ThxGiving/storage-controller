@@ -66,26 +66,66 @@ export const resources = {
   },
 } as const;
 
+// localStorage can throw in restricted iframe/privacy contexts (Home Assistant
+// renders the App inside an iframe). All access is guarded so a storage failure
+// never crashes startup — it just falls back to system/browser language.
+function safeGetItem(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeSetItem(key: string, value: string): void {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    /* ignore — preference simply won't persist */
+  }
+}
+
+function safeRemoveItem(key: string): void {
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    /* ignore */
+  }
+}
+
+function safeNavLanguage(): string {
+  try {
+    return navigator.language ?? "";
+  } catch {
+    return "";
+  }
+}
+
 /**
  * Resolve the initial language in this order:
  *   1. explicit Storage Controller user preference (localStorage)
  *   2. trusted Home Assistant / Ingress language (when available — best effort)
  *   3. browser language
  *   4. English fallback
+ *
+ * Accepts an optional storage/navLang for testing; defaults are guarded.
  */
 export function resolveInitialLanguage(
-  storage: Storage = window.localStorage,
-  navLang: string = navigator.language,
+  storage?: Pick<Storage, "getItem"> | null,
+  navLang?: string,
   haLang?: string | null,
 ): string {
-  const stored = storage.getItem(LANGUAGE_STORAGE_KEY);
+  const stored =
+    storage !== undefined
+      ? (storage?.getItem(LANGUAGE_STORAGE_KEY) ?? null)
+      : safeGetItem(LANGUAGE_STORAGE_KEY);
   if (stored && stored !== SYSTEM_LANGUAGE && SUPPORTED_CODES.includes(stored)) {
     return stored;
   }
   if (!stored || stored === SYSTEM_LANGUAGE) {
     const ha = (haLang ?? "").slice(0, 2).toLowerCase();
     if (ha && SUPPORTED_CODES.includes(ha)) return ha;
-    const browser = (navLang ?? "").slice(0, 2).toLowerCase();
+    const browser = (navLang ?? safeNavLanguage()).slice(0, 2).toLowerCase();
     if (browser && SUPPORTED_CODES.includes(browser)) return browser;
   }
   return DEFAULT_LOCALE;
@@ -93,16 +133,16 @@ export function resolveInitialLanguage(
 
 export function setLanguagePreference(language: string): void {
   if (language === SYSTEM_LANGUAGE) {
-    window.localStorage.removeItem(LANGUAGE_STORAGE_KEY);
+    safeRemoveItem(LANGUAGE_STORAGE_KEY);
     i18n.changeLanguage(resolveInitialLanguage());
   } else {
-    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    safeSetItem(LANGUAGE_STORAGE_KEY, language);
     i18n.changeLanguage(language);
   }
 }
 
 export function getStoredPreference(): string {
-  return window.localStorage.getItem(LANGUAGE_STORAGE_KEY) ?? SYSTEM_LANGUAGE;
+  return safeGetItem(LANGUAGE_STORAGE_KEY) ?? SYSTEM_LANGUAGE;
 }
 
 i18n.use(initReactI18next).init({
