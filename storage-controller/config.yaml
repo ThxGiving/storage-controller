@@ -1,10 +1,15 @@
 name: Storage Controller
 slug: storage_controller
 description: HACCP-oriented cold-storage monitoring and reporting
-version: 0.1.4
+version: 0.1.5
 stage: experimental
 
 url: https://github.com/ThxGiving/storage-controller
+
+# Prebuilt images: Supervisor pulls ghcr.io/thxgiving/storage-controller-<arch>
+# at this version instead of building on the device. Built/pushed by the
+# build-images workflow. Remove this key to build locally instead.
+image: "ghcr.io/thxgiving/storage-controller-{arch}"
 
 arch:
   - amd64

@@ -2,6 +2,23 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.1.5 — Unreleased
+
+### Added
+
+- **Prebuilt images.** `config.yaml` now declares an `image:`, so Home Assistant
+  pulls a prebuilt per-architecture image from GHCR
+  (`ghcr.io/thxgiving/storage-controller-{arch}`) instead of building on the
+  device. A `build-images` workflow builds and pushes amd64/aarch64 images with
+  the required `io.hass.*` labels on every `v*` tag. The frontend build stage is
+  pinned to `$BUILDPLATFORM` so cross-arch builds don't emulate the npm build.
+
+### Fixed
+
+- Numeric entity states are rounded and locale-formatted for display (e.g. a raw
+  sensor float `5.90000009536743 °C` now shows as `5,9 °C`). Non-numeric states
+  (on/off, unavailable, text) are shown unchanged.
+
 ## 0.1.4 — Unreleased
 
 ### Fixed

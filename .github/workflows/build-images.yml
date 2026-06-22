@@ -1,0 +1,69 @@
+name: Build & publish images
+
+# Builds the add-on container image per architecture and pushes it to GHCR so
+# Home Assistant pulls a prebuilt image (via config.yaml `image:`) instead of
+# building on the device. Runs on version tags and on demand.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            platform: linux/amd64
+            base: ghcr.io/home-assistant/amd64-base-python:3.12-alpine3.20
+          - arch: aarch64
+            platform: linux/arm64
+            base: ghcr.io/home-assistant/aarch64-base-python:3.12-alpine3.20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read add-on version
+        id: meta
+        run: |
+          v="$(grep -E '^version:' storage-controller/config.yaml | awk '{print $2}' | tr -d '\"')"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "Building version $v for ${{ matrix.arch }}"
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: storage-controller
+          file: storage-controller/Dockerfile
+          platforms: ${{ matrix.platform }}
+          build-args: |
+            BUILD_FROM=${{ matrix.base }}
+          push: true
+          provenance: false
+          tags: |
+            ghcr.io/thxgiving/storage-controller-${{ matrix.arch }}:${{ steps.meta.outputs.version }}
+            ghcr.io/thxgiving/storage-controller-${{ matrix.arch }}:latest
+          labels: |
+            io.hass.version=${{ steps.meta.outputs.version }}
+            io.hass.type=addon
+            io.hass.arch=${{ matrix.arch }}
+            io.hass.name=Storage Controller
+            org.opencontainers.image.source=https://github.com/ThxGiving/storage-controller
+            org.opencontainers.image.version=${{ steps.meta.outputs.version }}

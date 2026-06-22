@@ -2,7 +2,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, Search, X } from "lucide-react";
 import type { HAEntity } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, formatState } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 interface EntitySelectProps {
@@ -104,7 +104,7 @@ export function EntitySelect({
           {selected.friendly_name && <span>{selected.friendly_name}</span>}
           {selected.state != null && (
             <Badge tone={selected.available ? "info" : "danger"}>
-              {selected.state}
+              {formatState(selected.state)}
               {selected.unit_of_measurement ? ` ${selected.unit_of_measurement}` : ""}
             </Badge>
           )}
@@ -168,7 +168,7 @@ export function EntitySelect({
                   <span className="truncate font-mono">{e.entity_id}</span>
                   {e.state != null && (
                     <span className="shrink-0">
-                      {e.state}
+                      {formatState(e.state)}
                       {e.unit_of_measurement ? ` ${e.unit_of_measurement}` : ""}
                     </span>
                   )}

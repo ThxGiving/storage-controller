@@ -4,8 +4,11 @@ ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base-python:3.12-alpine3.20
 
 # ---------------------------------------------------------------------------
 # Stage 1: build the frontend
+#
+# Pinned to the build platform ($BUILDPLATFORM) so cross-arch image builds do
+# not run the heavy npm/vite build under QEMU emulation.
 # ---------------------------------------------------------------------------
-FROM node:22-alpine AS frontend
+FROM --platform=$BUILDPLATFORM node:22-alpine AS frontend
 WORKDIR /build/frontend
 
 COPY frontend/package.json frontend/package-lock.json* ./

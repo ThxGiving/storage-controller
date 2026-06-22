@@ -7,7 +7,7 @@ import type { HAEntity } from "@/lib/types";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { timeAgo } from "@/lib/utils";
+import { formatState, timeAgo } from "@/lib/utils";
 
 export function EntityBrowser() {
   const { t } = useTranslation(["entities", "errors"]);
@@ -100,8 +100,10 @@ export function EntityBrowser() {
                     </td>
                     <td className="px-4 py-2.5">
                       <Badge tone={e.available ? "ok" : "danger"}>
-                        {e.state ?? "—"}
-                        {e.unit_of_measurement ? ` ${e.unit_of_measurement}` : ""}
+                        {formatState(e.state)}
+                        {e.unit_of_measurement && e.available
+                          ? ` ${e.unit_of_measurement}`
+                          : ""}
                       </Badge>
                     </td>
                     <td className="px-4 py-2.5 text-muted-foreground">

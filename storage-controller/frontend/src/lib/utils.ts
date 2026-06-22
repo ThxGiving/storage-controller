@@ -42,6 +42,24 @@ export function parseDecimal(input: string): number | null {
   return Number.isNaN(num) ? null : num;
 }
 
+/**
+ * Format a Home Assistant state for display. Numeric states (e.g. a raw sensor
+ * float like "5.90000009536743") are rounded and locale-formatted; non-numeric
+ * states (on/off, unavailable, text) are returned unchanged.
+ */
+export function formatState(
+  state: string | null | undefined,
+  maxFractionDigits = 2,
+): string {
+  if (state == null || state === "") return "—";
+  const trimmed = state.trim();
+  // Only treat clean numeric strings as numbers (avoid "123abc", dates, etc.).
+  if (/^-?\d*\.?\d+$/.test(trimmed)) {
+    return formatNumber(Number(trimmed), { maximumFractionDigits: maxFractionDigits });
+  }
+  return state;
+}
+
 /** Locale-aware short date-time, or "—". */
 export function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return "—";

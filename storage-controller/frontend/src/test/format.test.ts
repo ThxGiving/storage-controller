@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from "vitest";
 import i18n from "@/i18n";
-import { formatNumber, formatTemperature, parseDecimal } from "@/lib/utils";
+import { formatNumber, formatState, formatTemperature, parseDecimal } from "@/lib/utils";
 
 afterAll(async () => {
   await i18n.changeLanguage("en");
@@ -42,5 +42,27 @@ describe("locale-aware number formatting", () => {
 
   it("returns a dash for nullish values", () => {
     expect(formatNumber(null)).toBe("—");
+  });
+});
+
+describe("formatState", () => {
+  it("rounds an ugly raw sensor float (English)", async () => {
+    await i18n.changeLanguage("en");
+    expect(formatState("5.90000009536743")).toBe("5.9");
+  });
+
+  it("rounds and localizes (German)", async () => {
+    await i18n.changeLanguage("de");
+    expect(formatState("5.90000009536743")).toBe("5,9");
+  });
+
+  it("leaves non-numeric states unchanged", () => {
+    expect(formatState("unavailable")).toBe("unavailable");
+    expect(formatState("on")).toBe("on");
+  });
+
+  it("returns a dash for empty/nullish", () => {
+    expect(formatState(null)).toBe("—");
+    expect(formatState("")).toBe("—");
   });
 });
