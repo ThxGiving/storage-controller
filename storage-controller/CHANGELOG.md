@@ -2,6 +2,17 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.1.4 — Unreleased
+
+### Fixed
+
+- **Entities missing from the browser and role selectors on larger installs.**
+  The frontend fetched entities with the backend's default cap of 500 (sorted by
+  entity id), so on instances with many entities (e.g. 800+) later sensors such
+  as `sensor.kuhlhaus_1_temperatur` were cut off and could not be assigned. The
+  frontend now requests the full entity set, so client-side search and the
+  storage-unit role selectors see every entity.
+
 ## 0.1.3 — Unreleased
 
 ### Added

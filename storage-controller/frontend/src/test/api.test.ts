@@ -28,7 +28,9 @@ describe("api client", () => {
 
     expect(fetchMock).toHaveBeenCalledOnce();
     const url = fetchMock.mock.calls[0][0] as string;
-    expect(url).toBe("/api/hassio_ingress/xyz/api/home-assistant/entities?search=kuhl");
+    expect(url).toBe(
+      "/api/hassio_ingress/xyz/api/home-assistant/entities?search=kuhl&limit=5000",
+    );
   });
 
   it("throws ApiError with the server detail on failure", async () => {

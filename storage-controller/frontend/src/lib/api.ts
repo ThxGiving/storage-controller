@@ -61,13 +61,20 @@ export const api = {
   getStatus: () => request<AppStatus>("api/status"),
   getConnection: () => request<ConnectionStatus>("api/home-assistant/connection"),
 
-  getEntities: (params?: { search?: string; domain?: string; device_class?: string }) => {
+  getEntities: (params?: {
+    search?: string;
+    domain?: string;
+    device_class?: string;
+    limit?: number;
+  }) => {
     const q = new URLSearchParams();
     if (params?.search) q.set("search", params.search);
     if (params?.domain) q.set("domain", params.domain);
     if (params?.device_class) q.set("device_class", params.device_class);
-    const qs = q.toString();
-    return request<HAEntity[]>(`api/home-assistant/entities${qs ? `?${qs}` : ""}`);
+    // Load the full entity set so client-side search and the role selectors see
+    // every entity (HA installs commonly have well over the old 500 default).
+    q.set("limit", String(params?.limit ?? 5000));
+    return request<HAEntity[]>(`api/home-assistant/entities?${q.toString()}`);
   },
 
   listUnits: () => request<StorageUnit[]>("api/storage-units"),
