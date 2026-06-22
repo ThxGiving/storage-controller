@@ -46,4 +46,4 @@ jobs:
           context: storage-controller
           push: false
           build-args: |
-            BUILD_FROM=ghcr.io/home-assistant/amd64-base-python:3.12
+            BUILD_FROM=ghcr.io/home-assistant/amd64-base-python:3.12-alpine3.20
