@@ -5,6 +5,6 @@ build_from:
 labels:
   org.opencontainers.image.title: Storage Controller
   org.opencontainers.image.description: HACCP-oriented cold-storage monitoring and reporting
-  org.opencontainers.image.source: https://github.com/your-org/storage-controller
+  org.opencontainers.image.source: https://github.com/ThxGiving/storage-controller
 
 args: {}
