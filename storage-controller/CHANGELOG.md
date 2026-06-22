@@ -2,6 +2,18 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.1.1 — Unreleased
+
+### Fixed
+
+- **Blank UI under Home Assistant Ingress.** Ingress can forward requests with a
+  duplicated leading slash (`//`, `//assets/...`). Those bypassed the static
+  mount and the SPA fallback served `index.html` for JS/CSS (wrong content type),
+  producing a white page. The request path is now normalized (duplicate leading
+  slashes collapsed) and the SPA fallback strips leading slashes and guards
+  against path traversal. Verified in-container: `//assets/*.js` now returns
+  `text/javascript`. Regression test added.
+
 ## 0.1.0 — Unreleased
 
 ### Added (Phase 1 + 2)

@@ -32,11 +32,13 @@ STATIC_DIR = Path(__file__).parent / "static"
 
 
 class IngressRootPathMiddleware:
-    """Set the ASGI ``root_path`` from the ``X-Ingress-Path`` header.
+    """Normalise the request path and set ``root_path`` from ``X-Ingress-Path``.
 
-    This makes any backend-generated URLs ingress-aware without hard-coding the
-    dynamic session prefix. Frontend assets and API calls themselves use
-    relative paths, so this primarily prevents incorrect absolute URLs.
+    Home Assistant Ingress can forward requests with a duplicated leading slash
+    (e.g. ``//`` and ``//assets/...``). Left untouched, those bypass the static
+    mount and the SPA route would serve ``index.html`` for JS/CSS, breaking the
+    page. We collapse duplicate leading slashes so routing works normally, and
+    set ``root_path`` so any generated URLs stay ingress-aware.
     """
 
     def __init__(self, app: ASGIApp) -> None:
@@ -44,10 +46,13 @@ class IngressRootPathMiddleware:
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] == "http":
+            scope = dict(scope)
+            path = scope.get("path", "")
+            if path.startswith("//"):
+                scope["path"] = "/" + path.lstrip("/")
             headers = dict(scope.get("headers") or [])
             ingress_path = headers.get(b"x-ingress-path")
             if ingress_path:
-                scope = dict(scope)
                 scope["root_path"] = ingress_path.decode("latin-1").rstrip("/")
         await self.app(scope, receive, send)
 
@@ -128,8 +133,16 @@ def _mount_frontend(app: FastAPI) -> None:
         @app.get("/{path:path}", include_in_schema=False)
         async def spa_fallback(path: str, request: Request):
             # API routes are matched first; anything else falls back to the SPA.
-            candidate = STATIC_DIR / path
-            if candidate.is_file():
+            # Strip leading slashes so a forwarded "/assets/x" does not become an
+            # absolute path on join, and reject path traversal outside STATIC_DIR.
+            rel = path.lstrip("/")
+            static_root = STATIC_DIR.resolve()
+            candidate = (static_root / rel).resolve()
+            if (
+                rel
+                and (candidate == static_root or static_root in candidate.parents)
+                and candidate.is_file()
+            ):
                 return FileResponse(candidate)
             return FileResponse(index_file)
     else:
