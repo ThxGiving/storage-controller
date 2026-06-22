@@ -1,0 +1,5 @@
+{
+  "nameRequired": "Bitte einen Namen eingeben.",
+  "roomTemperatureRequired": "Eine Raumtemperatur-Entity ist erforderlich.",
+  "invalidLimits": "Die untere Grenze muss kleiner als die obere Grenze sein."
+}

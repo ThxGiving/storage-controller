@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --muted: 210 40% 94%;
+    --muted-foreground: 215 16% 42%;
+    --primary: 209 90% 48%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 210 40% 92%;
+    --accent-foreground: 222 47% 11%;
+    --border: 214 26% 88%;
+    --input: 214 26% 86%;
+    --ring: 209 90% 48%;
+    --ok: 152 60% 40%;
+    --warn: 38 92% 50%;
+    --danger: 0 78% 56%;
+    --info: 209 90% 52%;
+    --radius: 0.85rem;
+  }
+
+  .dark {
+    --background: 222 32% 9%;
+    --foreground: 210 40% 96%;
+    --card: 222 28% 13%;
+    --card-foreground: 210 40% 96%;
+    --muted: 217 25% 18%;
+    --muted-foreground: 215 20% 65%;
+    --primary: 199 89% 56%;
+    --primary-foreground: 222 47% 11%;
+    --accent: 217 28% 20%;
+    --accent-foreground: 210 40% 96%;
+    --border: 217 25% 22%;
+    --input: 217 25% 24%;
+    --ring: 199 89% 56%;
+    --ok: 152 58% 48%;
+    --warn: 38 95% 58%;
+    --danger: 0 80% 63%;
+    --info: 199 89% 60%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    margin: 0;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+      Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .gradient-frost {
+    background-image: radial-gradient(
+        1200px 400px at 80% -10%,
+        hsl(var(--primary) / 0.18),
+        transparent
+      ),
+      radial-gradient(
+        900px 380px at 0% 0%,
+        hsl(var(--info) / 0.12),
+        transparent
+      );
+  }
+}

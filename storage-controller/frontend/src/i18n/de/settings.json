@@ -1,0 +1,15 @@
+{
+  "title": "Einstellungen",
+  "subtitle": "Anwendungseinstellungen.",
+  "language": "Sprache",
+  "languageHint": "Sprache der Oberfläche wählen. Wird sofort übernommen.",
+  "languageSystem": "System / Home Assistant",
+  "theme": "Darstellung",
+  "themeHint": "Zwischen hellem und dunklem Modus wechseln.",
+  "themeLight": "Hell",
+  "themeDark": "Dunkel",
+  "about": "Über",
+  "version": "Version",
+  "demoData": "Demodaten",
+  "demoHint": "Demo-Kühleinheiten werden nur über das Flag STORAGE_CONTROLLER_LOAD_DEMO_DATA oder den Befehl seed-demo geladen. Die Produktion startet leer."
+}

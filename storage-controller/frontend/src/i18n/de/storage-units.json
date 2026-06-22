@@ -1,0 +1,52 @@
+{
+  "title": "Kühleinheiten",
+  "count_one": "{{count}} Einheit konfiguriert",
+  "count_other": "{{count}} Einheiten konfiguriert",
+  "newUnit": "Neue Einheit",
+  "emptyTitle": "Noch keine Kühleinheiten",
+  "emptyHint": "Lege deine erste Einheit an und weise eine Raumtemperatur-Entity zu.",
+  "createFirst": "Erste Einheit anlegen",
+  "deleteConfirm": "„{{name}}“ wirklich löschen?",
+  "card": {
+    "range": "Bereich",
+    "hints_one": "{{count}} Hinweis",
+    "hints_other": "{{count}} Hinweise"
+  },
+  "roles": {
+    "room_temperature": "Raumtemperatur",
+    "evaporator_temperature": "Verdampfertemperatur",
+    "setpoint": "Sollwert",
+    "hysteresis": "Hysterese",
+    "compressor": "Kompressor",
+    "fan": "Ventilator",
+    "defrost": "Abtauen",
+    "light": "Licht",
+    "controller": "Regler",
+    "door": "Tür",
+    "alarm": "Alarm"
+  },
+  "editor": {
+    "titleNew": "Neue Kühleinheit",
+    "titleEdit": "„{{name}}“ bearbeiten",
+    "general": "Allgemein",
+    "name": "Name",
+    "namePlaceholder": "z. B. Kühlhaus 1",
+    "shortReportName": "Kurzname (Bericht)",
+    "location": "Standort",
+    "locationPlaceholder": "z. B. Küche",
+    "typeAndProfile": "Typ und Monitoring-Profil",
+    "type": "Typ der Kühleinheit",
+    "profile": "Monitoring-Profil",
+    "profileNone": "Kein Preset",
+    "profileHint": "Profilwerte sind Vorschläge und bleiben vollständig editierbar.",
+    "applyProfile": "Profilwerte übernehmen",
+    "limitsTiming": "Temperaturgrenzen & Timing",
+    "lowerLimit": "Untere Grenze °C",
+    "upperLimit": "Obere Grenze °C",
+    "warningMargin": "Warnabstand °C",
+    "violationDelay": "Verletzungs-Verzög. (min)",
+    "recoveryDelay": "Erholungs-Verzög. (min)",
+    "entityAssignment": "Entity-Zuordnung",
+    "fromProfile": "aus Preset"
+  }
+}

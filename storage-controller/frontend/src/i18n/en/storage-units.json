@@ -1,0 +1,52 @@
+{
+  "title": "Storage units",
+  "count_one": "{{count}} unit configured",
+  "count_other": "{{count}} units configured",
+  "newUnit": "New unit",
+  "emptyTitle": "No storage units yet",
+  "emptyHint": "Create your first unit and assign a room-temperature entity.",
+  "createFirst": "Create first unit",
+  "deleteConfirm": "Really delete “{{name}}”?",
+  "card": {
+    "range": "Range",
+    "hints_one": "{{count}} hint",
+    "hints_other": "{{count}} hints"
+  },
+  "roles": {
+    "room_temperature": "Room temperature",
+    "evaporator_temperature": "Evaporator temperature",
+    "setpoint": "Setpoint",
+    "hysteresis": "Hysteresis",
+    "compressor": "Compressor",
+    "fan": "Fan",
+    "defrost": "Defrost",
+    "light": "Light",
+    "controller": "Controller",
+    "door": "Door",
+    "alarm": "Alarm"
+  },
+  "editor": {
+    "titleNew": "New storage unit",
+    "titleEdit": "Edit “{{name}}”",
+    "general": "General",
+    "name": "Name",
+    "namePlaceholder": "e.g. Cold room 1",
+    "shortReportName": "Short report name",
+    "location": "Location",
+    "locationPlaceholder": "e.g. Kitchen",
+    "typeAndProfile": "Type and monitoring profile",
+    "type": "Storage-unit type",
+    "profile": "Monitoring profile",
+    "profileNone": "No preset",
+    "profileHint": "Profile values are suggestions and remain fully editable.",
+    "applyProfile": "Apply profile values",
+    "limitsTiming": "Temperature limits & timing",
+    "lowerLimit": "Lower limit °C",
+    "upperLimit": "Upper limit °C",
+    "warningMargin": "Warning margin °C",
+    "violationDelay": "Violation delay (min)",
+    "recoveryDelay": "Recovery delay (min)",
+    "entityAssignment": "Entity assignment",
+    "fromProfile": "from preset"
+  }
+}

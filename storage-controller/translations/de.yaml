@@ -1,0 +1,7 @@
+configuration: {}
+
+network: {}
+
+addon:
+  name: Storage Controller
+  description: HACCP-orientierte Überwachung und Dokumentation von Kühllagern

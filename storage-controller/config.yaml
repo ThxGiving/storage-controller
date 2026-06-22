@@ -1,0 +1,35 @@
+name: Storage Controller
+slug: storage_controller
+description: HACCP-oriented cold-storage monitoring and reporting
+version: 0.1.0
+stage: experimental
+
+url: https://github.com/your-org/storage-controller
+
+arch:
+  - amd64
+  - aarch64
+
+boot: auto
+startup: application
+init: false
+
+ingress: true
+ingress_port: 8099
+ingress_entry: /
+panel_title: Storage Controller
+panel_icon: mdi:snowflake-thermometer
+panel_admin: false
+
+homeassistant_api: true
+
+watchdog: "http://[HOST]:[PORT:8099]/health"
+
+# AppArmor: a custom profile is provided in apparmor.txt but is not yet
+# validated under enforcement. It is disabled for the initial real-instance
+# verification to guarantee a clean boot; enable (set to true) and validate as
+# part of Phase 7 hardening.
+apparmor: false
+
+options: {}
+schema: {}

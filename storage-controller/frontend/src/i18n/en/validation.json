@@ -1,0 +1,5 @@
+{
+  "nameRequired": "Please enter a name.",
+  "roomTemperatureRequired": "A room-temperature entity is required.",
+  "invalidLimits": "The lower limit must be below the upper limit."
+}

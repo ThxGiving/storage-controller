@@ -1,0 +1,10 @@
+{
+  "room_temperature_required": "A room-temperature entity is required.",
+  "duplicate_role": "Each role may be assigned only once.",
+  "invalid_limits": "The lower limit must be below the upper limit.",
+  "storage_unit_not_found": "Storage unit not found.",
+  "profile_not_found": "Monitoring profile not found.",
+  "profile_read_only": "Built-in profiles are read-only. Duplicate the profile to edit it.",
+  "generic": "Something went wrong.",
+  "loadFailed": "Could not load data."
+}

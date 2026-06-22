@@ -1,0 +1,26 @@
+{
+  "appName": "Storage Controller",
+  "brand": { "top": "Storage", "bottom": "Controller" },
+  "actions": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "create": "Anlegen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "add": "Hinzufügen",
+    "close": "Schließen",
+    "search": "Suchen",
+    "retry": "Erneut versuchen",
+    "apply": "Übernehmen",
+    "saving": "Speichert…"
+  },
+  "loading": "Lädt…",
+  "optional": "optional",
+  "none": "—",
+  "status": {
+    "connected": "Verbunden",
+    "reconnecting": "Verbindet erneut…",
+    "disconnected": "Getrennt",
+    "authentication_error": "Authentifizierung"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "title": "Overview",
+  "subtitle": "Status of Storage Controller and the Home Assistant connection.",
+  "homeAssistant": "Home Assistant",
+  "entities": "Entities",
+  "lastEvent": "Last event",
+  "reconnects": "Reconnects",
+  "storageUnits": "Storage units",
+  "database": "Database",
+  "ok": "OK",
+  "version": "Version",
+  "trendPreview": "Trend (preview)",
+  "phaseNote": "Note: independent temperature recording, incidents and reports follow in upcoming stages. The app currently shows live status and the storage-unit configuration."
+}

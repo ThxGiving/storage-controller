@@ -1,0 +1,51 @@
+#include <tunables/global>
+
+profile storage_controller flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+
+  # Networking (Home Assistant API + outbound SMTP later).
+  network,
+  capability net_bind_service,
+
+  # Capabilities required by the s6-overlay init system.
+  capability setuid,
+  capability setgid,
+  capability kill,
+  capability chown,
+  capability dac_override,
+  capability fowner,
+  capability fsetid,
+
+  # s6-overlay supervision tree and runtime.
+  /init ix,
+  /package/** ix,
+  /command/** ix,
+  /etc/s6-overlay/** r,
+  /run/{s6,s6-rc**,service}/** rwix,
+  /run/** rwk,
+  /dev/tty rw,
+
+  # Shell + bashio used by the startup script (with-contenv bashio).
+  /usr/bin/with-contenv ix,
+  /usr/bin/bashio ix,
+  /usr/bin/bash ix,
+  /bin/** ix,
+  /usr/bin/** ix,
+
+  # Python runtime and application code.
+  /usr/local/bin/* ix,
+  /usr/local/lib/python3.*/** r,
+  /usr/local/lib/python3.*/**.so* mr,
+  /app/** r,
+  /app/**.so* mr,
+
+  # System libraries.
+  /usr/lib/** mr,
+  /lib/** mr,
+  /etc/** r,
+  /proc/** r,
+  /sys/** r,
+
+  # Persistent application data (database, reports, uploads, logs, backups).
+  /data/** rwk,
+}

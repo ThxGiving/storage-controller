@@ -1,0 +1,25 @@
+{
+  "title": "Home-Assistant-Entities",
+  "count_one": "{{count}} Entity",
+  "count_other": "{{count}} Entities",
+  "shown": "{{count}} angezeigt",
+  "searchPlaceholder": "Entity-ID oder Name suchen…",
+  "loadError": "Entities konnten nicht geladen werden: {{message}}",
+  "empty": "Noch keine Entities",
+  "emptyHint": "Sobald Storage Controller mit Home Assistant verbunden ist, erscheinen hier alle verfügbaren Entities.",
+  "loading": "Lädt Entities…",
+  "col": {
+    "entity": "Entity",
+    "domain": "Domain",
+    "state": "Status",
+    "device": "Gerät",
+    "last": "Zuletzt"
+  },
+  "moreHidden": "{{count}} weitere — Suche eingrenzen.",
+  "select": {
+    "placeholder": "Entity auswählen…",
+    "searchPlaceholder": "Entity-ID oder Name suchen…",
+    "manualUse": "Manuell verwenden:",
+    "noResults": "Keine Entities gefunden."
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "title": "Home Assistant entities",
+  "count_one": "{{count}} entity",
+  "count_other": "{{count}} entities",
+  "shown": "{{count}} shown",
+  "searchPlaceholder": "Search entity ID or name…",
+  "loadError": "Entities could not be loaded: {{message}}",
+  "empty": "No entities yet",
+  "emptyHint": "Once Storage Controller is connected to Home Assistant, all available entities appear here.",
+  "loading": "Loading entities…",
+  "col": {
+    "entity": "Entity",
+    "domain": "Domain",
+    "state": "State",
+    "device": "Device",
+    "last": "Last changed"
+  },
+  "moreHidden": "{{count}} more — narrow your search.",
+  "select": {
+    "placeholder": "Select entity…",
+    "searchPlaceholder": "Search entity ID or name…",
+    "manualUse": "Use manually:",
+    "noResults": "No entities found."
+  }
+}

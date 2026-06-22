@@ -1,0 +1,10 @@
+{
+  "room_temperature_required": "Eine Raumtemperatur-Entity ist erforderlich.",
+  "duplicate_role": "Jede Rolle darf nur einmal zugewiesen werden.",
+  "invalid_limits": "Die untere Grenze muss kleiner als die obere Grenze sein.",
+  "storage_unit_not_found": "Kühleinheit nicht gefunden.",
+  "profile_not_found": "Monitoring-Profil nicht gefunden.",
+  "profile_read_only": "Eingebaute Profile sind schreibgeschützt. Dupliziere das Profil zum Bearbeiten.",
+  "generic": "Etwas ist schiefgelaufen.",
+  "loadFailed": "Daten konnten nicht geladen werden."
+}

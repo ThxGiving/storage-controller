@@ -1,0 +1,15 @@
+{
+  "title": "Settings",
+  "subtitle": "Application preferences.",
+  "language": "Language",
+  "languageHint": "Choose the interface language. Takes effect immediately.",
+  "languageSystem": "System / Home Assistant",
+  "theme": "Appearance",
+  "themeHint": "Switch between light and dark mode.",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "about": "About",
+  "version": "Version",
+  "demoData": "Demo data",
+  "demoHint": "Demo storage units load only via the STORAGE_CONTROLLER_LOAD_DEMO_DATA flag or the seed-demo command. Production starts empty."
+}

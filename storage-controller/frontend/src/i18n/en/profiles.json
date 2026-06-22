@@ -1,0 +1,19 @@
+{
+  "types": {
+    "day_cold_room": "Day cold room",
+    "freezer_room": "Freezer room",
+    "vegetable_cold_room": "Vegetable cold room",
+    "beverage_cold_room": "Beverage cold room",
+    "refrigerator": "Refrigerator",
+    "freezer": "Freezer",
+    "refrigerated_counter": "Refrigerated counter",
+    "custom": "Custom"
+  },
+  "presets": {
+    "positive_cold_storage": "Positive cold storage",
+    "deep_freeze_storage": "Deep-freeze storage",
+    "vegetable_storage": "Vegetable storage",
+    "beverage_storage": "Beverage storage"
+  },
+  "demoNote": "Demonstration values — review before use; not a universal HACCP requirement."
+}

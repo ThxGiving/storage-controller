@@ -1,0 +1,20 @@
+# gitleaks configuration for Storage Controller.
+# Extends the default ruleset and allowlists known non-secret test fixtures.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Non-secret test fixtures and documentation placeholders"
+paths = [
+  '''storage-controller/tests/.*''',
+  '''.*\.md''',
+]
+regexes = [
+  # Obvious placeholder/fixture tokens used in tests and docs (not real secrets).
+  '''secret-token''',
+  '''secret-test-token''',
+  '''super-secret-123''',
+  '''SUPERVISOR_TOKEN''',
+  '''your-org''',
+]

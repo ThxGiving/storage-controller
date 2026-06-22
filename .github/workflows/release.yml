@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: storage-controller
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: ruff check backend
+      - run: pytest -q
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - working-directory: storage-controller/frontend
+        run: npm ci || npm install
+      - working-directory: storage-controller/frontend
+        run: npm run test -- --run
+      - working-directory: storage-controller/frontend
+        run: npm run build
+
+  package-and-release:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build sanitized local install package
+        run: ./scripts/package-local.sh
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: storage-controller-*.tar.gz
+          generate_release_notes: true
+          body: |
+            Storage Controller Home Assistant App release.
+
+            **Local install:** download the attached `storage-controller-*.tar.gz`,
+            extract it into the Home Assistant `/addons` share, then
+            Settings → Add-ons → ⋮ → Check for updates. See `storage-controller/INSTALL.md`.

@@ -1,0 +1,14 @@
+{
+  "title": "Übersicht",
+  "subtitle": "Status von Storage Controller und der Home-Assistant-Verbindung.",
+  "homeAssistant": "Home Assistant",
+  "entities": "Entities",
+  "lastEvent": "Letztes Event",
+  "reconnects": "Reconnects",
+  "storageUnits": "Kühleinheiten",
+  "database": "Datenbank",
+  "ok": "OK",
+  "version": "Version",
+  "trendPreview": "Trend (Vorschau)",
+  "phaseNote": "Hinweis: Unabhängige Temperaturaufzeichnung, Vorfälle und Berichte folgen in den nächsten Ausbaustufen. Aktuell zeigt die App Live-Status und die Konfiguration der Kühleinheiten."
+}

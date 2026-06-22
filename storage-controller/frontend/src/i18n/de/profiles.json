@@ -1,0 +1,19 @@
+{
+  "types": {
+    "day_cold_room": "Tageskühlhaus",
+    "freezer_room": "Tiefkühlhaus",
+    "vegetable_cold_room": "Gemüsekühlhaus",
+    "beverage_cold_room": "Getränke-/Bierkühlhaus",
+    "refrigerator": "Kühlschrank",
+    "freezer": "Tiefkühlschrank",
+    "refrigerated_counter": "Kühltheke",
+    "custom": "Benutzerdefiniert"
+  },
+  "presets": {
+    "positive_cold_storage": "Normalkühlung",
+    "deep_freeze_storage": "Tiefkühlung",
+    "vegetable_storage": "Gemüsekühlung",
+    "beverage_storage": "Getränkekühlung"
+  },
+  "demoNote": "Demonstrationswerte – bitte vor Gebrauch prüfen; keine allgemeingültige HACCP-Vorgabe."
+}
