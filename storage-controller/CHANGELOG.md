@@ -2,6 +2,44 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.2.2 — Unreleased
+
+### Fixed — report visual/semantic correction pass
+
+Focused corrections on top of the 0.2.1 redesign (template/CSS/chart only; the
+report model gained additive presentation fields, no architecture change).
+
+- **Chart interval semantics (highest priority).** Red shading now marks **only
+  measured threshold violations** derived from raw samples — never extended
+  across a gap or to the period end. Missing **and** unavailable/invalid data is
+  shaded yellow and aligned to where the line actually breaks (so coarse-but-
+  present sampling is no longer painted yellow); the line is never connected
+  across a gap. Defrost stays blue, aligned at absolute timestamps.
+- **Adaptive chart aggregation** for hysteresis-heavy data: deterministic hourly
+  buckets for monthly reports (bucket width grows past `max_points=800` to keep
+  PDFs bounded), rendering one calm average line plus a subtle **min–max
+  envelope** that preserves short excursions. Metrics and incidents continue to
+  use raw samples — aggregation never changes counts, durations, extrema or
+  metrics (proven by tests).
+- **Status semantics** separated and documented: `open` (red) → `incomplete`
+  (gray, `coverage < 90 %` / missing sensor — no conformity statement) →
+  `reviewed` (blue) → `ok` (green). A reviewed incident no longer makes a unit OK.
+- **Stable per-unit identity colours** (blue/cyan/green/violet…) reused across
+  series, legend, table dot, card accent line and title — no longer derived from
+  status (fixes the all-orange accents).
+- **Header fallback** when no branding is configured: the title block is centred,
+  with no empty left column; the two-column branded header returns automatically
+  once branding is set. No placeholder company data is inserted.
+- **Summary icons** are now embedded coloured SVGs (thermometer / check-circle /
+  alert-triangle / x-circle) with explicit colours — no font/Unicode/`currentColor`
+  reliance, reliable in WeasyPrint.
+- **Negative values no longer wrap** (`-25.0 – -18.0 °C`, `-21.0 °C`).
+- Verified DE+EN at 3/4/5 units and a sparse low-coverage real-style report — all
+  two pages, no clipping; new deterministic tests in `tests/test_report_charts.py`
+  (envelope preserves spikes, in-range average can't hide an out-of-range
+  extremum, gaps stay breaks, last state not extended, metrics invariant to bucket
+  size). Rules documented in `docs/design/report-layout-spec.md`.
+
 ## 0.2.1 — Unreleased
 
 ### Changed — report PDF redesigned to match `report_mockup.png`

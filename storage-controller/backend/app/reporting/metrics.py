@@ -55,8 +55,11 @@ class SampleMetrics:
     time_above_seconds: int = 0
     time_below_seconds: int = 0
     data_quality: DataQuality = field(default_factory=DataQuality)
+    # Aggregated buckets: [epoch_center, avg, min, max] (all None for an empty bucket).
     chart_points: list[list[float | None]] = field(default_factory=list)
     gap_ranges: list[tuple[float, float]] = field(default_factory=list)  # (start, end) epoch
+    # Measured threshold-violation intervals (from raw samples only; never gaps).
+    violation_ranges: list[tuple[float, float]] = field(default_factory=list)
 
 
 async def sample_metrics(
@@ -68,7 +71,8 @@ async def sample_metrics(
     lower: float | None,
     upper: float | None,
     heartbeat_seconds: int,
-    chart_buckets: int = 160,
+    bucket_seconds: int = 3600,
+    max_points: int = 800,
 ) -> SampleMetrics:
     rows = (
         await session.execute(
@@ -104,8 +108,8 @@ async def sample_metrics(
 
     unavailable = invalid = gap = above = below = 0.0
     gaps_count = 0
-    gap_ranges: list[tuple[float, float]] = []
-    # Attribute the interval after each sample to that sample's state.
+    # Attribute the interval after each sample to that sample's state (raw metrics;
+    # independent of chart bucket size).
     for (ts, v, q), (nts, _nv, _nq) in zip(samples, samples[1:], strict=False):
         if ts is None or nts is None:
             continue
@@ -115,7 +119,6 @@ async def sample_metrics(
         if dt > gap_threshold:
             gap += dt
             gaps_count += 1
-            gap_ranges.append((ts.timestamp(), nts.timestamp()))
             continue
         dt = min(dt, attribute_cap)
         if q == Quality.valid.value and v is not None:
@@ -149,31 +152,123 @@ async def sample_metrics(
         missing_entity=False,
         incomplete=bool(coverage is not None and coverage < 90.0),
     )
-    m.chart_points = _downsample(samples, start_utc, end_utc, chart_buckets)
-    m.gap_ranges = gap_ranges
+    # Chart shading is aligned to the rendered line: yellow marks buckets with no
+    # valid data (where the line breaks), not merely coarse-but-present sampling.
+    m.chart_points, bucket_gaps = _aggregate_buckets(
+        samples, start_utc, end_utc, bucket_seconds, max_points
+    )
+    m.gap_ranges = _merge_ranges(bucket_gaps)
+    m.violation_ranges = _violation_ranges(samples, lower, upper, gap_threshold)
     return m
 
 
-def _downsample(samples, start_utc, end_utc, buckets: int) -> list[list[float | None]]:
-    """Bucket valid samples into ~``buckets`` points; empty buckets become gaps
-    (None) so missing periods render as breaks, never interpolated."""
-    span = (end_utc - start_utc).total_seconds()
-    if span <= 0 or buckets <= 0:
+def _merge_ranges(ranges: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    """Merge overlapping/adjacent (start, end) intervals into a minimal set."""
+    if not ranges:
         return []
-    width = span / buckets
+    ordered = sorted(ranges)
+    merged = [ordered[0]]
+    for s, e in ordered[1:]:
+        ls, le = merged[-1]
+        if s <= le:
+            merged[-1] = (ls, max(le, e))
+        else:
+            merged.append((s, e))
+    return merged
+
+
+def _aggregate_buckets(
+    samples, start_utc, end_utc, bucket_seconds: int, max_points: int
+) -> tuple[list[list[float | None]], list[tuple[float, float]]]:
+    """Deterministic time-bucket aggregation.
+
+    Returns ``(points, gap_ranges)``. Each bucket → ``[epoch, avg, min, max]``;
+    an empty bucket *between* data becomes a single ``None`` marker so the line
+    breaks (never interpolated) and is reported as a gap range. The min/max
+    preserve short excursions an average would hide. Bucket width grows if it
+    would exceed ``max_points``.
+    """
+    span = (end_utc - start_utc).total_seconds()
+    if span <= 0:
+        return [], []
+    base = start_utc.timestamp()
+    width = max(bucket_seconds, span / max_points) if max_points > 0 else bucket_seconds
+    nbuckets = max(1, int(span / width) + 1)
     acc: dict[int, list[float]] = {}
+    first_idx = nbuckets
+    last_idx = -1
     for ts, v, q in samples:
-        if ts is None or v is None or q != Quality.valid.value:
+        if ts is None:
             continue
-        idx = int((ts - start_utc).total_seconds() / width)
-        idx = min(idx, buckets - 1)
+        idx = min(int((ts.timestamp() - base) / width), nbuckets - 1)
+        if v is None or q != Quality.valid.value:
+            continue
         acc.setdefault(idx, []).append(v)
+        first_idx = min(first_idx, idx)
+        last_idx = max(last_idx, idx)
+
     points: list[list[float | None]] = []
-    for i in range(buckets):
-        epoch = start_utc.timestamp() + (i + 0.5) * width
+    gaps: list[tuple[float, float]] = []
+    prev_empty = False
+    run_start: int | None = None
+    for i in range(first_idx, last_idx + 1):  # only span observed data (no extension)
+        epoch = base + (i + 0.5) * width
         vals = acc.get(i)
-        points.append([epoch, round(statistics.fmean(vals), 2) if vals else None])
-    return points
+        if vals:
+            if run_start is not None:  # close a gap run between data
+                gaps.append((base + run_start * width, base + i * width))
+                run_start = None
+            points.append(
+                [epoch, round(statistics.fmean(vals), 2), round(min(vals), 2), round(max(vals), 2)]
+            )
+            prev_empty = False
+        else:
+            if run_start is None:
+                run_start = i
+            if not prev_empty:
+                points.append([epoch, None, None, None])  # one break marker per gap run
+                prev_empty = True
+    return points, gaps
+
+
+def _violation_ranges(
+    samples, lower: float | None, upper: float | None, gap_threshold: float
+) -> list[tuple[float, float]]:
+    """Contiguous intervals where MEASURED valid samples exceeded a safety limit.
+
+    Derived only from real samples — never extended across a gap or past the last
+    measured point, so missing/unknown data is never shown as a violation.
+    """
+    if lower is None and upper is None:
+        return []
+    out: list[tuple[float, float]] = []
+    run_start: float | None = None
+    run_last: float | None = None
+    prev_ts: float | None = None
+    for ts, v, q in samples:
+        if ts is None:
+            continue
+        cur = ts.timestamp()
+        # A real gap ends any open run at the last measured point (no extension).
+        if prev_ts is not None and (cur - prev_ts) > gap_threshold and run_start is not None:
+            out.append((run_start, run_last))
+            run_start = None
+        violating = (
+            q == Quality.valid.value
+            and v is not None
+            and ((upper is not None and v > upper) or (lower is not None and v < lower))
+        )
+        if violating:
+            if run_start is None:
+                run_start = cur
+            run_last = cur
+        elif run_start is not None:
+            out.append((run_start, cur))  # closed at the recovering sample
+            run_start = None
+        prev_ts = cur
+    if run_start is not None and run_last is not None:
+        out.append((run_start, run_last))
+    return out
 
 
 async def incident_summaries(

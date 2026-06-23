@@ -56,3 +56,51 @@ approximate (mockup is ~768 px/page); the goal is **structural** match.
 - [ ] P2: missing DATENQUALITÄT + FREIGABE panels.
 - [ ] P2 footer: disclaimer + page number layout.
 - [ ] Whole: large empty areas → denser, balanced page usage.
+
+## Status derivation (per unit) — v2
+
+Priority order (first match wins):
+
+1. **open** — an incident is still open (`pending_violation` / `active_violation`
+   / `recovering`). Badge: red "Open incident". A reviewed/closed incident does
+   **not** make a unit OK.
+2. **incomplete** — data is incomplete (`coverage < 90 %`) or the sensor is
+   missing. Badge: gray "Incomplete". No conformity statement is implied.
+3. **reviewed** — closed incident(s) exist with the period's data complete.
+   Badge: blue "Reviewed".
+4. **ok** — no incidents and complete data. Badge: green "OK".
+
+Overall verdict mirrors this: `incomplete` → `open` → `documented` → `ok`.
+The unit *identity colour* (accent line, title, table dot, chart series) is a
+stable palette colour (blue / cyan / green / violet …) and is **never** derived
+from status.
+
+## Chart interval semantics (red vs. yellow vs. blue)
+
+- **Red (deviation)** — only intervals where **measured valid** samples exceeded
+  a configured safety limit. Derived from raw samples; never extended across a
+  gap or to the period end, so an open incident or a sensor dropout is never
+  painted red into the unknown future.
+- **Yellow (no data)** — buckets with no valid data (missing *or* unavailable /
+  invalid). Aligned to where the rendered line breaks, so merely coarse-but-
+  present sampling is **not** painted yellow; only genuine gaps are. The line is
+  never connected across a gap.
+- **Blue (defrost)** — configured defrost intervals (cycle start→end), drawn at
+  absolute timestamps so they stay aligned after aggregation.
+- No shading for normal valid in-range data.
+
+## Adaptive chart aggregation
+
+Deterministic, time-range dependent bucket aggregation (monthly reports →
+**hourly** buckets; bucket width grows if it would exceed `max_points = 800`,
+keeping PDF generation bounded). Each bucket carries avg, min, max, valid count.
+The chart renders one **calm average line** plus a subtle **min–max envelope**
+(so short excursions an average would hide stay visible) over the safety-limit
+lines and the interval shading above.
+
+Report **metrics and incidents always use raw samples / validated values** — a
+bucket whose average is in range but whose min/max crossed a limit still counts
+toward the metrics and still shows the excursion. Aggregation never changes
+incident counts, durations, extrema or report metrics (proven in
+`tests/test_report_charts.py`). The same aggregation semantics are used for the
+overview charts and the detail-card mini-charts.

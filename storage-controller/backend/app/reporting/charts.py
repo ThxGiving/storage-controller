@@ -32,7 +32,10 @@ def _zone(tz: str) -> ZoneInfo:
 def _bounds(series: list[ChartSeries], lo: float | None, hi: float | None):
     vals: list[float] = []
     for s in series:
-        vals.extend(v for _, v in s.points if v is not None)
+        for p in s.points:
+            for k in (1, 2, 3):  # avg, min, max
+                if len(p) > k and p[k] is not None:
+                    vals.append(p[k])
     if lo is not None:
         vals.append(lo)
     if hi is not None:
@@ -146,20 +149,35 @@ def render_chart_svg(
             f'fill="#9ca3af">{label}</text>'
         )
 
-    # series polylines (break at gaps)
+    # series: a subtle min–max envelope + a calm average line, broken at gaps.
     for s in series:
-        d: list[str] = []
-        pen = False
-        for x, v in s.points:
-            if v is None:
-                pen = False
+        # Split into contiguous non-empty segments (None marks a gap → no line).
+        seg: list[tuple[float, float, float, float]] = []  # (x, avg, lo, hi)
+        segments: list[list[tuple[float, float, float, float]]] = []
+        for pt in s.points:
+            if len(pt) < 4 or pt[1] is None:
+                if seg:
+                    segments.append(seg)
+                    seg = []
                 continue
-            d.append(f"{'L' if pen else 'M'}{sx(x):.1f},{sy(v):.1f}")
-            pen = True
-        if d:
+            seg.append((pt[0], pt[1], pt[2], pt[3]))
+        if seg:
+            segments.append(seg)
+        for segment in segments:
+            # envelope polygon: forward along hi, back along lo
+            top = " ".join(f"{sx(x):.1f},{sy(hi):.1f}" for x, _a, _lo, hi in segment)
+            bot = " ".join(f"{sx(x):.1f},{sy(lo):.1f}" for x, _a, lo, _hi in reversed(segment))
             p.append(
-                f'<path d="{" ".join(d)}" fill="none" stroke="{s.color}" '
-                f'stroke-width="0.9" stroke-linejoin="round"/>'
+                f'<polygon points="{top} {bot}" fill="{s.color}" fill-opacity="0.14" '
+                f'stroke="none"/>'
+            )
+            avg = "".join(
+                f"{'L' if i else 'M'}{sx(x):.1f},{sy(a):.1f}"
+                for i, (x, a, _lo, _hi) in enumerate(segment)
+            )
+            p.append(
+                f'<path d="{avg}" fill="none" stroke="{s.color}" stroke-width="1.0" '
+                f'stroke-linejoin="round"/>'
             )
 
     # legend row

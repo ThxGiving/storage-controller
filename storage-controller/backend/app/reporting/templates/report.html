@@ -7,10 +7,17 @@
 </head>
 <body class="status-{{ m.summary.overall_status }}">
 {% macro statusbadge(u) -%}
-{% if u.status == "ok" %}<span class="badge b-green">✓ {{ L.status_ok_unit }}</span>
-{%- elif u.status == "reviewed" %}<span class="badge b-blue">✓ {{ L.status_reviewed }}</span>
-{%- else %}<span class="badge b-orange">{{ L.status_reviewed }}</span>{% endif %}
+{% if u.status == "ok" %}<span class="badge b-green">{{ icon_check() }} {{ L.status_ok_unit }}</span>
+{%- elif u.status == "reviewed" %}<span class="badge b-blue">{{ icon_check() }} {{ L.status_reviewed }}</span>
+{%- elif u.status == "open" %}<span class="badge b-red">{{ L.status_open }}</span>
+{%- else %}<span class="badge b-gray">{{ L.status_incomplete }}</span>{% endif %}
 {%- endmacro %}
+{% macro icon_check() -%}<svg class="bdg-ic" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>{%- endmacro %}
+{% macro ic_thermo() -%}<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 0 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg>{%- endmacro %}
+{% macro ic_check_c(c) -%}<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="{{ c }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.3l2.4 2.4 4.6-5.1"/></svg>{%- endmacro %}
+{% macro ic_triangle(c) -%}<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="{{ c }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.3 2.5 18a1.5 1.5 0 0 0 1.3 2.2h16.4a1.5 1.5 0 0 0 1.3-2.2L13 4.3a1.2 1.2 0 0 0-2 0z"/><path d="M12 9.5v4"/><path d="M12 16.5h.01"/></svg>{%- endmacro %}
+{% macro ic_xcircle(c) -%}<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="{{ c }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>{%- endmacro %}
+{% set verdict_color = {"ok": "#16a34a", "documented": "#2563eb", "open": "#dc2626", "incomplete": "#6b7280"}[m.summary.verdict] %}
 
 <!-- running-footer sources -->
 <span class="src set-pagelabel">{{ L.page }}</span>
@@ -20,7 +27,9 @@
 <section class="page">
   <span class="src set-footleft">Storage Controller v{{ version }}</span>
 
-  <header class="head">
+  {% set has_brand = logo_uri or m.branding.organization_name or m.branding.address or m.branding.site_name %}
+  <header class="head{% if not has_brand %} head-center{% endif %}">
+    {% if has_brand %}
     <div class="head-brand">
       {% if logo_uri %}<img class="logo" src="{{ logo_uri }}" alt=""/>{% endif %}
       <div class="org-block">
@@ -29,6 +38,7 @@
         {% if m.branding.site_name %}<div class="addr">{{ m.branding.site_name }}</div>{% endif %}
       </div>
     </div>
+    {% endif %}
     <div class="head-title">
       <h1>{{ m.branding.report_title }}</h1>
       <div class="month">{{ m.period_label }}</div>
@@ -45,29 +55,29 @@
     <div class="box-head">{{ L.overview_title }}</div>
     <div class="box-body summary">
       <div class="metric">
-        <svg viewBox="0 0 24 24" class="ic ic-b"><path d="M12 3a3 3 0 0 1 3 3v7.5a4.5 4.5 0 1 1-6 0V6a3 3 0 0 1 3-3z"/><circle cx="12" cy="17.5" r="2.2" fill="currentColor"/></svg>
+        {{ ic_thermo() }}
         <div class="num">{{ m.summary.monitored_count }}</div>
         <div class="lbl">{{ L.monitored }}</div>
       </div>
       <div class="metric">
-        <svg viewBox="0 0 24 24" class="ic ic-g"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5 5-5.5"/></svg>
+        {{ ic_check_c("#16a34a") }}
         <div class="num g">{{ m.summary.coverage_percent if m.summary.coverage_percent is not none else "—" }}{% if m.summary.coverage_percent is not none %} %{% endif %}</div>
         <div class="lbl">{{ L.coverage_total }}</div>
       </div>
       <div class="metric">
-        <svg viewBox="0 0 24 24" class="ic ic-o"><path d="M12 3l9 16H3z"/><path d="M12 9v5M12 16.5v.5" stroke-width="2"/></svg>
+        {{ ic_triangle("#ea580c") }}
         <div class="num {% if m.summary.confirmed_deviations %}o{% endif %}">{{ m.summary.confirmed_deviations }}</div>
         <div class="lbl">{{ L.confirmed_deviations }}</div>
       </div>
       <div class="metric">
-        <svg viewBox="0 0 24 24" class="ic ic-r"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
+        {{ ic_xcircle("#dc2626") }}
         <div class="num {% if m.summary.open_incidents %}r{% endif %}">{{ m.summary.open_incidents }}</div>
         <div class="lbl">{{ L.open_incidents }}</div>
       </div>
       <div class="verdict">
         <div class="vhead">{{ L.assessment }}</div>
         <div class="vbody">
-          <svg viewBox="0 0 24 24" class="ic ic-g"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5 5-5.5"/></svg>
+          {{ ic_check_c(verdict_color) }}
           <span>{{ L["verdict_" + m.summary.verdict] }}</span>
         </div>
       </div>
@@ -88,9 +98,9 @@
       <tbody>
         {% for u in m.units %}
         <tr>
-          <td class="l"><span class="uname">{{ u.name }}</span><span class="utype">{{ u.type_label }}</span></td>
-          <td>{{ u.thresholds.lower_limit_c if u.thresholds.lower_limit_c is not none else "—" }} – {{ u.thresholds.upper_limit_c if u.thresholds.upper_limit_c is not none else "—" }} °C</td>
-          <td>{{ u.min_c | temp }}</td><td>{{ u.avg_c | temp }}</td><td>{{ u.max_c | temp }}</td>
+          <td class="l"><span class="udot" style="background: {{ u.accent }}"></span><span class="uname">{{ u.name }}</span><span class="utype">{{ u.type_label }}</span></td>
+          <td class="nw">{{ u.thresholds.lower_limit_c if u.thresholds.lower_limit_c is not none else "—" }} – {{ u.thresholds.upper_limit_c if u.thresholds.upper_limit_c is not none else "—" }} °C</td>
+          <td class="nw">{{ u.min_c | temp }}</td><td class="nw">{{ u.avg_c | temp }}</td><td class="nw">{{ u.max_c | temp }}</td>
           <td class="{% if u.outside_seconds %}o{% else %}g{% endif %}">{{ u.outside_seconds | dur }}</td>
           <td class="{% if u.data_quality.incomplete %}o{% endif %}">{{ u.data_quality.coverage_percent | pct }}</td>
           <td>{{ u.incident_count }}</td>
@@ -183,7 +193,7 @@
     <section class="box panel">
       <div class="box-head">{{ L.data_quality_title }}</div>
       <div class="box-body dq">
-        <svg viewBox="0 0 24 24" class="ic {% if m.data_quality_ok %}ic-g{% else %}ic-o{% endif %}"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5 5-5.5"/></svg>
+        {% if m.data_quality_ok %}{{ ic_check_c("#16a34a") }}{% else %}{{ ic_triangle("#ea580c") }}{% endif %}
         <span>{{ m.data_quality_note }}</span>
       </div>
     </section>

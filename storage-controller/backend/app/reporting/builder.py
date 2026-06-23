@@ -35,9 +35,11 @@ from .model import (
     UnitReport,
 )
 
-# Per-unit series colors (cycled).
-_PALETTE = ["#2563eb", "#16a34a", "#7c3aed", "#0891b2", "#db2777", "#ca8a04", "#0f766e"]
-_ACCENT = {"ok": "#16a34a", "reviewed": "#2563eb", "attention": "#ea580c"}
+# Stable per-unit identity colors (restrained palette: blue, cyan, green, violet…).
+# These are the unit's identity — never derived from status.
+_PALETTE = ["#2563eb", "#0891b2", "#16a34a", "#7c3aed", "#db2777", "#b45309", "#0f766e"]
+# Hourly buckets for the monthly report's charts.
+_MONTH_BUCKET_SECONDS = 3600
 
 _UNIT_TYPE_LABEL: dict[str, dict[str, str]] = {
     "day_cold_room": {"en": "Day cold room", "de": "Tageskühlhaus"},
@@ -50,14 +52,6 @@ _UNIT_TYPE_LABEL: dict[str, dict[str, str]] = {
     "custom": {"en": "Storage unit", "de": "Lagereinheit"},
 }
 
-
-def _parse_iso(s: str | None) -> float | None:
-    if not s:
-        return None
-    try:
-        return datetime.fromisoformat(s).timestamp()
-    except ValueError:
-        return None
 
 _GROUP_LABEL = {
     "chilled": {"en": "Chilled units", "de": "Kühlbereiche"},
@@ -135,6 +129,7 @@ async def build_report_model(
             lower=unit.lower_limit_c,
             upper=unit.upper_limit_c,
             heartbeat_seconds=heartbeat,
+            bucket_seconds=_MONTH_BUCKET_SECONDS,
         )
         incidents = await incident_summaries(
             session, storage_unit_id=uid, start_utc=start_utc, end_utc=end_utc
@@ -157,28 +152,34 @@ async def build_report_model(
             ):
                 extreme = i.extreme_value_c
 
+        # Status derivation (documented in docs/design/report-layout-spec.md):
+        #   open       — an incident is still open (pending/active/recovering)
+        #   incomplete — data is incomplete / sensor missing (no conformity statement)
+        #   reviewed   — closed incident(s) exist (documented review)
+        #   ok         — no incidents and complete data
         open_states = {"pending_violation", "active_violation", "recovering"}
         has_open = any(i.state in open_states for i in incidents)
-        all_doc = incidents and all(i.documented for i in incidents)
-        if has_open or (incidents and not all_doc):
-            status = "attention"
+        dq_incomplete = sm.data_quality.incomplete or sm.data_quality.missing_entity
+        if has_open:
+            status = "open"
+        elif dq_incomplete:
+            status = "incomplete"
         elif incidents:
             status = "reviewed"
         else:
             status = "ok"
 
-        # Chart bands: deviations (incidents), data gaps, defrost periods.
+        # Chart bands. Red = MEASURED threshold violations only (from raw samples).
+        # Yellow = real data gaps. Blue = defrost. Missing/unknown data is never red.
         bands: list[ChartBand] = []
-        for i in incidents:
-            st, en = _parse_iso(i.opened_at), _parse_iso(i.closed_at) or end_utc.timestamp()
-            if st is not None:
-                bands.append(ChartBand(kind="deviation", start=st, end=en))
+        for vs, ve in sm.violation_ranges:
+            bands.append(ChartBand(kind="deviation", start=vs, end=ve))
         for gs, ge in sm.gap_ranges:
             bands.append(ChartBand(kind="gap", start=gs, end=ge))
         for ds, de in d_ranges:
             bands.append(ChartBand(kind="defrost", start=ds, end=de))
 
-        color = _PALETTE[color_i % len(_PALETTE)]
+        color = _PALETTE[color_i % len(_PALETTE)]  # stable identity color
         color_i += 1
         group = chart_group_for(unit)
         chart = ChartSeries(
@@ -198,7 +199,7 @@ async def build_report_model(
                 id=uid, name=unit.name, short_name=unit.short_report_name,
                 unit_type=unit.unit_type, type_label=type_label,
                 profile_name=unit.applied_profile_name, chart_group=group,
-                status=status, accent=_ACCENT[status],
+                status=status, accent=color,
                 thresholds=ThresholdSnapshot(
                     lower_limit_c=unit.lower_limit_c, upper_limit_c=unit.upper_limit_c,
                     warning_margin_c=unit.warning_margin_c,

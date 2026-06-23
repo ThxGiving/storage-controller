@@ -35,7 +35,8 @@ def _fmt_duration(seconds: int | None) -> str:
 
 
 def _fmt_temp(v: float | None) -> str:
-    return "—" if v is None else f"{v:.1f} °C"
+    # Non-breaking space so a value and its unit never wrap ("-21.0 °C").
+    return "—" if v is None else f"{v:.1f} °C"
 
 
 def _fmt_pct(v: float | None) -> str:

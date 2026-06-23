@@ -41,6 +41,8 @@ body {
 .org { font-weight: 700; font-size: 10.5pt; color: #111827; }
 .addr { color: #6b7280; font-size: 7.5pt; line-height: 1.35; }
 .head-title { text-align: right; }
+.head-center { justify-content: center; }
+.head-center .head-title { text-align: center; }
 .head-title h1 { font-size: 15pt; font-weight: 700; margin: 0; letter-spacing: .2px; }
 .head-title .month { font-size: 10.5pt; font-weight: 600; color: #374151; margin-bottom: 4pt; }
 .hmeta { font-size: 6.8pt; color: #4b5563; line-height: 1.5; }
@@ -61,9 +63,7 @@ body {
 .metric .num { font-size: 16pt; font-weight: 700; color: #111827; line-height: 1.1; }
 .metric .num.g { color: #16a34a; } .metric .num.o { color: #ea580c; } .metric .num.r { color: #dc2626; }
 .metric .lbl { font-size: 6.4pt; color: #6b7280; margin-top: 1pt; }
-.ic { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6;
-  stroke-linecap: round; stroke-linejoin: round; margin-bottom: 1pt; }
-.ic-b { color: #2563eb; } .ic-g { color: #16a34a; } .ic-o { color: #ea580c; } .ic-r { color: #dc2626; }
+.ic { width: 16px; height: 16px; margin-bottom: 1pt; vertical-align: middle; }
 .verdict { flex: 1.5; border-left: 0.5pt solid #e5e7eb; padding-left: 8pt; }
 .vhead { font-size: 6.4pt; font-weight: 700; letter-spacing: .4px; color: #6b7280; }
 .vbody { display: flex; align-items: center; gap: 5pt; margin-top: 3pt; font-size: 8pt; color: #1f2937; }
@@ -74,8 +74,10 @@ table.cmp { width: 100%; border-collapse: collapse; }
 table.cmp th, table.cmp td { padding: 3.6pt 5pt; text-align: right; border-bottom: 0.5pt solid #eef0f2; }
 table.cmp th { font-size: 6.4pt; text-transform: uppercase; letter-spacing: .3px; color: #9ca3af; font-weight: 600; }
 table.cmp th.l, table.cmp td.l { text-align: left; }
-.uname { font-weight: 700; display: block; }
-.utype { color: #9ca3af; font-size: 6.6pt; display: block; }
+table.cmp td.nw { white-space: nowrap; }
+.udot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4pt; vertical-align: middle; }
+.uname { font-weight: 700; }
+.utype { color: #9ca3af; font-size: 6.6pt; display: block; padding-left: 10pt; }
 td.o, b.o { color: #ea580c; font-weight: 600; } td.g { color: #16a34a; }
 
 /* ---------- charts ---------- */
@@ -94,11 +96,11 @@ td.o, b.o { color: #ea580c; font-weight: 600; } td.g { color: #16a34a; }
 .accent { height: 2.6px; width: 100%; }
 .card-head { display: flex; justify-content: space-between; align-items: center; padding: 5pt 8pt 3pt; }
 .ctitle { font-weight: 700; font-size: 9pt; }
-.card-row { display: flex; justify-content: space-between; padding: 0 8pt 4pt; font-size: 7pt; color: #6b7280; border-bottom: 0.5pt solid #f1f1f1; }
+.card-row { display: flex; justify-content: space-between; padding: 0 8pt 4pt; font-size: 7pt; color: #6b7280; border-bottom: 0.5pt solid #f1f1f1; white-space: nowrap; }
 .card-row b { color: #1f2937; }
 table.metrics { width: 100%; border-collapse: collapse; }
 table.metrics th { font-size: 6.2pt; text-transform: uppercase; color: #9ca3af; font-weight: 600; padding: 4pt 4pt 0; }
-table.metrics td { font-size: 8.5pt; font-weight: 600; color: #111827; padding: 1pt 4pt 4pt; text-align: center; }
+table.metrics td { font-size: 8.5pt; font-weight: 600; color: #111827; padding: 1pt 4pt 4pt; text-align: center; white-space: nowrap; }
 table.metrics th { text-align: center; }
 .mini { padding: 2pt 6pt 5pt; }
 .mini svg { width: 100%; height: auto; }
@@ -124,4 +126,7 @@ table.inc td.ft { color: #374151; }
 .b-green { background: #dcfce7; color: #15803d; }
 .b-blue { background: #dbeafe; color: #1d4ed8; }
 .b-orange { background: #ffedd5; color: #c2410c; }
+.b-red { background: #fee2e2; color: #b91c1c; }
+.b-gray { background: #eef0f2; color: #4b5563; }
+.bdg-ic { width: 7px; height: 7px; vertical-align: middle; }
 .badge-cell { text-align: center; }
