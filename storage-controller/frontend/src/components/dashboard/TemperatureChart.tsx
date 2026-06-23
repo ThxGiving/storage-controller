@@ -109,9 +109,11 @@ export function TemperatureChart({
           type: "line",
           data,
           showSymbol: false,
+          // Steady periods stay continuous (backend carries the last valid state
+          // within the trust interval); the line breaks only on genuine gaps.
+          // No lttb sampling — it bridged nulls into dotted diagonal segments.
           connectNulls: false,
           smooth: false,
-          sampling: "lttb",
           lineStyle: { width: 1.75, color: "#0ea5e9" },
           areaStyle: {
             color: {

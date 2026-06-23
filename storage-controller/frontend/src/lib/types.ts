@@ -666,6 +666,8 @@ export interface HistoryImportJob {
   error_message: string | null;
   imported_ranges: HistoryDateRange[];
   failed_ranges: HistoryDateRange[];
+  chunks_done: number;
+  chunks_total: number;
   created_at: string;
   finished_at: string | null;
 }

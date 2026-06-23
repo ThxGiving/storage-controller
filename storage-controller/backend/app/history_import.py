@@ -398,6 +398,18 @@ def summarize_chunks(chunks_json: str | None) -> dict[str, list[dict[str, str]]]
     return out
 
 
+def chunk_counts(chunks_json: str | None) -> tuple[int, int]:
+    """Return (done, total) windows for showing import progress."""
+    if not chunks_json:
+        return 0, 0
+    try:
+        chunks = json.loads(chunks_json)
+    except (ValueError, TypeError):
+        return 0, 0
+    done = sum(1 for c in chunks if c.get("st") == "done")
+    return done, len(chunks)
+
+
 def imported_quality(res_quality: str) -> str:
     # Imported raw samples keep their normalized quality; this hook lets callers
     # distinguish imported data if needed in the future.

@@ -27,6 +27,7 @@ from ..models import (
     SensorSample,
     StorageUnit,
 )
+from ..state_series import MAX_TRUST_SECONDS, gap_ranges, in_gap, reconstruct
 from .model import DataQuality, DefrostSummary, IncidentSummary
 
 
@@ -104,40 +105,47 @@ async def sample_metrics(
         m.max_c = round(max(valid_values), 2)
         m.avg_c = round(statistics.fmean(valid_values), 2)
 
-    attribute_cap = max(2 * heartbeat_seconds, 600)
-    gap_threshold = max(3 * heartbeat_seconds, 1800)
-
-    unavailable = invalid = gap = above = below = 0.0
-    gaps_count = 0
-    # Attribute the interval after each sample to that sample's state (raw metrics;
-    # independent of chart bucket size).
-    for (ts, v, q), (nts, _nv, _nq) in zip(samples, samples[1:], strict=False):
-        if ts is None or nts is None:
-            continue
-        dt = (nts - ts).total_seconds()
-        if dt <= 0:
-            continue
-        if dt > gap_threshold:
-            gap += dt
-            gaps_count += 1
-            continue
-        dt = min(dt, attribute_cap)
-        if q == Quality.valid.value and v is not None:
-            if upper is not None and v > upper:
-                above += dt
-            elif lower is not None and v < lower:
-                below += dt
-        elif q in (Quality.unavailable.value, Quality.unknown.value):
-            unavailable += dt
-        elif q in (Quality.invalid.value, Quality.implausible.value):
-            invalid += dt
-
+    # State-change aware attribution. A value holds (is "covered") until the next
+    # sample, capped at the trust interval; silence beyond that, or an explicit
+    # unavailable/unknown/invalid state, is attributed as such — never as a steady
+    # gap. This stops a normal state-change sensor from looking mostly-missing.
+    max_trust = float(MAX_TRUST_SECONDS)
     period_seconds = (end_utc - start_utc).total_seconds()
-    expected = int(period_seconds / heartbeat_seconds) if heartbeat_seconds > 0 else None
+    above = below = unavailable = invalid = gap = valid_covered = 0.0
+    gaps_count = 0
+    first_ts = next((ts for ts, _v, _q in samples if ts is not None), None)
+    if first_ts is not None and first_ts > start_utc:
+        gap += (first_ts - start_utc).total_seconds()  # leading missing region
+        gaps_count += 1
+    n = len(samples)
+    for i, (ts, v, q) in enumerate(samples):
+        if ts is None:
+            continue
+        nts = samples[i + 1][0] if i + 1 < n else end_utc
+        if nts is None or nts <= ts:
+            continue
+        dur = (nts - ts).total_seconds()
+        held = min(dur, max_trust)
+        overflow = dur - held  # silence beyond trust → uncertain gap
+        if q == Quality.valid.value and v is not None:
+            valid_covered += held
+            if upper is not None and v > upper:
+                above += held
+            elif lower is not None and v < lower:
+                below += held
+        elif q in (Quality.unavailable.value, Quality.unknown.value):
+            unavailable += held
+        elif q in (Quality.invalid.value, Quality.implausible.value):
+            invalid += held
+        if overflow > 0:
+            gap += overflow
+            gaps_count += 1
+
     valid_count = len(valid_values)
+    expected = int(period_seconds / heartbeat_seconds) if heartbeat_seconds > 0 else None
     coverage = None
-    if expected and expected > 0:
-        coverage = round(min(100.0, 100.0 * valid_count / expected), 1)
+    if period_seconds > 0:
+        coverage = round(min(100.0, 100.0 * valid_covered / period_seconds), 1)
 
     m.time_above_seconds = int(above)
     m.time_below_seconds = int(below)
@@ -146,6 +154,9 @@ async def sample_metrics(
         total_count=len(samples),
         expected_count=expected,
         coverage_percent=coverage,
+        # True when there are valid measurements but coverage rounds below 0.1%,
+        # so the report never shows "0.0 %" next to real min/avg/max values.
+        coverage_below_min=bool(valid_count > 0 and coverage is not None and coverage < 0.05),
         unavailable_seconds=int(unavailable),
         invalid_seconds=int(invalid),
         gap_seconds=int(gap),
@@ -153,13 +164,15 @@ async def sample_metrics(
         missing_entity=False,
         incomplete=bool(coverage is not None and coverage < 90.0),
     )
-    # Chart shading is aligned to the rendered line: yellow marks buckets with no
-    # valid data (where the line breaks), not merely coarse-but-present sampling.
-    m.chart_points, bucket_gaps = _aggregate_buckets(
-        samples, start_utc, end_utc, bucket_seconds, max_points
+    # Chart gaps come from reconstructed state validity (genuine missing/unavailable
+    # only); steady state-change periods stay continuous, not shaded.
+    intervals = reconstruct(samples, start_utc, end_utc, valid_quality=Quality.valid.value)
+    chart_gaps = gap_ranges(intervals)
+    m.chart_points = _aggregate_buckets(
+        samples, start_utc, end_utc, bucket_seconds, max_points, chart_gaps
     )
-    m.gap_ranges = _merge_ranges(bucket_gaps)
-    m.violation_ranges = _violation_ranges(samples, lower, upper, gap_threshold)
+    m.gap_ranges = _merge_ranges(chart_gaps)
+    m.violation_ranges = _violation_ranges(samples, lower, upper, max_trust)
     return m
 
 
@@ -179,58 +192,50 @@ def _merge_ranges(ranges: list[tuple[float, float]]) -> list[tuple[float, float]
 
 
 def _aggregate_buckets(
-    samples, start_utc, end_utc, bucket_seconds: int, max_points: int
-) -> tuple[list[list[float | None]], list[tuple[float, float]]]:
-    """Deterministic time-bucket aggregation.
+    samples, start_utc, end_utc, bucket_seconds: int, max_points: int, chart_gaps
+) -> list[list[float | None]]:
+    """Deterministic time-bucket aggregation with state-change continuity.
 
-    Returns ``(points, gap_ranges)``. Each bucket → ``[epoch, avg, min, max]``;
-    an empty bucket *between* data becomes a single ``None`` marker so the line
-    breaks (never interpolated) and is reported as a gap range. The min/max
-    preserve short excursions an average would hide. Bucket width grows if it
-    would exceed ``max_points``.
+    Each bucket → ``[epoch, avg, min, max]``. A bucket with no samples carries the
+    last known value (the state persisted) and stays continuous — UNLESS its centre
+    falls inside a genuine gap (``chart_gaps`` from reconstructed state validity),
+    where it becomes a single ``None`` break so the line/envelope stop and never
+    interpolate across missing data. The min/max preserve short excursions.
     """
     span = (end_utc - start_utc).total_seconds()
     if span <= 0:
-        return [], []
+        return []
     base = start_utc.timestamp()
     width = max(bucket_seconds, span / max_points) if max_points > 0 else bucket_seconds
     nbuckets = max(1, math.ceil(span / width))
     acc: dict[int, list[float]] = {}
     for ts, v, q in samples:
-        if ts is None:
+        if ts is None or v is None or q != Quality.valid.value:
             continue
         idx = min(int((ts.timestamp() - base) / width), nbuckets - 1)
-        if v is None or q != Quality.valid.value:
-            continue
         acc.setdefault(idx, []).append(v)
 
     points: list[list[float | None]] = []
-    gaps: list[tuple[float, float]] = []
-    prev_empty = False
-    run_start: int | None = None
-    # Iterate the FULL period so the line/envelope exist only inside buckets that
-    # actually contain valid data, break at every gap (leading, internal and
-    # trailing), and never extend the first/last known value.
+    last_val: float | None = None
+    broke = False
     for i in range(nbuckets):
         epoch = base + (i + 0.5) * width
         vals = acc.get(i)
         if vals:
-            if run_start is not None:  # close a gap run
-                gaps.append((base + run_start * width, base + i * width))
-                run_start = None
-            points.append(
-                [epoch, round(statistics.fmean(vals), 2), round(min(vals), 2), round(max(vals), 2)]
-            )
-            prev_empty = False
+            last_val = round(statistics.fmean(vals), 2)
+            points.append([epoch, last_val, round(min(vals), 2), round(max(vals), 2)])
+            broke = False
+        elif in_gap(chart_gaps, epoch) or last_val is None:
+            # Genuine gap (or nothing known yet) → one break marker per gap run.
+            if not broke:
+                points.append([epoch, None, None, None])
+                broke = True
+            last_val = None
         else:
-            if run_start is None:
-                run_start = i
-            if not prev_empty:
-                points.append([epoch, None, None, None])  # one break marker per gap run
-                prev_empty = True
-    if run_start is not None:  # trailing gap to period end
-        gaps.append((base + run_start * width, base + nbuckets * width))
-    return points, gaps
+            # Steady state: carry the last known value so the line stays continuous.
+            points.append([epoch, last_val, last_val, last_val])
+            broke = False
+    return points
 
 
 def _violation_ranges(

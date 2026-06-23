@@ -24,6 +24,7 @@ from ..models import (
     StorageUnit,
 )
 from ..schemas import DefrostCycleOut, HistoryPoint, HistoryResponse
+from ..state_series import gap_ranges, in_gap, reconstruct, valid_seconds
 
 router = APIRouter(prefix="/api/storage-units", tags=["history"])
 
@@ -94,15 +95,20 @@ async def unit_samples(
         for ts, val, q in rows
         if q == Quality.valid.value and val is not None
     ]
-    points, downsampled, bucket_seconds = _build_points(rows, start, end, max_points)
+    samples = [(_as_utc(ts), val, q) for ts, val, q in rows]
+    intervals = reconstruct(samples, _as_utc(start), _as_utc(end))
+    points, downsampled, bucket_seconds = _build_points(rows, start, end, max_points, intervals)
 
     min_c = min((v for _, v in valid), default=None)
     max_c = max((v for _, v in valid), default=None)
     avg_c = (sum(v for _, v in valid) / len(valid)) if valid else None
 
-    # Coverage: fraction of buckets that contain at least one valid value.
-    covered = sum(1 for p in points if p.v is not None)
-    coverage = (covered / len(points)) if points else None
+    # Coverage: share of the period in which a valid state was known. A steady
+    # state-change sensor holds its last value between rows, so steady periods
+    # count as covered — only explicit unavailable/unknown or silence beyond the
+    # trust interval is missing.
+    span = (_as_utc(end) - _as_utc(start)).total_seconds()
+    coverage = (valid_seconds(intervals) / span) if span > 0 else None
 
     return HistoryResponse(
         storage_unit_id=unit_id,
@@ -155,22 +161,31 @@ def _build_points(
     start: datetime,
     end: datetime,
     max_points: int,
+    intervals,
 ) -> tuple[list[HistoryPoint], bool, int | None]:
-    """Return display points. Small series are returned raw (unavailable → gap);
-    large series are downsampled into fixed time buckets (empty bucket → gap)."""
+    """Return display points using reconstructed state validity.
+
+    A valid value persists between state-change rows, so the line stays continuous
+    through steady periods; it breaks (``v=None``) only across genuine gaps
+    (explicit unavailable/unknown or silence beyond the trust interval). Empty
+    aggregation buckets inside a valid interval carry the last known value instead
+    of being mis-rendered as missing.
+    """
+    gaps = gap_ranges(intervals)
+
     if len(rows) <= max_points:
-        return (
-            [
-                HistoryPoint(
-                    t=_as_utc(ts),
-                    v=val if (q == Quality.valid.value and val is not None) else None,
-                    q=q,
-                )
-                for ts, val, q in rows
-            ],
-            False,
-            None,
-        )
+        points: list[HistoryPoint] = []
+        prev_epoch: float | None = None
+        for ts, val, q in rows:
+            if q != Quality.valid.value or val is None:
+                continue
+            e = _as_utc(ts).timestamp()
+            # Break the line only if a genuine gap lies between the two samples.
+            if prev_epoch is not None and _straddles_gap(gaps, prev_epoch, e):
+                points.append(HistoryPoint(t=_as_utc(ts), v=None, q=None))
+            points.append(HistoryPoint(t=_as_utc(ts), v=val, q=Quality.valid.value))
+            prev_epoch = e
+        return points, False, None
 
     start = _as_utc(start)
     total_seconds = max((end - start).total_seconds(), 1.0)
@@ -182,21 +197,32 @@ def _build_points(
         idx = int((_as_utc(ts) - start).total_seconds() // bucket_seconds)
         buckets.setdefault(idx, []).append(val)
 
-    points: list[HistoryPoint] = []
+    points = []
     n_buckets = int(total_seconds // bucket_seconds) + 1
+    last_val: float | None = None
     for idx in range(n_buckets):
         center = start + timedelta(seconds=bucket_seconds * idx + bucket_seconds / 2)
         values = buckets.get(idx)
         if values:
+            mean = sum(values) / len(values)
             points.append(
-                HistoryPoint(
-                    t=center,
-                    v=sum(values) / len(values),
-                    vmin=min(values),
-                    vmax=max(values),
-                    q=Quality.valid.value,
-                )
+                HistoryPoint(t=center, v=mean, vmin=min(values), vmax=max(values),
+                             q=Quality.valid.value)
             )
-        else:
+            last_val = mean
+        elif in_gap(gaps, center.timestamp()) or last_val is None:
+            # Genuine gap (or nothing known yet) → break the line.
             points.append(HistoryPoint(t=center, v=None, q=None))
+            last_val = None
+        else:
+            # Steady state: the last known value still holds (continuous, no break).
+            points.append(
+                HistoryPoint(t=center, v=last_val, vmin=last_val, vmax=last_val,
+                             q=Quality.valid.value)
+            )
     return points, True, bucket_seconds
+
+
+def _straddles_gap(gaps: list[tuple[float, float]], a: float, b: float) -> bool:
+    """True if a genuine gap interval lies between epochs ``a`` and ``b``."""
+    return any(g0 < b and g1 > a for g0, g1 in gaps)

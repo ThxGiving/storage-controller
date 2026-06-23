@@ -14,6 +14,12 @@ from app.reporting.metrics import (
     sample_metrics,
 )
 from app.reporting.render import _fmt_dt, _fmt_duration, _fmt_pct, _fmt_temp
+from app.state_series import gap_ranges, reconstruct
+
+
+def _gaps(samples, start, end):
+    """Genuine gap ranges, as production computes them (state-change aware)."""
+    return gap_ranges(reconstruct(samples, start, end))
 
 
 def test_german_locale_formatting():
@@ -34,10 +40,11 @@ def test_buckets_positioned_at_real_timestamps_not_stretched():
     end = T0 + timedelta(days=30)
     last_day = end - timedelta(days=1)
     samples = [_s_at(last_day + timedelta(minutes=10 * i), 5.0) for i in range(12)]
-    buckets, gaps = _aggregate_buckets(samples, start, end, bucket_seconds=3600, max_points=800)
+    gaps = _gaps(samples, start, end)
+    buckets = _aggregate_buckets(samples, start, end, 3600, 800, gaps)
     filled = [b for b in buckets if b[1] is not None]
     assert filled, "expected some filled buckets"
-    # every filled bucket is in the last day, not spread across the month
+    # every filled bucket is in the last day (+ trust window), not spread across the month
     assert all(b[0] >= last_day.timestamp() - 3600 for b in filled)
     # a long leading gap exists, starting at the period start
     assert gaps and gaps[0][0] == start.timestamp()
@@ -91,7 +98,7 @@ def test_in_range_average_cannot_hide_out_of_range_extremum():
     base = [_s(m, 6.0) for m in range(0, 60, 5)]  # avg ~6 (in range, upper=8)
     base[6] = _s(30, 11.0)  # one spike
     end = T0 + timedelta(hours=1)
-    buckets, _gaps = _aggregate_buckets(base, T0, end, bucket_seconds=3600, max_points=800)
+    buckets = _aggregate_buckets(base, T0, end, 3600, 800, _gaps(base, T0, end))
     assert len(buckets) == 1
     _epoch, avg, lo, hi = buckets[0]
     assert avg is not None and avg <= 8  # average stays in range
@@ -100,8 +107,8 @@ def test_in_range_average_cannot_hide_out_of_range_extremum():
 
 
 def test_aggregation_reduces_dense_data_and_marks_gaps():
-    # 7 days of 5-min hysteresis data -> hourly buckets are bounded and a missing
-    # window becomes a single None break (never interpolated).
+    # 7 days of 5-min hysteresis data -> hourly buckets are bounded and a one-day
+    # blackout (well beyond the trust interval) becomes a single None break.
     samples = []
     for m in range(0, 7 * 24 * 60, 5):
         v = 5 + (1 if (m // 5) % 2 else -1) * 1.5  # raw zig-zag
@@ -109,13 +116,15 @@ def test_aggregation_reduces_dense_data_and_marks_gaps():
             continue
         samples.append(_s(m, v))
     end = T0 + timedelta(days=7)
-    buckets, gaps = _aggregate_buckets(samples, T0, end, bucket_seconds=3600, max_points=800)
+    gaps = _gaps(samples, T0, end)
+    buckets = _aggregate_buckets(samples, T0, end, 3600, 800, gaps)
     assert len(buckets) <= 800  # bounded
-    assert any(b[1] is None for b in buckets)  # the gap is a break
-    assert len(gaps) == 1  # the one-day blackout is a single gap range
-    # average is calm (~5) while the envelope keeps the ±1.5 swing
+    assert any(b[1] is None for b in buckets)  # the blackout is a break
+    assert len(gaps) == 1  # the one-day blackout is a single genuine gap range
+    # measured buckets keep a calm ~5 average and the ±1.5 envelope; carried-forward
+    # steady buckets (flat) are also ~5, so the whole line stays near 5.
     filled = [b for b in buckets if b[1] is not None]
-    assert all(abs(b[1] - 5) < 0.5 for b in filled)
+    assert all(abs(b[1] - 5) < 0.6 for b in filled)
     assert any(b[3] - b[2] > 2.0 for b in filled)  # min–max envelope preserved
 
 

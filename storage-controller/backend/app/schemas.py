@@ -801,5 +801,7 @@ class HistoryImportOut(BaseModel):
     error_message: str | None = None
     imported_ranges: list[HistoryDateRange] = Field(default_factory=list)
     failed_ranges: list[HistoryDateRange] = Field(default_factory=list)
+    chunks_done: int = 0
+    chunks_total: int = 0
     created_at: datetime
     finished_at: datetime | None = None

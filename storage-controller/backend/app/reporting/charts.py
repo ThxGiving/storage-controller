@@ -13,13 +13,28 @@ from zoneinfo import ZoneInfo
 
 from .model import ChartBand, ChartSeries, OverviewChart
 
+# Localized, restrained band fills. Missing data is rendered as subtle pale-yellow
+# diagonal hatching (a pattern) so it reads as "no data" without washing the whole
+# plot in saturated colour; measured violations and defrost stay as soft solids.
 _BAND_FILL = {
-    "deviation": "#fecaca",
-    "gap": "#fde68a",
-    "defrost": "#dbeafe",
+    "deviation": "#fca5a5",
+    "defrost": "#bfdbfe",
+}
+_BAND_OPACITY = {
+    "deviation": 0.40,
+    "defrost": 0.45,
 }
 _UPPER = "#dc2626"
 _LOWER = "#2563eb"
+
+# A pale, low-contrast diagonal hatch for missing-data regions. One diagonal per
+# tile (no patternTransform) keeps it robust under WeasyPrint's SVG renderer.
+_GAP_PATTERN = (
+    '<defs><pattern id="scGap" width="7" height="7" patternUnits="userSpaceOnUse">'
+    '<rect width="7" height="7" fill="#fefce8"/>'
+    '<path d="M0,7 L7,0" stroke="#fde047" stroke-width="0.7" stroke-opacity="0.55"/>'
+    "</pattern></defs>"
+)
 
 
 def _zone(tz: str) -> ZoneInfo:
@@ -72,6 +87,7 @@ def render_chart_svg(
     lower_label: str = "Lower limit",
     x_start: float | None = None,
     x_end: float | None = None,
+    note: str | None = None,
 ) -> str:
     series = [s for s in chart.series if s.points]
     pad_l, pad_r, pad_t, pad_b = 26, 6, 12, 14
@@ -99,20 +115,38 @@ def render_chart_svg(
     p: list[str] = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
         f'viewBox="0 0 {width} {height}" font-family="DejaVu Sans, Helvetica, sans-serif">',
+        _GAP_PATTERN,
         f'<rect width="{width}" height="{height}" fill="#ffffff"/>',
+        # white plot background so data — not shading — dominates
+        f'<rect x="{pad_l}" y="{plot_top}" width="{pw}" height="{plot_h}" fill="#ffffff"/>',
     ]
 
-    # shaded bands (behind everything)
+    # shaded bands (behind the data). Missing-data gaps use the subtle hatch;
+    # measured violations / defrost use soft solids, and a thin boundary marker
+    # keeps even a wide gap legible without a saturated fill.
     all_bands: list[ChartBand] = list(chart.bands) + [b for s in series for b in s.bands]
     for b in all_bands:
         bx0 = max(pad_l, sx(b.start))
         bx1 = min(pad_l + pw, sx(b.end))
         if bx1 <= bx0:
             bx1 = bx0 + 1.2  # keep instantaneous events visible
-        p.append(
-            f'<rect x="{bx0:.1f}" y="{plot_top}" width="{bx1 - bx0:.1f}" height="{plot_h}" '
-            f'fill="{_BAND_FILL.get(b.kind, "#eee")}" fill-opacity="0.55"/>'
-        )
+        if b.kind == "gap":
+            p.append(
+                f'<rect x="{bx0:.1f}" y="{plot_top}" width="{bx1 - bx0:.1f}" '
+                f'height="{plot_h}" fill="url(#scGap)"/>'
+            )
+            for bx in (bx0, bx1):
+                p.append(
+                    f'<line x1="{bx:.1f}" y1="{plot_top}" x2="{bx:.1f}" '
+                    f'y2="{plot_bot}" stroke="#fde047" stroke-width="0.5" '
+                    f'stroke-opacity="0.7"/>'
+                )
+        else:
+            p.append(
+                f'<rect x="{bx0:.1f}" y="{plot_top}" width="{bx1 - bx0:.1f}" '
+                f'height="{plot_h}" fill="{_BAND_FILL.get(b.kind, "#eee")}" '
+                f'fill-opacity="{_BAND_OPACITY.get(b.kind, 0.4)}"/>'
+            )
 
     p.append(
         f'<rect x="{pad_l}" y="{plot_top}" width="{pw}" height="{plot_h}" fill="none" '
@@ -175,7 +209,7 @@ def render_chart_svg(
             top = " ".join(f"{sx(x):.1f},{sy(hi):.1f}" for x, _a, _lo, hi in segment)
             bot = " ".join(f"{sx(x):.1f},{sy(lo):.1f}" for x, _a, lo, _hi in reversed(segment))
             p.append(
-                f'<polygon points="{top} {bot}" fill="{s.color}" fill-opacity="0.14" '
+                f'<polygon points="{top} {bot}" fill="{s.color}" fill-opacity="0.16" '
                 f'stroke="none"/>'
             )
             avg = "".join(
@@ -183,9 +217,16 @@ def render_chart_svg(
                 for i, (x, a, _lo, _hi) in enumerate(segment)
             )
             p.append(
-                f'<path d="{avg}" fill="none" stroke="{s.color}" stroke-width="1.0" '
-                f'stroke-linejoin="round"/>'
+                f'<path d="{avg}" fill="none" stroke="{s.color}" stroke-width="1.3" '
+                f'stroke-linejoin="round" stroke-linecap="round"/>'
             )
+
+    # sparse-data annotation (kept subtle, inside the plot)
+    if note:
+        p.append(
+            f'<text x="{pad_l + 4}" y="{plot_top + 9}" font-size="6.4" '
+            f'fill="#a16207">{_esc(note)}</text>'
+        )
 
     # legend row
     if legend:

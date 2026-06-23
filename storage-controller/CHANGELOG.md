@@ -2,6 +2,42 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.3.3 — Unreleased
+
+### Fixed — state-change semantics (no more false gaps / dashed bridges)
+
+- Home Assistant's Recorder is **state-change based**: a steady sensor emits no
+  new row until its value changes. The app no longer treats every larger interval
+  between rows as missing data. A new shared module reconstructs **state-validity
+  intervals**: a valid value persists until the next state, an explicit
+  `unavailable`/`unknown`, or a bounded **maximum trust interval** (2 h) — then it
+  becomes a genuine gap.
+- The **live temperature chart** no longer renders dashed diagonal bridges across
+  steady periods. Empty aggregation buckets inside a valid interval now carry the
+  last known value (continuous line); the line breaks only on genuine gaps. The
+  redundant `lttb` sampling (which bridged nulls) was removed.
+- **Coverage** is now the share of the period in which a valid state was known
+  (duration-based), so a normal state-change sensor is no longer reported as
+  mostly-missing. This also resolves units that showed **0.0 % coverage next to
+  real min/avg/max** — such a unit now reports its true (small) coverage, and the
+  report shows `< 0,1 %` rather than `0,0 %` when data exists but rounds below 0.1%.
+
+### Changed — report chart visual redesign
+
+- Missing data is now a **subtle pale-yellow diagonal hatch** with thin boundary
+  markers instead of a saturated yellow fill, on a white plot background — so the
+  temperature data dominates, not the shading. Measured violations (soft red) and
+  defrost (soft blue) stay as restrained solids; the mean line is a touch stronger
+  with a soft min–max envelope.
+- Sparse reports show a concise annotation (e.g. *"Incomplete data — measurements
+  available only from 23.06.2026"*) while keeping the full monthly x-axis. No data
+  is drawn across gaps; envelopes stop at gaps.
+
+### Added
+
+- **Import progress**: the history-import row shows a live progress bar and
+  `done/total` windows (e.g. `60% (3/5)`) while importing.
+
 ## 0.3.2 — Unreleased
 
 ### Fixed — resilient, resumable history import (was `ReadTimeout`)

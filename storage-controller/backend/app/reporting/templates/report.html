@@ -102,7 +102,7 @@
           <td class="nw">{{ u.thresholds.lower_limit_c | lim }} – {{ u.thresholds.upper_limit_c | lim }} °C</td>
           <td class="nw">{{ u.min_c | temp }}</td><td class="nw">{{ u.avg_c | temp }}</td><td class="nw">{{ u.max_c | temp }}</td>
           <td class="{% if u.outside_seconds %}o{% else %}g{% endif %}">{{ u.outside_seconds | dur }}</td>
-          <td class="{% if u.data_quality.incomplete %}o{% endif %}">{{ u.data_quality.coverage_percent | pct }}</td>
+          <td class="{% if u.data_quality.incomplete %}o{% endif %}">{{ u.data_quality.coverage_percent | cov(u.data_quality.coverage_below_min) }}</td>
           <td>{{ u.incident_count }}</td>
           <td>{{ statusbadge(u) }}</td>
         </tr>
@@ -145,7 +145,7 @@
       </div>
       <div class="card-row">
         <span>{{ L.permitted_range }}: <b>{{ u.thresholds.lower_limit_c | lim }} – {{ u.thresholds.upper_limit_c | lim }} °C</b></span>
-        <span>{{ L.coverage }}: <b class="{% if u.data_quality.incomplete %}o{% endif %}">{{ u.data_quality.coverage_percent | pct }}</b></span>
+        <span>{{ L.coverage }}: <b class="{% if u.data_quality.incomplete %}o{% endif %}">{{ u.data_quality.coverage_percent | cov(u.data_quality.coverage_below_min) }}</b></span>
       </div>
       <table class="metrics">
         <tr><th>{{ L.min }}</th><th>ø</th><th>{{ L.max }}</th><th>{{ L.outside_short }}</th><th>{{ L.incidents }}</th></tr>

@@ -66,6 +66,7 @@ class DataQuality(BaseModel):
     total_count: int = 0
     expected_count: int | None = None
     coverage_percent: float | None = None
+    coverage_below_min: bool = False  # has data but coverage rounds below 0.1%
     unavailable_seconds: int = 0
     invalid_seconds: int = 0
     gap_seconds: int = 0

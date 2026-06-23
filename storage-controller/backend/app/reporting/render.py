@@ -12,6 +12,7 @@ import csv
 import io
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -52,6 +53,14 @@ def _fmt_lim(v, locale: str) -> str:
     return "\u2014" if v is None else _num(v, 1, locale)
 
 
+def _fmt_cov(v, below_min, locale: str) -> str:
+    """Coverage %, but ``< 0,1 %`` when there is data yet it rounds below 0.1%,
+    so the report never shows ``0,0 %`` next to real min/avg/max values."""
+    if below_min:
+        return f"<\u00a0{_num(0.1, 1, locale)}\u00a0%"
+    return _fmt_pct(v, locale)
+
+
 def _fmt_dt(iso, locale: str) -> str:
     if not iso:
         return "\u2014"
@@ -74,6 +83,7 @@ def _env(locale: str) -> Environment:
     env.filters["pct"] = lambda v: _fmt_pct(v, locale)
     env.filters["lim"] = lambda v: _fmt_lim(v, locale)
     env.filters["dt"] = lambda v: _fmt_dt(v, locale)
+    env.filters["cov"] = lambda v, below=False: _fmt_cov(v, below, locale)
     return env
 
 
@@ -96,6 +106,26 @@ def _epoch(iso: str) -> float | None:
         return None
 
 
+def _sparse_note(chart, x0, x1, locale: str, tz: str, L) -> str | None:
+    """If a chart's data starts well after the period start, annotate from when
+    measurements are actually available (keeps the full axis, stays honest)."""
+    if x0 is None or x1 is None or x1 <= x0:
+        return None
+    xs = [p[0] for s in chart.series for p in s.points if len(p) > 1 and p[1] is not None]
+    if not xs:
+        return None
+    earliest = min(xs)
+    if earliest <= x0 + 0.1 * (x1 - x0):  # data covers most of the period → no note
+        return None
+    try:
+        zone = ZoneInfo(tz)
+    except Exception:  # noqa: BLE001
+        zone = ZoneInfo("UTC")
+    dt = datetime.fromtimestamp(earliest, zone)
+    date = dt.strftime("%d.%m.%Y" if locale == "de" else "%Y-%m-%d")
+    return L["incomplete_from"].format(date=date)
+
+
 def render_html(model: ReportModel, *, logo_path: Path | None = None) -> str:
     L = labels(model.locale)
     x0, x1 = _epoch(model.period_start_utc), _epoch(model.period_end_utc)
@@ -103,6 +133,7 @@ def render_html(model: ReportModel, *, logo_path: Path | None = None) -> str:
         render_chart_svg(
             c, model.timezone, upper_label=L["upper_limit"], lower_label=L["lower_limit"],
             x_start=x0, x_end=x1,
+            note=_sparse_note(c, x0, x1, model.locale, model.timezone, L),
         )
         for c in model.overview_charts
     ]

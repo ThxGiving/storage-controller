@@ -185,10 +185,25 @@ function StatusLine({ job: j }: { job: HistoryImportJob }) {
   const { t } = useTranslation(["history"]);
 
   if (j.status === "importing") {
+    const pct = j.chunks_total > 0 ? Math.round((j.chunks_done / j.chunks_total) * 100) : 0;
     return (
-      <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-        <RefreshCw className="h-3.5 w-3.5 animate-spin" /> {t("history:status.importing")}
-      </span>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+        <span>{t("history:status.importing")}</span>
+        {j.chunks_total > 0 && (
+          <>
+            <span className="h-1.5 w-28 overflow-hidden rounded-full bg-muted">
+              <span
+                className="block h-full rounded-full bg-primary transition-all"
+                style={{ width: `${pct}%` }}
+              />
+            </span>
+            <span className="tabular-nums">
+              {pct}% ({j.chunks_done}/{j.chunks_total})
+            </span>
+          </>
+        )}
+      </div>
     );
   }
   if (j.status === "no_history") {

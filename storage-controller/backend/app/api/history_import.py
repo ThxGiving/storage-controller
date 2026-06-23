@@ -22,6 +22,7 @@ from ..errors import ERROR_STORAGE_UNIT_NOT_FOUND, AppError
 from ..history_import import (
     RECOMMENDED_RANGE,
     check_availability,
+    chunk_counts,
     run_import,
     summarize_chunks,
 )
@@ -77,6 +78,7 @@ async def _unit(db: AsyncSession, unit_id: int) -> StorageUnit:
 
 def _out(j: HistoryImport) -> HistoryImportOut:
     ranges = summarize_chunks(j.chunks_json)
+    done, total = chunk_counts(j.chunks_json)
     return HistoryImportOut(
         id=j.id,
         storage_unit_id=j.storage_unit_id,
@@ -92,6 +94,8 @@ def _out(j: HistoryImport) -> HistoryImportOut:
         error_message=j.error_message,
         imported_ranges=[HistoryDateRange(**r) for r in ranges["imported"]],
         failed_ranges=[HistoryDateRange(**r) for r in ranges["failed"]],
+        chunks_done=done,
+        chunks_total=total,
         created_at=j.created_at,
         finished_at=j.finished_at,
     )
