@@ -1,13 +1,28 @@
 import { useTranslation } from "react-i18next";
-import { LayoutDashboard, Snowflake, List, Boxes, Settings, TriangleAlert } from "lucide-react";
+import {
+  LayoutDashboard,
+  Snowflake,
+  List,
+  Boxes,
+  Settings,
+  TriangleAlert,
+  FileText,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type TabKey = "overview" | "units" | "incidents" | "entities" | "settings";
+export type TabKey =
+  | "overview"
+  | "units"
+  | "incidents"
+  | "reports"
+  | "entities"
+  | "settings";
 
 const NAV: { key: TabKey; i18nKey: string; Icon: typeof LayoutDashboard }[] = [
   { key: "overview", i18nKey: "overview", Icon: LayoutDashboard },
   { key: "units", i18nKey: "units", Icon: Boxes },
   { key: "incidents", i18nKey: "incidents", Icon: TriangleAlert },
+  { key: "reports", i18nKey: "reports", Icon: FileText },
   { key: "entities", i18nKey: "entities", Icon: List },
   { key: "settings", i18nKey: "settings", Icon: Settings },
 ];

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="{{ m.locale }}">
+<head>
+  <meta charset="utf-8"/>
+  <link rel="stylesheet" href="print.css"/>
+  <title>{{ m.branding.report_title }} — {{ m.period_label }}</title>
+</head>
+<body class="status-{{ m.summary.overall_status }}">
+
+<!-- ============================ PAGE 1 ============================ -->
+<section class="page">
+  <header class="rep-head">
+    <div class="brand">
+      {% if logo_uri %}<img class="logo" src="{{ logo_uri }}" alt=""/>{% endif %}
+      <div>
+        <div class="org">{{ m.branding.organization_name or "" }}</div>
+        <div class="site">{{ m.branding.site_name or "" }}</div>
+      </div>
+    </div>
+    <div class="title-block">
+      <h1>{{ m.branding.report_title }}</h1>
+      {% if m.branding.subtitle %}<div class="subtitle">{{ m.branding.subtitle }}</div>{% endif %}
+      <div class="period">{{ m.period_label }}</div>
+    </div>
+    <div class="meta">
+      <div><span>{{ L.report_id }}</span> {{ m.uuid[:8] }}</div>
+      <div><span>{{ L.generated }}</span> {{ m.generated_at[:16] | replace("T", " ") }}</div>
+      <div><span>{{ L.timezone }}</span> {{ m.timezone_label }}</div>
+    </div>
+  </header>
+
+  <div class="status-strip">
+    <span class="dot"></span>
+    <strong>{{ L.overall_status }}:</strong>
+    {% if m.summary.overall_status == "ok" %}{{ L.status_ok }}
+    {% elif m.summary.overall_status == "attention" %}{{ L.status_attention }}
+    {% else %}{{ L.status_incomplete }}{% endif %}
+    <span class="sep">·</span> {{ L.summary_units }}: {{ m.summary.total_units }}
+    <span class="sep">·</span> {{ L.summary_incidents }}: {{ m.summary.total_incidents }}
+    {% if m.summary.coverage_percent is not none %}
+      <span class="sep">·</span> {{ L.coverage }}: {{ m.summary.coverage_percent | pct }}
+    {% endif %}
+  </div>
+
+  <table class="cmp">
+    <thead>
+      <tr>
+        <th>{{ L.unit }}</th><th>{{ L.range }}</th><th>{{ L.min }}</th><th>{{ L.max }}</th>
+        <th>{{ L.avg }}</th><th>{{ L.coverage }}</th><th>{{ L.incidents }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in m.units %}
+      <tr>
+        <td class="name">{{ u.name }}</td>
+        <td>{% if u.thresholds.lower_limit_c is not none %}{{ u.thresholds.lower_limit_c }}{% else %}—{% endif %} … {% if u.thresholds.upper_limit_c is not none %}{{ u.thresholds.upper_limit_c }}{% else %}—{% endif %} °C</td>
+        <td>{{ u.min_c | temp }}</td>
+        <td>{{ u.max_c | temp }}</td>
+        <td>{{ u.avg_c | temp }}</td>
+        <td class="{% if u.data_quality.incomplete %}warn{% endif %}">{{ u.data_quality.coverage_percent | pct }}</td>
+        <td class="{% if u.incident_count %}warn{% endif %}">{{ u.incident_count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="overview">
+    {% for svg in overview_svgs %}
+    <figure class="chart">
+      <figcaption>{{ m.overview_charts[loop.index0].label }} ({{ L.chart_unit }})</figcaption>
+      {{ svg | safe }}
+    </figure>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ============================ PAGE 2 ============================ -->
+<section class="page page-2">
+  <div class="grid">
+    {% for u in m.units %}
+    <div class="card">
+      <div class="card-head">
+        <div class="card-name">{{ u.name }}</div>
+        <div class="card-type">{{ u.profile_name or u.unit_type }}</div>
+      </div>
+      {% if mini_svgs.get(u.id) %}<div class="mini">{{ mini_svgs[u.id] | safe }}</div>{% endif %}
+      <table class="kv">
+        <tr><td>{{ L.min }}/{{ L.max }}</td><td>{{ u.min_c | temp }} / {{ u.max_c | temp }}</td></tr>
+        <tr><td>{{ L.avg }}</td><td>{{ u.avg_c | temp }}</td></tr>
+        <tr><td>{{ L.coverage }}</td><td class="{% if u.data_quality.incomplete %}warn{% endif %}">{{ u.data_quality.coverage_percent | pct }}</td></tr>
+        <tr><td>{{ L.unavailable }}</td><td>{{ u.data_quality.unavailable_seconds | dur }}</td></tr>
+        <tr><td>{{ L.time_above }}</td><td class="{% if u.time_above_seconds %}warn{% endif %}">{{ u.time_above_seconds | dur }}</td></tr>
+        <tr><td>{{ L.time_below }}</td><td class="{% if u.time_below_seconds %}warn{% endif %}">{{ u.time_below_seconds | dur }}</td></tr>
+        <tr><td>{{ L.incidents }}</td><td class="{% if u.incident_count %}warn{% endif %}">{{ u.incident_count }} ({{ L.longest_incident }} {{ u.longest_incident_seconds | dur }})</td></tr>
+        {% if u.defrost %}
+        <tr><td>{{ L.defrost_cycles }}</td><td>{{ u.defrost.cycle_count }}{% if u.defrost.typical_duration_seconds %} · {{ L.typical_duration }} {{ u.defrost.typical_duration_seconds | dur }}{% endif %}{% if u.defrost.abnormal_count %} · {{ L.abnormal }} {{ u.defrost.abnormal_count }}{% endif %}</td></tr>
+        {% endif %}
+      </table>
+      {% if u.data_quality.missing_entity %}
+        <div class="quality warn">{{ L.missing_entity }}</div>
+      {% elif u.data_quality.incomplete %}
+        <div class="quality warn">{{ L.incomplete_warning }}</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if m.detail_level == "detailed" %}
+  <div class="detail-incidents">
+    {% for u in m.units if u.incidents %}
+    <h3>{{ u.name }} — {{ L.incidents }}</h3>
+    <table class="inc">
+      <thead><tr><th>{{ L.incident_type }}</th><th>{{ L.incident_start }}</th><th>{{ L.incident_end }}</th><th>{{ L.incident_duration }}</th><th>{{ L.incident_extreme }}</th><th>{{ L.incident_state }}</th><th>{{ L.corrective_action }}</th></tr></thead>
+      <tbody>
+        {% for i in u.incidents %}
+        <tr>
+          <td>{{ i.type }}</td>
+          <td>{{ i.opened_at[:16] | replace("T", " ") }}</td>
+          <td>{% if i.closed_at %}{{ i.closed_at[:16] | replace("T", " ") }}{% else %}—{% endif %}</td>
+          <td>{{ i.duration_seconds | dur }}</td>
+          <td>{{ i.extreme_value_c | temp }}</td>
+          <td>{{ i.state }}</td>
+          <td class="freetext">{{ i.corrective_action or "" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="legal">
+    <div>{{ L.configured_limits }}. {{ L.operational_note }}</div>
+    {% if m.branding.disclaimer %}<div>{{ m.branding.disclaimer }}</div>{% endif %}
+  </div>
+
+  <div class="review">
+    <div class="review-title">{{ L.review }}</div>
+    <div class="sign-row">
+      {% set sigs = m.branding.signature_labels if m.branding.signature_labels else [L.prepared_by, L.reviewed_by] %}
+      {% for s in sigs %}
+      <div class="sign">
+        <div class="sign-line"></div>
+        <div class="sign-label">{{ s }}</div>
+        <div class="sign-date">{{ L.date }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

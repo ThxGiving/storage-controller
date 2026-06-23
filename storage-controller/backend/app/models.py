@@ -637,6 +637,101 @@ class MaintenanceRun(Base):
     detail: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
+class ReportStatus(str, enum.Enum):
+    queued = "queued"
+    generating = "generating"
+    completed = "completed"
+    failed = "failed"
+
+
+class ReportDetailLevel(str, enum.Enum):
+    compact = "compact"
+    standard = "standard"
+    detailed = "detailed"
+
+
+# Bump when the immutable report-model structure changes.
+REPORT_MODEL_VERSION = "1"
+
+
+class ReportBrandingSettings(Base):
+    """Editable report branding. A snapshot is frozen into each report at
+    generation, so later edits never change already-generated reports."""
+
+    __tablename__ = "report_branding_settings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    organization_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    site_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    address: Mapped[str | None] = mapped_column(Text, nullable=True)
+    contact: Mapped[str | None] = mapped_column(Text, nullable=True)
+    logo_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    report_title: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    subtitle: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    accent: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    footer_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    disclaimer: Mapped[str | None] = mapped_column(Text, nullable=True)
+    signature_labels_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    default_locale: Mapped[str] = mapped_column(String(10), default="en", nullable=False)
+    default_timezone: Mapped[str] = mapped_column(
+        String(64), default="Europe/Berlin", nullable=False
+    )
+    default_detail_level: Mapped[str] = mapped_column(
+        String(20), default=ReportDetailLevel.standard.value, nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+
+class Report(Base):
+    """An immutable generated report. After ``completed`` the snapshot JSON,
+    branding snapshot and checksum are frozen and never recomputed."""
+
+    __tablename__ = "reports"
+    __table_args__ = (
+        UniqueConstraint("uuid", name="uq_report_uuid"),
+        Index("ix_reports_period", "period_year", "period_month"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    uuid: Mapped[str] = mapped_column(String(36), nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(20), default=ReportStatus.queued.value, nullable=False
+    )
+
+    period_year: Mapped[int] = mapped_column(Integer, nullable=False)
+    period_month: Mapped[int] = mapped_column(Integer, nullable=False)
+    period_start_utc: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    period_end_utc: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    locale: Mapped[str] = mapped_column(String(10), default="en", nullable=False)
+    timezone: Mapped[str] = mapped_column(String(64), default="Europe/Berlin", nullable=False)
+    detail_level: Mapped[str] = mapped_column(
+        String(20), default=ReportDetailLevel.standard.value, nullable=False
+    )
+    storage_unit_ids_json: Mapped[str] = mapped_column(Text, nullable=False)
+
+    report_model_version: Mapped[str] = mapped_column(String(10), nullable=False)
+    model_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    branding_snapshot_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    pdf_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    csv_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    json_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    checksum_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    failure_category: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    created_by: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    generated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 class AuditEvent(Base):
     __tablename__ = "audit_events"
 

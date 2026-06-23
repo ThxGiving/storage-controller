@@ -10,6 +10,7 @@ import { Dashboard } from "@/pages/Dashboard";
 import { EntityBrowser } from "@/features/entities/EntityBrowser";
 import { UnitsPage } from "@/features/units/UnitsPage";
 import { IncidentsPage } from "@/pages/Incidents";
+import { ReportsPage } from "@/pages/Reports";
 import { SettingsPage } from "@/pages/Settings";
 
 export default function App() {
@@ -44,6 +45,7 @@ export default function App() {
           {tab === "overview" && <Dashboard onNavigateToUnits={() => setTab("units")} />}
           {tab === "units" && <UnitsPage />}
           {tab === "incidents" && <IncidentsPage />}
+          {tab === "reports" && <ReportsPage />}
           {tab === "entities" && <EntityBrowser />}
           {tab === "settings" && <SettingsPage />}
         </main>

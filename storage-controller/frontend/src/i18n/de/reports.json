@@ -1,0 +1,66 @@
+{
+  "title": "HACCP-Berichte",
+  "subtitle": "Erzeuge unveränderliche monatliche Temperaturberichte (PDF, CSV, JSON) aus aufgezeichneten Daten.",
+  "config": {
+    "title": "Neuer Bericht",
+    "month": "Monat",
+    "year": "Jahr",
+    "units": "Lagereinheiten",
+    "selectAll": "Alle",
+    "locale": "Berichtssprache",
+    "detail": "Detailgrad",
+    "timezone": "Zeitzone",
+    "preview": "Vorschau",
+    "generate": "Erstellen",
+    "generating": "Wird erstellt…",
+    "noUnits": "Mindestens eine Lagereinheit auswählen."
+  },
+  "detail": {
+    "compact": "Kompakt",
+    "standard": "Standard",
+    "detailed": "Detailliert"
+  },
+  "list": {
+    "title": "Erstellte Berichte",
+    "empty": "Noch keine Berichte.",
+    "period": "Zeitraum",
+    "status": "Status",
+    "created": "Erstellt",
+    "checksum": "Prüfsumme",
+    "downloads": "Downloads",
+    "delete": "Löschen",
+    "confirmDelete": "Diesen Bericht endgültig löschen? Audit-Einträge bleiben erhalten.",
+    "by": "von"
+  },
+  "status": {
+    "queued": "In Warteschlange",
+    "generating": "Wird erstellt",
+    "completed": "Fertig",
+    "failed": "Fehlgeschlagen"
+  },
+  "failed": "Erstellung fehlgeschlagen. Bitte erneut versuchen.",
+  "duplicate": "Ein Bericht für diesen Zeitraum, diese Einheiten und Sprache existiert bereits. Trotzdem erstellen?",
+  "previewTitle": "Druckvorschau",
+  "branding": {
+    "title": "Berichts-Branding",
+    "hint": "Wird für neue Berichte verwendet. Pro Bericht wird ein Schnappschuss eingefroren — spätere Änderungen ändern bestehende Berichte nie.",
+    "organization": "Organisation",
+    "site": "Standort",
+    "address": "Adresse",
+    "contact": "Kontakt",
+    "reportTitle": "Berichtstitel",
+    "subtitle": "Untertitel",
+    "footer": "Fußzeile",
+    "disclaimer": "Haftungsausschluss",
+    "signatures": "Unterschriftsfelder (kommagetrennt)",
+    "defaults": "Standardwerte",
+    "logo": "Logo (PNG/JPEG, ≤ 2 MB)",
+    "uploadLogo": "Logo hochladen",
+    "save": "Branding speichern",
+    "saved": "Gespeichert"
+  },
+  "months": {
+    "1": "Januar", "2": "Februar", "3": "März", "4": "April", "5": "Mai", "6": "Juni",
+    "7": "Juli", "8": "August", "9": "September", "10": "Oktober", "11": "November", "12": "Dezember"
+  }
+}

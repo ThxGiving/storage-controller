@@ -2,6 +2,56 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.2.0 — Unreleased
+
+### Added — Phase 5: HACCP reporting & PDF export
+
+- **Immutable report model.** PDF, CSV and JSON are all derived from one
+  versioned report model (never from DB rows or the dashboard). Pipeline:
+  SQLite → report model → Jinja2 HTML + print CSS → server-side SVG charts →
+  WeasyPrint PDF.
+- **Monthly reports** with a compact **two-page** target for ~4 units: page 1 =
+  header/branding, status strip, comparison table, up to two overview charts
+  (grouped data-/config-driven into chilled vs frozen, not by hardcoded names);
+  page 2 = a 2×2 detail grid (mini-chart, min/max/avg, coverage, unavailable,
+  time above/below limit, incidents, defrost summary, data-quality) + a
+  review/signature area. Detail levels: compact / **standard** (default) /
+  detailed (adds an incident timeline).
+- **Metrics**: min/max/avg, valid/expected counts, coverage %, unavailable/
+  invalid/gap durations, time above/below the **configured** limits, incident
+  count/total/longest/extreme, defrost cycle/duration/recovery/abnormal counts.
+  Configured safety limits, learned operational defrost values and measured data
+  are clearly distinguished; learned values are never presented as HACCP limits.
+- **Server-side SVG charts**: print-readable, grayscale-distinct series, explicit
+  °C units, configured limit lines, timezone-aware day axis, and visible gaps
+  (missing periods are breaks, never interpolated).
+- **Immutable snapshots**: each report freezes the model JSON, a branding
+  snapshot, unit names + threshold snapshot, locale, timezone and detail level,
+  with a SHA-256 checksum. Later edits to units, profiles, branding or incidents
+  never change an already-generated report. Files are finalized atomically under
+  `/data/reports/<uuid>/` (PDF/CSV/JSON); a failed generation is never marked
+  completed and temp files are cleaned up.
+- **Branding**: organization/site/contact, report title/subtitle, footer,
+  disclaimer, signature labels, default locale/timezone/detail, plus a validated
+  PNG/JPEG **logo upload** (≤ 2 MB, UUID filename under `/data/uploads`).
+- **Report localization** (per report, en/de) of headings, labels, status and
+  disclaimers; user-entered free text (incident notes/corrective actions) is
+  never auto-translated. Default report timezone is the configured IANA zone with
+  CET/CEST shown; timestamps stored in UTC.
+- **API** (`/api/reports` preview/create/list/get/pdf/csv/json/delete +
+  `/api/report-branding` get/patch/logo): Ingress-authenticated, admin-gated
+  create/delete (audited), bounded month range, validated unit selection, safe
+  UUID filenames, streamed downloads, duplicate-generation guard, and a clear
+  status (queued/generating/completed/failed) with sanitized error messages (no
+  stack traces). PDF rendering runs in a worker thread so the event loop isn't
+  blocked.
+- **Reports UI**: a new Reports section — month/unit/locale/detail config, a
+  print-approximating preview, generation + failed states, PDF/CSV/JSON downloads,
+  checksum display, delete confirmation, and branding settings. Full en/de.
+- **Migration 0008** (`reports`, `report_branding_settings`). Dockerfile gains
+  Pango/fonts + Pillow build deps for WeasyPrint; report templates ship as
+  package data.
+
 ## 0.1.12 — Unreleased
 
 ### Phase 4.7 — Defrost diagnostics & stabilization

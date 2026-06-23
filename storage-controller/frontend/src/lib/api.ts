@@ -19,6 +19,10 @@ import type {
   IncidentUpdate,
   MaintenanceStatus,
   MonitoringProfile,
+  Report,
+  ReportBranding,
+  ReportCreate,
+  ReportPreview,
   StorageUnit,
   StorageUnitInput,
 } from "./types";
@@ -50,8 +54,10 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  // FormData (file upload) must set its own multipart boundary — don't force JSON.
+  const isForm = typeof FormData !== "undefined" && init?.body instanceof FormData;
   const res = await fetch(apiUrl(path), {
-    headers: { "Content-Type": "application/json" },
+    headers: isForm ? undefined : { "Content-Type": "application/json" },
     ...init,
   });
   if (!res.ok) {
@@ -191,5 +197,27 @@ export const api = {
     if (params?.severity) q.set("severity", params.severity);
     const qs = q.toString();
     return request<DiagnosticsLogsResponse>(`api/diagnostics/logs${qs ? `?${qs}` : ""}`);
+  },
+
+  // --- Reports (Phase 5) ---
+  listReports: () => request<Report[]>("api/reports"),
+  previewReport: (input: ReportCreate) =>
+    request<ReportPreview>("api/reports/preview", { method: "POST", body: JSON.stringify(input) }),
+  createReport: (input: ReportCreate) =>
+    request<Report>("api/reports", { method: "POST", body: JSON.stringify(input) }),
+  deleteReport: (id: number) =>
+    request<void>(`api/reports/${id}`, { method: "DELETE" }),
+  reportDownloadUrl: (id: number, fmt: "pdf" | "csv" | "json") =>
+    apiUrl(`api/reports/${id}/${fmt}`),
+  getReportBranding: () => request<ReportBranding>("api/report-branding"),
+  updateReportBranding: (input: Partial<ReportBranding>) =>
+    request<ReportBranding>("api/report-branding", {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+  uploadReportLogo: (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return request<ReportBranding>("api/report-branding/logo", { method: "POST", body: form });
   },
 };

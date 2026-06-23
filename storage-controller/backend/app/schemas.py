@@ -682,3 +682,80 @@ class DiagnosticsLogsResponse(BaseModel):
     mode: DiagnosticsModeOut
     count: int = 0
     entries: list[LogEntryOut] = Field(default_factory=list)
+
+
+# --------------------------------------------------------------------------- #
+# Reports (Phase 5)
+# --------------------------------------------------------------------------- #
+
+
+class ReportBrandingOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    organization_name: str | None = None
+    site_name: str | None = None
+    address: str | None = None
+    contact: str | None = None
+    logo_filename: str | None = None
+    report_title: str | None = None
+    subtitle: str | None = None
+    accent: str | None = None
+    footer_text: str | None = None
+    disclaimer: str | None = None
+    signature_labels: list[str] = Field(default_factory=list)
+    default_locale: str = "en"
+    default_timezone: str = "Europe/Berlin"
+    default_detail_level: str = "standard"
+
+
+class ReportBrandingUpdate(BaseModel):
+    organization_name: str | None = None
+    site_name: str | None = None
+    address: str | None = None
+    contact: str | None = None
+    report_title: str | None = Field(default=None, max_length=200)
+    subtitle: str | None = Field(default=None, max_length=200)
+    accent: str | None = Field(default=None, max_length=20)
+    footer_text: str | None = None
+    disclaimer: str | None = None
+    signature_labels: list[str] | None = None
+    default_locale: str | None = None
+    default_timezone: str | None = None
+    default_detail_level: str | None = None
+
+
+class ReportCreate(BaseModel):
+    year: int = Field(ge=2000, le=2100)
+    month: int = Field(ge=1, le=12)
+    storage_unit_ids: list[int] = Field(min_length=1)
+    locale: str | None = None
+    timezone: str | None = None
+    detail_level: str | None = None
+    allow_duplicate: bool = False
+
+
+class ReportOut(BaseModel):
+    id: int
+    uuid: str
+    status: str
+    period_year: int
+    period_month: int
+    locale: str
+    timezone: str
+    detail_level: str
+    storage_unit_ids: list[int] = Field(default_factory=list)
+    checksum_sha256: str | None = None
+    has_pdf: bool = False
+    has_csv: bool = False
+    has_json: bool = False
+    created_by: str | None = None
+    created_at: datetime
+    generated_at: datetime | None = None
+    duration_ms: int | None = None
+    failure_category: str | None = None
+    error_message: str | None = None
+
+
+class ReportPreviewOut(BaseModel):
+    model: dict[str, object]
+    html: str

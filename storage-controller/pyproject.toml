@@ -19,6 +19,8 @@ dependencies = [
     "websockets>=12.0",
     "APScheduler>=3.10",
     "Jinja2>=3.1",
+    "weasyprint>=62",
+    "python-multipart>=0.0.9",
 ]
 
 [project.scripts]
@@ -37,6 +39,11 @@ package-dir = {"" = "backend"}
 [tool.setuptools.packages.find]
 where = ["backend"]
 include = ["app*"]
+
+[tool.setuptools.package-data]
+# Report templates/CSS are non-Python files that must ship with the installed
+# package (the container runs the installed package, not the source tree).
+"app.reporting" = ["templates/*.html", "templates/*.css"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

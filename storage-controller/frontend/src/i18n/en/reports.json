@@ -1,0 +1,66 @@
+{
+  "title": "HACCP reports",
+  "subtitle": "Generate immutable monthly temperature reports (PDF, CSV, JSON) from recorded data.",
+  "config": {
+    "title": "New report",
+    "month": "Month",
+    "year": "Year",
+    "units": "Storage units",
+    "selectAll": "All",
+    "locale": "Report language",
+    "detail": "Detail level",
+    "timezone": "Timezone",
+    "preview": "Preview",
+    "generate": "Generate",
+    "generating": "Generating…",
+    "noUnits": "Select at least one storage unit."
+  },
+  "detail": {
+    "compact": "Compact",
+    "standard": "Standard",
+    "detailed": "Detailed"
+  },
+  "list": {
+    "title": "Generated reports",
+    "empty": "No reports yet.",
+    "period": "Period",
+    "status": "Status",
+    "created": "Created",
+    "checksum": "Checksum",
+    "downloads": "Downloads",
+    "delete": "Delete",
+    "confirmDelete": "Delete this report permanently? Audit records remain.",
+    "by": "by"
+  },
+  "status": {
+    "queued": "Queued",
+    "generating": "Generating",
+    "completed": "Completed",
+    "failed": "Failed"
+  },
+  "failed": "Generation failed. Please try again.",
+  "duplicate": "A report for this period, units and language already exists. Generate anyway?",
+  "previewTitle": "Print preview",
+  "branding": {
+    "title": "Report branding",
+    "hint": "Used on new reports. A snapshot is frozen into each report — later changes never alter existing reports.",
+    "organization": "Organization",
+    "site": "Site",
+    "address": "Address",
+    "contact": "Contact",
+    "reportTitle": "Report title",
+    "subtitle": "Subtitle",
+    "footer": "Footer text",
+    "disclaimer": "Disclaimer",
+    "signatures": "Signature labels (comma-separated)",
+    "defaults": "Defaults",
+    "logo": "Logo (PNG/JPEG, ≤ 2 MB)",
+    "uploadLogo": "Upload logo",
+    "save": "Save branding",
+    "saved": "Saved"
+  },
+  "months": {
+    "1": "January", "2": "February", "3": "March", "4": "April", "5": "May", "6": "June",
+    "7": "July", "8": "August", "9": "September", "10": "October", "11": "November", "12": "December"
+  }
+}

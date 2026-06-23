@@ -564,3 +564,62 @@ export interface DiagnosticsLogsResponse {
   count: number;
   entries: DiagnosticsLogEntry[];
 }
+
+// --- Phase 5: reports -------------------------------------------------------
+
+export type ReportStatus = "queued" | "generating" | "completed" | "failed";
+export type ReportDetailLevel = "compact" | "standard" | "detailed";
+
+export interface Report {
+  id: number;
+  uuid: string;
+  status: ReportStatus;
+  period_year: number;
+  period_month: number;
+  locale: string;
+  timezone: string;
+  detail_level: ReportDetailLevel;
+  storage_unit_ids: number[];
+  checksum_sha256: string | null;
+  has_pdf: boolean;
+  has_csv: boolean;
+  has_json: boolean;
+  created_by: string | null;
+  created_at: string;
+  generated_at: string | null;
+  duration_ms: number | null;
+  failure_category: string | null;
+  error_message: string | null;
+}
+
+export interface ReportCreate {
+  year: number;
+  month: number;
+  storage_unit_ids: number[];
+  locale?: string;
+  timezone?: string;
+  detail_level?: ReportDetailLevel;
+  allow_duplicate?: boolean;
+}
+
+export interface ReportPreview {
+  model: Record<string, unknown>;
+  html: string;
+}
+
+export interface ReportBranding {
+  organization_name: string | null;
+  site_name: string | null;
+  address: string | null;
+  contact: string | null;
+  logo_filename: string | null;
+  report_title: string | null;
+  subtitle: string | null;
+  accent: string | null;
+  footer_text: string | null;
+  disclaimer: string | null;
+  signature_labels: string[];
+  default_locale: string;
+  default_timezone: string;
+  default_detail_level: ReportDetailLevel;
+}

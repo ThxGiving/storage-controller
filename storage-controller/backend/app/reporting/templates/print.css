@@ -1,0 +1,109 @@
+@page {
+  size: A4;
+  margin: 12mm 12mm 14mm 12mm;
+  @bottom-center {
+    content: counter(page) " / " counter(pages);
+    font: 7pt "DejaVu Sans", sans-serif;
+    color: #9ca3af;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: "DejaVu Sans", sans-serif;
+  font-size: 8.5pt;
+  color: #111827;
+  margin: 0;
+  -weasy-hyphens: none;
+}
+
+.page { page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+.page-2 { page-break-before: always; }
+
+/* ---- header ---- */
+.rep-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1.5pt solid #111827;
+  padding-bottom: 6pt;
+  margin-bottom: 8pt;
+}
+.brand { display: flex; gap: 8pt; align-items: center; max-width: 32%; }
+.logo { max-height: 42px; max-width: 120px; object-fit: contain; }
+.org { font-weight: 700; font-size: 10pt; }
+.site { color: #6b7280; }
+.title-block { text-align: center; flex: 1; }
+.title-block h1 { font-size: 15pt; margin: 0; }
+.subtitle { color: #6b7280; font-size: 8pt; }
+.period { font-weight: 700; margin-top: 2pt; }
+.meta { text-align: right; font-size: 7.5pt; color: #374151; min-width: 30%; }
+.meta span { color: #9ca3af; display: inline-block; min-width: 56px; }
+
+/* ---- status strip ---- */
+.status-strip {
+  background: #f3f4f6;
+  border: 0.5pt solid #e5e7eb;
+  border-radius: 3pt;
+  padding: 4pt 8pt;
+  margin-bottom: 8pt;
+  font-size: 8pt;
+}
+.status-strip .dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: #16a34a; margin-right: 5pt; vertical-align: middle;
+}
+.status-attention .status-strip .dot { background: #d97706; }
+.status-incomplete .status-strip .dot { background: #6b7280; }
+.status-strip .sep { color: #d1d5db; margin: 0 3pt; }
+
+/* ---- comparison table ---- */
+table.cmp { width: 100%; border-collapse: collapse; margin-bottom: 8pt; }
+table.cmp th, table.cmp td {
+  border-bottom: 0.5pt solid #e5e7eb; padding: 3pt 4pt; text-align: right;
+}
+table.cmp th { background: #f9fafb; font-size: 7pt; text-transform: uppercase; color: #6b7280; }
+table.cmp th:first-child, table.cmp td.name { text-align: left; }
+table.cmp td.name { font-weight: 600; }
+.warn { color: #b45309; font-weight: 600; }
+
+/* ---- overview charts ---- */
+.overview { display: flex; flex-direction: column; gap: 6pt; }
+.chart figcaption { font-size: 7.5pt; font-weight: 600; color: #374151; margin-bottom: 2pt; }
+.chart svg { width: 100%; height: auto; border: 0.5pt solid #f0f0f0; }
+
+/* ---- detail grid (page 2) ---- */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7pt;
+  margin-bottom: 8pt;
+}
+.card { border: 0.5pt solid #e5e7eb; border-radius: 4pt; padding: 6pt; break-inside: avoid; }
+.card-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3pt; }
+.card-name { font-weight: 700; font-size: 9.5pt; }
+.card-type { color: #6b7280; font-size: 7pt; }
+.mini svg { width: 100%; height: auto; }
+table.kv { width: 100%; border-collapse: collapse; margin-top: 3pt; }
+table.kv td { padding: 1.5pt 2pt; vertical-align: top; }
+table.kv td:first-child { color: #6b7280; width: 42%; }
+table.kv td:last-child { text-align: right; }
+.quality { margin-top: 3pt; font-size: 7pt; }
+
+/* ---- detailed incidents ---- */
+.detail-incidents h3 { font-size: 9pt; margin: 8pt 0 3pt; }
+table.inc { width: 100%; border-collapse: collapse; font-size: 7.5pt; }
+table.inc th, table.inc td { border-bottom: 0.5pt solid #eee; padding: 2pt 3pt; text-align: left; }
+.freetext { color: #374151; }
+
+/* ---- legal + review ---- */
+.legal { font-size: 6.5pt; color: #6b7280; margin: 6pt 0; border-top: 0.5pt solid #eee; padding-top: 4pt; }
+.review { margin-top: 6pt; break-inside: avoid; }
+.review-title { font-size: 8pt; font-weight: 700; margin-bottom: 6pt; }
+.sign-row { display: flex; gap: 16pt; }
+.sign { flex: 1; }
+.sign-line { border-bottom: 0.7pt solid #9ca3af; height: 22pt; }
+.sign-label { font-size: 7.5pt; font-weight: 600; margin-top: 2pt; }
+.sign-date { font-size: 6.5pt; color: #9ca3af; }

@@ -29,13 +29,31 @@ ENV LANG=C.UTF-8 \
 
 WORKDIR /app
 
-# System libraries (kept minimal for Phase 1+2; WeasyPrint deps added in P5).
-RUN apk add --no-cache tzdata
+# System libraries. WeasyPrint (Phase 5 PDF) renders text via Pango and rasters
+# logos via Pillow; these need Pango/Fontconfig/fonts + JPEG/zlib at runtime.
+RUN apk add --no-cache \
+        tzdata \
+        pango \
+        fontconfig \
+        ttf-dejavu \
+        font-noto \
+        libjpeg-turbo \
+        zlib \
+    && fc-cache -f
 
-# Python dependencies
+# Python dependencies. cffi (Pango bindings) and Pillow have no musl wheels, so
+# they compile from source — install build deps in a virtual group and drop them.
 COPY pyproject.toml ./
 COPY backend ./backend
-RUN pip install --no-cache-dir .
+RUN apk add --no-cache --virtual .build-deps \
+        gcc \
+        musl-dev \
+        python3-dev \
+        libffi-dev \
+        jpeg-dev \
+        zlib-dev \
+    && pip install --no-cache-dir . \
+    && apk del .build-deps
 
 # Database migrations
 COPY alembic.ini ./

@@ -35,6 +35,8 @@ from .api import (
 from .api import (
     maintenance as maintenance_api,
 )
+from .api import report_branding as report_branding_api
+from .api import reports as reports_api
 from .api import settings as settings_api
 from .collector import Collector
 from .config import get_settings
@@ -203,6 +205,8 @@ def create_app() -> FastAPI:
     app.include_router(incidents.router)
     app.include_router(defrost.router)
     app.include_router(diagnostics_api.router)
+    app.include_router(reports_api.router)
+    app.include_router(report_branding_api.router)
     app.include_router(maintenance_api.router)
 
     _mount_frontend(app)
