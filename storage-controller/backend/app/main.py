@@ -116,6 +116,7 @@ async def lifespan(app: FastAPI):
 
     # Incident engine (Phase 4): evaluates limit/availability conditions.
     incident_engine = IncidentEngine(get_session_factory())
+    incident_engine.diagnostics = diagnostics
     manager.set_incident_engine(incident_engine)
 
     # Maintenance runner (Phase 4.5): aggregation, retention, storage, WAL.

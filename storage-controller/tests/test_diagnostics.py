@@ -46,6 +46,24 @@ def test_mapping_invert_combines():
     assert normalize_bool("x", mapping=m).normalized_bool is False
 
 
+def test_normalization_variants():
+    # on/off
+    assert normalize_bool("on").normalized_bool is True
+    assert normalize_bool("off").normalized_bool is False
+    # true/false text
+    assert normalize_bool("true").normalized_bool is True
+    assert normalize_bool("False").normalized_bool is False
+    # 1/0 text
+    assert normalize_bool("1").normalized_bool is True
+    assert normalize_bool("0").normalized_bool is False
+    # unknown value -> not guessed
+    bad = normalize_bool("schräg")
+    assert bad.normalized_bool is None and bad.reason == "unrecognized_state"
+    # unavailable / missing keep a reason and never become a boolean
+    assert normalize_bool("unavailable").reason == "unavailable"
+    assert normalize_bool(None).reason == "missing"
+
+
 # --------------------------------------------------------------------------- #
 # API
 # --------------------------------------------------------------------------- #
@@ -128,19 +146,77 @@ async def test_recent_events_and_collector_records(app_client):
 
 
 @pytest.mark.asyncio
-async def test_trace_mode_requires_user(app_client):
-    await _unit(app_client)
-    # No forwarded user -> 403
-    resp = await app_client.post("/api/diagnostics/trace", json={"entity_id": "switch.tk_defrost"})
+async def test_logging_mode_requires_admin_and_expires_default_30m(app_client):
+    # No forwarded user -> 403 (admin only)
+    resp = await app_client.post("/api/diagnostics/logging/enable", json={})
     assert resp.status_code == 403
-    # With a user header -> active, then stop.
+    # /logs is also admin-gated
+    assert (await app_client.get("/api/diagnostics/logs")).status_code == 403
+
     headers = {"X-Remote-User-Name": "admin"}
-    resp = await app_client.post(
-        "/api/diagnostics/trace", json={"entity_id": "switch.tk_defrost"}, headers=headers
-    )
+    resp = await app_client.post("/api/diagnostics/logging/enable", json={}, headers=headers)
     assert resp.status_code == 200
     body = resp.json()
-    assert body["active"] is True and body["entity_id"] == "switch.tk_defrost"
-    assert 0 < body["remaining_seconds"] <= 15 * 60
-    stop = await app_client.request("DELETE", "/api/diagnostics/trace", headers=headers)
-    assert stop.status_code == 200 and stop.json()["active"] is False
+    assert body["enabled"] is True and body["enabled_by"] == "admin"
+    assert 0 < body["remaining_seconds"] <= 30 * 60  # default 30 minutes
+
+    status = await app_client.get("/api/diagnostics/logging/status")
+    assert status.json()["enabled"] is True  # status readable without admin
+
+    off = await app_client.post("/api/diagnostics/logging/disable", json={}, headers=headers)
+    assert off.status_code == 200 and off.json()["enabled"] is False
+
+
+@pytest.mark.asyncio
+async def test_logs_only_collected_while_mode_active_and_filtered(app_client):
+    await _unit(app_client, mapping={"active": ["defrosting"], "inactive": ["cooling"]})
+    collector = get_collector(app_client)
+    await collector.refresh_index()
+    headers = {"X-Remote-User-Name": "admin"}
+
+    # Mode OFF -> events still traced, but no structured logs collected.
+    await collector.handle_state(
+        "switch.tk_defrost",
+        ha_state("switch.tk_defrost", "cooling", unit=None, last_updated="2026-06-23T09:59:00+00:00"),
+        SampleSource.live_websocket,
+    )
+    logs = (await app_client.get("/api/diagnostics/logs", headers=headers)).json()
+    assert logs["count"] == 0
+
+    # Mode ON -> subsequent events produce structured, filterable logs.
+    await app_client.post("/api/diagnostics/logging/enable", json={}, headers=headers)
+    await collector.handle_state(
+        "switch.tk_defrost",
+        ha_state("switch.tk_defrost", "defrosting", unit=None, last_updated="2026-06-23T10:01:00+00:00"),
+        SampleSource.live_websocket,
+        old_raw="cooling",
+    )
+    logs = (
+        await app_client.get(
+            "/api/diagnostics/logs?component=collector&entity_id=switch.tk_defrost", headers=headers
+        )
+    ).json()
+    assert logs["count"] >= 1
+    assert all(e["component"] == "collector" for e in logs["entries"])
+
+
+@pytest.mark.asyncio
+async def test_out_of_order_event_result(app_client):
+    await _unit(app_client)
+    collector = get_collector(app_client)
+    await collector.refresh_index()
+    await collector.handle_state(
+        "sensor.tk_temp",
+        ha_state("sensor.tk_temp", "5.0", last_updated="2026-06-23T10:00:00+00:00"),
+        SampleSource.live_websocket,
+    )
+    # An older timestamp for the same entity -> out_of_order_event
+    await collector.handle_state(
+        "sensor.tk_temp",
+        ha_state("sensor.tk_temp", "6.0", last_updated="2026-06-23T09:00:00+00:00"),
+        SampleSource.live_websocket,
+    )
+    events = (
+        await app_client.get("/api/diagnostics/events/recent?entity_id=sensor.tk_temp")
+    ).json()["events"]
+    assert events[0]["result"] == "out_of_order_event"

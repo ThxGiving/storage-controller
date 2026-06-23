@@ -504,6 +504,8 @@ export interface DefrostMappingDiagnostic {
   active_cycle_id: number | null;
   last_cycle_started: string | null;
   last_cycle_ended: string | null;
+  last_completed_cycle_id: number | null;
+  last_cycle_reconstructed: boolean;
   last_ignored_reason: string | null;
   connected: boolean;
   reconnect_attempts: number;
@@ -539,9 +541,26 @@ export interface RecentEventsResponse {
   events: EventTrace[];
 }
 
-export interface TraceStatus {
-  active: boolean;
-  entity_id: string | null;
+export interface DiagnosticsMode {
+  enabled: boolean;
   expires_at: string | null;
   remaining_seconds: number;
+  enabled_by: string | null;
+  buffered_logs: number;
+}
+
+export interface DiagnosticsLogEntry {
+  timestamp: string;
+  severity: string;
+  component: string;
+  message: string;
+  storage_unit_id: number | null;
+  entity_id: string | null;
+  fields: Record<string, unknown>;
+}
+
+export interface DiagnosticsLogsResponse {
+  mode: DiagnosticsMode;
+  count: number;
+  entries: DiagnosticsLogEntry[];
 }

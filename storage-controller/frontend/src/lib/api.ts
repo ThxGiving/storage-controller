@@ -9,9 +9,10 @@ import type {
   DefrostDiagnosticsResponse,
   DefrostLearningApprove,
   DefrostLearningStatus,
+  DiagnosticsLogsResponse,
+  DiagnosticsMode,
   HAEntity,
   RecentEventsResponse,
-  TraceStatus,
   HistoryResponse,
   Incident,
   IncidentDetail,
@@ -175,11 +176,20 @@ export const api = {
     request<RecentEventsResponse>(
       `api/diagnostics/events/recent?entity_id=${encodeURIComponent(entityId)}&limit=${limit}`,
     ),
-  getTraceStatus: () => request<TraceStatus>("api/diagnostics/trace"),
-  startTrace: (entityId: string) =>
-    request<TraceStatus>("api/diagnostics/trace", {
+  getDiagnosticsMode: () => request<DiagnosticsMode>("api/diagnostics/logging/status"),
+  enableDiagnostics: (minutes = 30) =>
+    request<DiagnosticsMode>("api/diagnostics/logging/enable", {
       method: "POST",
-      body: JSON.stringify({ entity_id: entityId }),
+      body: JSON.stringify({ minutes }),
     }),
-  stopTrace: () => request<TraceStatus>("api/diagnostics/trace", { method: "DELETE" }),
+  disableDiagnostics: () =>
+    request<DiagnosticsMode>("api/diagnostics/logging/disable", { method: "POST" }),
+  getDiagnosticsLogs: (params?: { component?: string; entity_id?: string; severity?: string }) => {
+    const q = new URLSearchParams();
+    if (params?.component) q.set("component", params.component);
+    if (params?.entity_id) q.set("entity_id", params.entity_id);
+    if (params?.severity) q.set("severity", params.severity);
+    const qs = q.toString();
+    return request<DiagnosticsLogsResponse>(`api/diagnostics/logs${qs ? `?${qs}` : ""}`);
+  },
 };

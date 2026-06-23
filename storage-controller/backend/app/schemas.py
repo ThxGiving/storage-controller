@@ -596,6 +596,8 @@ class DefrostMappingDiagnostic(BaseModel):
     active_cycle_id: int | None = None
     last_cycle_started: datetime | None = None
     last_cycle_ended: datetime | None = None
+    last_completed_cycle_id: int | None = None
+    last_cycle_reconstructed: bool = False
     last_ignored_reason: str | None = None
     connected: bool = False
     reconnect_attempts: int = 0
@@ -654,12 +656,29 @@ class RecentEventsResponse(BaseModel):
     events: list[EventTraceOut] = Field(default_factory=list)
 
 
-class TraceStatusOut(BaseModel):
-    active: bool
-    entity_id: str | None = None
+class DiagnosticsModeOut(BaseModel):
+    enabled: bool
     expires_at: datetime | None = None
     remaining_seconds: int = 0
+    enabled_by: str | None = None
+    buffered_logs: int = 0
 
 
-class TraceStartIn(BaseModel):
-    entity_id: str = Field(min_length=1)
+class DiagnosticsEnableIn(BaseModel):
+    minutes: int = Field(default=30, ge=1, le=120)
+
+
+class LogEntryOut(BaseModel):
+    timestamp: datetime
+    severity: str
+    component: str
+    message: str
+    storage_unit_id: int | None = None
+    entity_id: str | None = None
+    fields: dict[str, object] = Field(default_factory=dict)
+
+
+class DiagnosticsLogsResponse(BaseModel):
+    mode: DiagnosticsModeOut
+    count: int = 0
+    entries: list[LogEntryOut] = Field(default_factory=list)

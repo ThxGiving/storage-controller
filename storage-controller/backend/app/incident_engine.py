@@ -17,6 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import selectinload
 
+from . import diagnostics as diag
 from .incident_logic import Decision, EvalResult, decide
 from .learning_service import get_active_model, recompute_learning
 from .models import (
@@ -32,6 +33,7 @@ from .models import (
     IncidentState,
     IncidentType,
     Quality,
+    StateSample,
     StorageUnit,
 )
 from .normalization import normalize_bool, normalize_numeric, parse_bool_mapping
@@ -121,6 +123,7 @@ class UnitReading:
     # Defrost context (Phase 4 defrost). evaporator_c optional.
     evaporator_c: float | None = None
     defrost_entity_id: str | None = None
+    defrost_assignment_id: int | None = None
     defrost: DefrostSettings | None = None
 
 
@@ -209,9 +212,32 @@ def _update_extreme(incident: Incident, cond: _Cond, now: datetime) -> None:
         incident.extreme_at = now
 
 
+# If the latest persisted "on" defrost sample is older than this when a cycle is
+# first observed, the rising edge was missed (restart/gap) → reconstruct.
+RECONSTRUCT_THRESHOLD_SECONDS = 120
+
+
 class IncidentEngine:
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
+        # Optional diagnostics recorder (set by the app at startup).
+        self.diagnostics: object | None = None
+
+    def _diag(
+        self, entity_id: str | None, unit_id: int | None, result: str, **fields: object
+    ) -> None:
+        d = self.diagnostics
+        if d is None:
+            return
+        # Structured log (mode-gated) + an engine event-trace entry.
+        d.log("info", "defrost_engine", result, storage_unit_id=unit_id,
+              entity_id=entity_id, fields=fields)
+        if entity_id is not None:
+            d.record(
+                entity_id=entity_id, storage_unit_id=unit_id, role="defrost",
+                old_raw=None, new_raw=None, normalized_old=None, normalized_new=None,
+                mapping_found=True, persisted=False, engine_relevant=True, result=result,
+            )
 
     async def evaluate_readings(self, readings: list[UnitReading], *, connected: bool) -> None:
         """Evaluate explicit readings (used by tests with crafted timestamps)."""
@@ -269,9 +295,11 @@ class IncidentEngine:
 
             defrost_on: bool | None = None
             defrost_entity_id: str | None = None
+            defrost_assignment_id: int | None = None
             defrost = by_role.get(EntityRole.defrost.value)
             if defrost is not None:
                 defrost_entity_id = defrost.entity_id
+                defrost_assignment_id = defrost.id
                 d_entity = get_entity(defrost.entity_id)
                 if d_entity is not None:
                     defrost_on = normalize_bool(
@@ -329,6 +357,7 @@ class IncidentEngine:
                     offline_delay=unit.offline_delay_seconds,
                     evaporator_c=evaporator_c,
                     defrost_entity_id=defrost_entity_id,
+                    defrost_assignment_id=defrost_assignment_id,
                     defrost=defrost_settings,
                 )
             )
@@ -401,13 +430,36 @@ class IncidentEngine:
         )
         valid_room = r.quality == Quality.valid.value and r.normalized_c is not None
 
-        # Rising edge: open a cycle.
+        # Rising edge: open a cycle. If the defrost was already "on" well before
+        # this first observation (app restart / WS gap), reconstruct an
+        # approximate start from the last persisted "on" sample instead of now.
         if r.defrost_on and cycle is None:
+            started_at = now
+            reconstructed = False
+            if r.defrost_assignment_id is not None:
+                prior_on = await session.scalar(
+                    select(StateSample)
+                    .where(
+                        StateSample.entity_assignment_id == r.defrost_assignment_id,
+                        StateSample.normalized_bool.is_(True),
+                    )
+                    .order_by(StateSample.event_timestamp.desc())
+                    .limit(1)
+                )
+                prior_ts = _utc(prior_on.event_timestamp) if prior_on is not None else None
+                if (
+                    prior_ts is not None
+                    and (now - prior_ts).total_seconds() > RECONSTRUCT_THRESHOLD_SECONDS
+                ):
+                    started_at = prior_ts
+                    reconstructed = True
             cycle = DefrostCycle(
                 storage_unit_id=r.storage_unit_id,
                 source_entity_id=r.defrost_entity_id,
-                started_at=now,
+                started_at=started_at,
                 status=DefrostStatus.active.value,
+                reconstructed=reconstructed,
+                triggering_rule="reconstructed_on_restart" if reconstructed else None,
                 initial_room_temperature_c=r.normalized_c if valid_room else None,
                 peak_room_temperature_c=r.normalized_c if valid_room else None,
                 initial_evaporator_temperature_c=r.evaporator_c,
@@ -420,9 +472,18 @@ class IncidentEngine:
                     action="defrost_started",
                     object_type="storage_unit",
                     object_id=str(r.storage_unit_id),
+                    detail="reconstructed_on_restart" if reconstructed else None,
                 )
             )
-            log.info("defrost: cycle started for unit %s", r.storage_unit_id)
+            self._diag(
+                r.defrost_entity_id, r.storage_unit_id, diag.CYCLE_STARTED,
+                reconstructed=reconstructed,
+            )
+            log.info(
+                "defrost: cycle %s for unit %s",
+                "reconstructed" if reconstructed else "started",
+                r.storage_unit_id,
+            )
 
         if cycle is None:
             return DefrostContext()
@@ -448,6 +509,7 @@ class IncidentEngine:
                 cycle.status = DefrostStatus.recovering.value
                 cycle.ended_at = now
                 cycle.recovery_started_at = now
+                self._diag(r.defrost_entity_id, r.storage_unit_id, diag.CYCLE_ENDED)
             elif (now - started).total_seconds() > ds.max_defrost_seconds:
                 self._mark_cycle_abnormal(
                     session, cycle, "defrost_duration_exceeded", r, open_by_type, now

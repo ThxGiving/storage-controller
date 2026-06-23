@@ -47,5 +47,22 @@
     "empty": "Noch keine Ereignisse aufgezeichnet.",
     "old": "alt",
     "new": "neu"
+  },
+  "mode": {
+    "label": "Diagnose-Modus",
+    "off": "aus",
+    "on": "an",
+    "enable": "30 Min aktivieren",
+    "disable": "Deaktivieren",
+    "remaining": "noch {{mins}}m {{secs}}s",
+    "adminOnly": "Nur Administrator. Läuft automatisch ab; Logs sind bereinigt (keine Tokens/Geheimnisse).",
+    "buffered": "{{n}} gepuffert"
+  },
+  "copy": "Kopieren",
+  "copied": "Kopiert",
+  "download": "JSON herunterladen",
+  "logs": {
+    "title": "Strukturierte Logs",
+    "empty": "Aktiviere den Diagnose-Modus, um strukturierte Logs zu sammeln."
   }
 }

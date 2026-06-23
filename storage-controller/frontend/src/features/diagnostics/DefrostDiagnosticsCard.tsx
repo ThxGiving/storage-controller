@@ -1,7 +1,15 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
-import { Stethoscope, AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Stethoscope,
+  AlertTriangle,
+  CheckCircle2,
+  RefreshCw,
+  Power,
+  Copy,
+  Download,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import type { DefrostMappingDiagnostic } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,11 +19,51 @@ import { timeAgo } from "@/lib/utils";
 
 export function DefrostDiagnosticsCard() {
   const { t } = useTranslation(["diagnostics", "common"]);
+  const qc = useQueryClient();
+  const [copied, setCopied] = React.useState(false);
+
   const query = useQuery({
     queryKey: ["defrost-diagnostics"],
     queryFn: api.getDefrostDiagnostics,
     refetchInterval: 30000,
   });
+  const mode = useQuery({
+    queryKey: ["diagnostics-mode"],
+    queryFn: api.getDiagnosticsMode,
+    refetchInterval: 5000,
+  });
+
+  const enable = useMutation({
+    mutationFn: () => api.enableDiagnostics(30),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["diagnostics-mode"] }),
+  });
+  const disable = useMutation({
+    mutationFn: () => api.disableDiagnostics(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["diagnostics-mode"] }),
+  });
+
+  const sanitizedJson = () => JSON.stringify(query.data ?? {}, null, 2);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(sanitizedJson());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard may be blocked in the iframe; ignore */
+    }
+  };
+  const download = () => {
+    const blob = new Blob([sanitizedJson()], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "defrost-diagnostics.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const m = mode.data;
+  const active = m?.enabled ?? false;
 
   return (
     <Card>
@@ -33,10 +81,49 @@ export function DefrostDiagnosticsCard() {
         </Button>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
+        {/* Diagnostics mode controls */}
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/30 p-2.5 text-xs">
+          <Badge tone={active ? "ok" : "neutral"}>
+            {t("diagnostics:mode.label")}: {active ? t("diagnostics:mode.on") : t("diagnostics:mode.off")}
+          </Badge>
+          {active && m && (
+            <span className="tabular-nums text-muted-foreground">
+              {t("diagnostics:mode.remaining", {
+                mins: Math.floor(m.remaining_seconds / 60),
+                secs: m.remaining_seconds % 60,
+              })}
+              {" · "}
+              {t("diagnostics:mode.buffered", { n: m.buffered_logs })}
+            </span>
+          )}
+          <span className="ml-auto flex items-center gap-2">
+            {active ? (
+              <Button size="sm" variant="outline" onClick={() => disable.mutate()} disabled={disable.isPending}>
+                <Power className="h-3.5 w-3.5" />
+                {t("diagnostics:mode.disable")}
+              </Button>
+            ) : (
+              <Button size="sm" variant="outline" onClick={() => enable.mutate()} disabled={enable.isPending}>
+                <Power className="h-3.5 w-3.5" />
+                {t("diagnostics:mode.enable")}
+              </Button>
+            )}
+            <Button size="sm" variant="ghost" onClick={copy}>
+              <Copy className="h-3.5 w-3.5" />
+              {copied ? t("diagnostics:copied") : t("diagnostics:copy")}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={download}>
+              <Download className="h-3.5 w-3.5" />
+              {t("diagnostics:download")}
+            </Button>
+          </span>
+          <p className="w-full text-[11px] text-muted-foreground">{t("diagnostics:mode.adminOnly")}</p>
+        </div>
+
         {!query.data || query.data.mappings.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("diagnostics:noMappings")}</p>
         ) : (
-          query.data.mappings.map((m) => <MappingRow key={m.defrost_entity_id} m={m} />)
+          query.data.mappings.map((m2) => <MappingRow key={m2.defrost_entity_id} m={m2} />)
         )}
       </CardContent>
     </Card>

@@ -507,6 +507,9 @@ class DefrostCycle(Base):
     status: Mapped[str] = mapped_column(String(20), nullable=False)
     classification: Mapped[str | None] = mapped_column(String(40), nullable=True)
     triggering_rule: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    # True when the cycle start was reconstructed on (re)connect rather than
+    # directly observed — its timestamps are approximate, not precise.
+    reconstructed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(

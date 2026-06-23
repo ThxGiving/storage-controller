@@ -2,6 +2,47 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.1.12 — Unreleased
+
+### Phase 4.7 — Defrost diagnostics & stabilization
+
+Root cause of the original "TK defrost not detected" (confirmed on the real
+instance): the freezer was configured with only a lower limit, so recovery — gated
+on the upper limit — never completed and cycles weren't counted. Fixed in 0.1.11
+(baseline-recovery fallback); the real-instance trace now shows the TK cycle
+**completed and counting toward learning**. This release adds the diagnostics and
+stabilization to make such issues self-evident.
+
+### Added
+
+- **Admin-only diagnostics mode** (`POST /api/diagnostics/logging/enable|disable`,
+  `GET /api/diagnostics/logging/status`): disabled by default, default 30 minutes,
+  auto-expiring, manual disable, visible countdown. Ingress-authenticated only.
+- **Structured, bounded log buffer** (`GET /api/diagnostics/logs`): in-memory ring
+  buffer (≤1000 buffered, ≤200 returned, oldest discarded), filterable by
+  component / storage_unit_id / entity_id / severity / since. Populated only while
+  the mode is active.
+- **Redaction** of every message/field: SUPERVISOR_TOKEN, Authorization headers,
+  cookies, session ids, SMTP passwords, API keys, private keys and full
+  environment values are never disclosed.
+- **Expanded event result codes**: `reconciled_on_reconnect`, `out_of_order_event`,
+  `cycle_started`, `cycle_ended`, plus the existing `stored`, `duplicate_ignored`,
+  `ignored_unchanged`, `normalization_failed`, `unavailable`.
+- **Reconnect reconciliation**: when the App starts/reconnects while defrost is
+  already active, the cycle start is **reconstructed** from the last persisted
+  "on" sample (migration 0007 `defrost_cycles.reconstructed`) instead of
+  fabricating a precise "now" timestamp; the cycle is flagged accordingly.
+- Diagnostics now expose `last_completed_cycle_id` and `last_cycle_reconstructed`.
+- **Diagnostics UI** (Settings): mode toggle with live countdown, copy and
+  download of sanitized diagnostics JSON, plus the per-mapping chain and recent
+  events. `docs/current-status.md` added.
+
+### Notes
+
+- No raw SQL, no arbitrary filesystem access, no environment-variable dumping.
+- All Phase 4.6 safety rules preserved (no learned HACCP limits, no blanket
+  defrost exemption, no auto-approval, no suppression before approval).
+
 ## 0.1.11 — Unreleased
 
 ### Fixed — defrost detection for non-standard controllers

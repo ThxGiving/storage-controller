@@ -47,5 +47,22 @@
     "empty": "No events recorded yet.",
     "old": "old",
     "new": "new"
+  },
+  "mode": {
+    "label": "Diagnostics mode",
+    "off": "off",
+    "on": "on",
+    "enable": "Enable 30 min",
+    "disable": "Disable",
+    "remaining": "{{mins}}m {{secs}}s left",
+    "adminOnly": "Administrator only. Auto-expires; logs are redacted (no tokens/secrets).",
+    "buffered": "{{n}} buffered"
+  },
+  "copy": "Copy",
+  "copied": "Copied",
+  "download": "Download JSON",
+  "logs": {
+    "title": "Structured logs",
+    "empty": "Enable diagnostics mode to collect structured logs."
   }
 }

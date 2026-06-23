@@ -253,6 +253,60 @@ async def test_no_defrost_entity_uses_normal_logic(app_client):
 
 
 @pytest.mark.asyncio
+async def test_reconstructed_cycle_on_restart_while_defrosting(app_client):
+    """If defrost was already 'on' (persisted) well before the first observation,
+    the cycle start is reconstructed from the prior sample, not fabricated as now."""
+    from app.models import EntityAssignment, EntityRole, StateSample
+
+    unit = await _make_unit(app_client)
+    uid = unit["id"]
+    eng = _engine(app_client)
+
+    factory = db_module.get_session_factory()
+    async with factory() as s:
+        aid = await s.scalar(
+            select(EntityAssignment.id).where(
+                EntityAssignment.storage_unit_id == uid,
+                EntityAssignment.role == EntityRole.defrost.value,
+            )
+        )
+        # A persisted 'on' sample from 20 minutes ago (before any observation).
+        s.add(
+            StateSample(
+                storage_unit_id=uid, entity_assignment_id=aid,
+                entity_id="switch.kh_defrost", role="defrost",
+                event_timestamp=T0 - timedelta(minutes=20),
+                received_timestamp=T0 - timedelta(minutes=20),
+                raw_state="on", normalized_bool=True, quality="valid",
+                source="reconcile", source_context_id=None,
+            )
+        )
+        await s.commit()
+
+    reading = UnitReading(
+        storage_unit_id=uid, now=T0, connected=True, has_room=True, room_exists=True,
+        quality="valid", normalized_c=6.0, last_update=T0, defrost_on=True,
+        lower=0.0, upper=8.0, warning_margin=0.5, violation_delay=900,
+        recovery_delay=300, offline_delay=600, evaporator_c=None,
+        defrost_entity_id="switch.kh_defrost", defrost_assignment_id=aid,
+        defrost=_ds(learned=False),
+    )
+    await eng.evaluate_readings([reading], connected=True)
+
+    cycles = await _cycles(uid)
+    assert len(cycles) == 1
+    assert cycles[0].reconstructed is True
+    assert cycles[0].triggering_rule == "reconstructed_on_restart"
+    # started_at reconstructed to ~20 min ago, not 'now'
+    assert _utc_naive(cycles[0].started_at) < T0 - timedelta(minutes=10)
+
+
+def _utc_naive(ts):
+    from datetime import timezone as _tz
+    return ts if ts.tzinfo is not None else ts.replace(tzinfo=_tz.utc)
+
+
+@pytest.mark.asyncio
 async def test_restart_no_duplicate_cycle(app_client):
     unit = await _make_unit(app_client)
     uid = unit["id"]

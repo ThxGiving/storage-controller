@@ -219,7 +219,7 @@ class Collector:
                 reason = await self._store_one(
                     session, target, event_ts, raw_state, unit, context_id, source, old_raw
                 )
-                if reason == diag.STORED:
+                if reason in (diag.STORED, diag.RECONCILED_ON_RECONNECT):
                     stored += 1
             await session.commit()
         return stored
@@ -243,7 +243,8 @@ class Collector:
 
         high = self._last_ts.get(aid)
         if high is not None and event_ts <= high:
-            return self._diag(target, old_raw, raw_str, last_v, None, False, diag.IGNORED_DUPLICATE)
+            code = diag.IGNORED_DUPLICATE if event_ts == high else diag.OUT_OF_ORDER_EVENT
+            return self._diag(target, old_raw, raw_str, _fmt(last_v), None, False, code)
 
         row: SensorSample | StateSample
         if target.numeric:
@@ -328,6 +329,8 @@ class Collector:
             result = diag.NORMALIZATION_FAILED
         elif new_quality in (Quality.unavailable.value, Quality.unknown.value):
             result = diag.UNAVAILABLE
+        elif source is SampleSource.reconcile:
+            result = diag.RECONCILED_ON_RECONNECT
         else:
             result = diag.STORED
         return self._diag(target, old_raw, raw_str, prev, norm, True, result)

@@ -22,6 +22,7 @@ from ..ha.manager import HAConnectionManager
 from ..models import (
     OPEN_DEFROST_STATUSES,
     DefrostCycle,
+    DefrostStatus,
     EntityAssignment,
     EntityRole,
     StorageUnit,
@@ -35,12 +36,14 @@ from ..normalization import (
 from ..schemas import (
     DefrostDiagnosticsResponse,
     DefrostMappingDiagnostic,
+    DiagnosticsEnableIn,
+    DiagnosticsLogsResponse,
+    DiagnosticsModeOut,
     EntityAssignmentDiagnostic,
     EntityDiagnostic,
     EventTraceOut,
+    LogEntryOut,
     RecentEventsResponse,
-    TraceStartIn,
-    TraceStatusOut,
     ValueMappingOut,
 )
 from .deps import get_manager
@@ -144,6 +147,15 @@ async def defrost_diagnostics(
             .order_by(DefrostCycle.started_at.desc())
             .limit(1)
         )
+        last_completed = await db.scalar(
+            select(DefrostCycle.id)
+            .where(
+                DefrostCycle.storage_unit_id == unit.id,
+                DefrostCycle.status == DefrostStatus.completed.value,
+            )
+            .order_by(DefrostCycle.started_at.desc())
+            .limit(1)
+        )
 
         last_event = rec.last_for(assignment.entity_id)
         last_persisted = next(
@@ -187,6 +199,8 @@ async def defrost_diagnostics(
                 active_cycle_id=open_cycle.id if open_cycle else None,
                 last_cycle_started=_as_utc(last_cycle.started_at) if last_cycle else None,
                 last_cycle_ended=_as_utc(last_cycle.ended_at) if last_cycle else None,
+                last_completed_cycle_id=last_completed,
+                last_cycle_reconstructed=bool(last_cycle.reconstructed) if last_cycle else False,
                 last_ignored_reason=last_ignored.result if last_ignored else None,
                 connected=manager.connected,
                 reconnect_attempts=manager.status().reconnect_attempts,
@@ -276,36 +290,71 @@ async def recent_events(
     return RecentEventsResponse(entity_id=entity_id, events=events)
 
 
-@router.get("/trace", response_model=TraceStatusOut)
-async def trace_status(request: Request) -> TraceStatusOut:
-    s = _recorder(request).trace_status()
-    return TraceStatusOut(
-        active=s.active,
-        entity_id=s.entity_id,
+def _mode_out(s) -> DiagnosticsModeOut:
+    return DiagnosticsModeOut(
+        enabled=s.enabled,
         expires_at=s.expires_at,
         remaining_seconds=s.remaining_seconds,
+        enabled_by=s.enabled_by,
+        buffered_logs=s.buffered_logs,
     )
 
 
-@router.post("/trace", response_model=TraceStatusOut)
-async def start_trace(payload: TraceStartIn, request: Request) -> TraceStatusOut:
+@router.get("/logging/status", response_model=DiagnosticsModeOut)
+async def logging_status(request: Request) -> DiagnosticsModeOut:
+    return _mode_out(_recorder(request).mode_status())
+
+
+@router.post("/logging/enable", response_model=DiagnosticsModeOut)
+async def logging_enable(
+    payload: DiagnosticsEnableIn, request: Request
+) -> DiagnosticsModeOut:
     user = _require_user(request)
-    s = _recorder(request).start_trace(payload.entity_id, user=user)
-    return TraceStatusOut(
-        active=s.active,
-        entity_id=s.entity_id,
-        expires_at=s.expires_at,
-        remaining_seconds=s.remaining_seconds,
-    )
+    rec = _recorder(request)
+    rec.enable_mode(minutes=payload.minutes, user=user)
+    rec.log("info", "diagnostics", "diagnostics mode enabled", fields={"minutes": payload.minutes})
+    return _mode_out(rec.mode_status())
 
 
-@router.delete("/trace", response_model=TraceStatusOut)
-async def stop_trace(request: Request) -> TraceStatusOut:
+@router.post("/logging/disable", response_model=DiagnosticsModeOut)
+async def logging_disable(request: Request) -> DiagnosticsModeOut:
     _require_user(request)
-    s = _recorder(request).stop_trace()
-    return TraceStatusOut(
-        active=s.active,
-        entity_id=s.entity_id,
-        expires_at=s.expires_at,
-        remaining_seconds=s.remaining_seconds,
+    return _mode_out(_recorder(request).disable_mode())
+
+
+@router.get("/logs", response_model=DiagnosticsLogsResponse)
+async def get_logs(
+    request: Request,
+    component: str | None = Query(default=None),
+    storage_unit_id: int | None = Query(default=None),
+    entity_id: str | None = Query(default=None),
+    severity: str | None = Query(default=None),
+    since: datetime | None = Query(default=None),
+    limit: int = Query(default=200, ge=1, le=200),
+) -> DiagnosticsLogsResponse:
+    _require_user(request)
+    rec = _recorder(request)
+    entries = rec.query_logs(
+        component=component,
+        storage_unit_id=storage_unit_id,
+        entity_id=entity_id,
+        severity=severity,
+        since=since,
+        limit=limit,
+    )
+    return DiagnosticsLogsResponse(
+        mode=_mode_out(rec.mode_status()),
+        count=len(entries),
+        entries=[
+            LogEntryOut(
+                timestamp=e.timestamp,
+                severity=e.severity,
+                component=e.component,
+                message=e.message,
+                storage_unit_id=e.storage_unit_id,
+                entity_id=e.entity_id,
+                fields=e.fields,
+            )
+            for e in entries
+        ],
     )
