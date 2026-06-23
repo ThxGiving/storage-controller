@@ -91,6 +91,86 @@ async def test_update_unit(app_client):
 
 
 @pytest.mark.asyncio
+async def test_update_resending_same_assignments_does_not_violate_unique(app_client):
+    """Regression: editing a unit and re-sending the existing room_temperature
+    assignment must not raise UNIQUE(storage_unit_id, role)."""
+    created = await app_client.post("/api/storage-units", json=unit_payload())
+    uid = created.json()["id"]
+
+    resp = await app_client.patch(
+        f"/api/storage-units/{uid}",
+        json={
+            "lower_limit_c": -25.0,
+            "upper_limit_c": -18.0,
+            "assignments": [ROOM],  # same role/entity as before
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["lower_limit_c"] == -25.0
+    assert body["upper_limit_c"] == -18.0
+    assert [a["role"] for a in body["assignments"]] == ["room_temperature"]
+
+
+@pytest.mark.asyncio
+async def test_negative_lower_limit_is_allowed(app_client):
+    created = await app_client.post(
+        "/api/storage-units", json=unit_payload(lower_limit_c=-25.0, upper_limit_c=-18.0)
+    )
+    assert created.status_code == 201
+    assert created.json()["lower_limit_c"] == -25.0
+
+
+@pytest.mark.asyncio
+async def test_edit_preserves_recorded_samples(app_client):
+    """Editing a unit (in-place assignment reconcile) keeps the same assignment
+    id, so recorded sensor_samples survive the edit."""
+    from datetime import datetime, timezone
+
+    from sqlalchemy import func, select
+
+    from app import db as db_module
+    from app.models import SampleSource, SensorSample
+
+    created = await app_client.post("/api/storage-units", json=unit_payload())
+    unit = created.json()
+    aid = unit["assignments"][0]["id"]
+
+    factory = db_module.get_session_factory()
+    async with factory() as session:
+        session.add(
+            SensorSample(
+                storage_unit_id=unit["id"],
+                entity_assignment_id=aid,
+                entity_id=ROOM["entity_id"],
+                role="room_temperature",
+                event_timestamp=datetime(2026, 6, 23, 8, 0, tzinfo=timezone.utc),
+                received_timestamp=datetime(2026, 6, 23, 8, 0, tzinfo=timezone.utc),
+                raw_value="5.0",
+                numeric_value=5.0,
+                normalized_value_c=5.0,
+                original_unit="°C",
+                quality="valid",
+                source=SampleSource.live_websocket.value,
+            )
+        )
+        await session.commit()
+
+    # Edit the unit (change limits, re-send the same assignment).
+    resp = await app_client.patch(
+        f"/api/storage-units/{unit['id']}",
+        json={"lower_limit_c": -25.0, "assignments": [ROOM]},
+    )
+    assert resp.status_code == 200
+    # Same assignment id is kept.
+    assert resp.json()["assignments"][0]["id"] == aid
+
+    async with factory() as session:
+        count = await session.scalar(select(func.count()).select_from(SensorSample))
+    assert count == 1  # sample preserved across the edit
+
+
+@pytest.mark.asyncio
 async def test_delete_unit(app_client):
     created = await app_client.post("/api/storage-units", json=unit_payload())
     uid = created.json()["id"]

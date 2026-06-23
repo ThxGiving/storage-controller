@@ -2,6 +2,20 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.1.7 — Unreleased
+
+### Fixed
+
+- **Editing a storage unit failed with a 500** (`UNIQUE constraint failed:
+  entity_assignments.storage_unit_id, role`). Updating a unit cleared and
+  recreated its assignments, and SQLite flushed the INSERT before the DELETE,
+  colliding with the existing role. Assignments are now reconciled **in place**
+  (existing role updated, new roles added, dropped roles removed). This also
+  **preserves recorded samples** across an edit, because the assignment id is
+  kept (sensor_samples reference it). Negative lower limits (e.g. -25 °C for a
+  deep-freeze room) now save correctly, so the permitted-range band appears in
+  the gauge.
+
 ## 0.1.6 — Unreleased
 
 ### Added — Phase 3A: independent data collection

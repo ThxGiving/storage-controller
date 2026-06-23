@@ -95,16 +95,37 @@ def _validate_limits(lower: float | None, upper: float | None) -> None:
 
 
 def _apply_assignments(unit: StorageUnit, assignments) -> None:
-    unit.assignments.clear()
-    for a in assignments:
-        unit.assignments.append(
-            EntityAssignment(
-                role=a.role.value,
-                entity_id=a.entity_id,
-                enabled=a.enabled,
-                invert_state=a.invert_state,
+    """Reconcile assignments in place (by role).
+
+    Existing role assignments are updated rather than deleted + recreated. This
+    avoids a UNIQUE(storage_unit_id, role) violation on flush (INSERT before
+    DELETE ordering) AND preserves each assignment's id — so recorded
+    sensor_samples (FK to entity_assignment_id) survive an edit.
+    """
+    incoming = {a.role.value: a for a in assignments}
+    existing = {a.role: a for a in unit.assignments}
+
+    # Update existing roles or add new ones.
+    for role, a in incoming.items():
+        current = existing.get(role)
+        if current is not None:
+            current.entity_id = a.entity_id
+            current.enabled = a.enabled
+            current.invert_state = a.invert_state
+        else:
+            unit.assignments.append(
+                EntityAssignment(
+                    role=role,
+                    entity_id=a.entity_id,
+                    enabled=a.enabled,
+                    invert_state=a.invert_state,
+                )
             )
-        )
+
+    # Remove roles that are no longer assigned (cascade removes their samples).
+    for role, current in list(existing.items()):
+        if role not in incoming:
+            unit.assignments.remove(current)
 
 
 @router.get("", response_model=list[StorageUnitOut])
