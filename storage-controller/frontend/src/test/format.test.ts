@@ -66,3 +66,17 @@ describe("formatState", () => {
     expect(formatState("")).toBe("—");
   });
 });
+
+import { formatBytes } from "@/lib/utils";
+
+describe("formatBytes", () => {
+  it("formats byte sizes", async () => {
+    await i18n.changeLanguage("en");
+    expect(formatBytes(0)).toBe("0 B");
+    expect(formatBytes(1536)).toBe("1.5 KB");
+    expect(formatBytes(2 * 1024 * 1024 * 1024)).toBe("2 GB");
+  });
+  it("returns dash for nullish", () => {
+    expect(formatBytes(null)).toBe("—");
+  });
+});

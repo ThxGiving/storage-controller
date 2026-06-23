@@ -1,6 +1,6 @@
 {
   "title": "Settings",
-  "subtitle": "Application preferences.",
+  "subtitle": "Application preferences, recording limits and storage.",
   "language": "Language",
   "languageHint": "Choose the interface language. Takes effect immediately.",
   "languageSystem": "System / Home Assistant",
@@ -11,5 +11,41 @@
   "about": "About",
   "version": "Version",
   "demoData": "Demo data",
-  "demoHint": "Demo storage units load only via the STORAGE_CONTROLLER_LOAD_DEMO_DATA flag or the seed-demo command. Production starts empty."
+  "demoHint": "Demo storage units load only via the STORAGE_CONTROLLER_LOAD_DEMO_DATA flag or the seed-demo command. Production starts empty.",
+  "timezone": "Timezone",
+  "timezoneHint": "Timestamps are stored in UTC and shown in this zone. Use an IANA name like Europe/Berlin.",
+  "recording": "Recording limits",
+  "recordingHint": "Bounded recording keeps the database small. Quality and availability transitions are always recorded.",
+  "heartbeat": "Heartbeat interval (s)",
+  "minDelta": "Minimum temperature change (°C)",
+  "retention": "Data retention",
+  "retentionHint": "Raw samples are aggregated into 15-minute and hourly tiers before deletion.",
+  "retentionRaw": "Raw samples (days)",
+  "retentionAgg15": "15-minute aggregates (days)",
+  "retentionAggHourly": "Hourly aggregates (days)",
+  "storage": "Storage",
+  "budget": "Storage budget (MB)",
+  "thresholds": "Warning / critical / emergency (%)",
+  "usage": "App storage usage",
+  "free": "Free filesystem",
+  "level": { "ok": "OK", "warning": "Warning", "critical": "Critical", "emergency": "Emergency" },
+  "category": {
+    "database": "Database",
+    "wal": "WAL",
+    "reports": "Reports",
+    "uploads": "Uploads",
+    "logs": "Logs"
+  },
+  "lastRun": "Last maintenance",
+  "nextRun": "Next maintenance",
+  "runNow": "Run maintenance now",
+  "running": "Running…",
+  "save": "Save",
+  "saving": "Saving…",
+  "saved": "Saved",
+  "banner": {
+    "warning": "Storage usage is high ({{pct}}% of budget). Review retention settings.",
+    "critical": "Storage usage is critical ({{pct}}%). Automatic cleanup is running.",
+    "emergency": "Storage emergency ({{pct}}%). Non-essential heartbeat samples are suspended; critical events are still recorded."
+  }
 }

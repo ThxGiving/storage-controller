@@ -38,7 +38,9 @@ from ..schemas import (
     DashboardSummary,
     DashboardUnit,
 )
+from ..settings_store import get_timezone_name
 from ..status_logic import compute_status
+from ..timezone import resolve_timezone
 from .deps import get_manager
 
 router = APIRouter(prefix="/api", tags=["dashboard"])
@@ -294,11 +296,12 @@ async def dashboard(
             )
         )
 
+    tz = resolve_timezone(await get_timezone_name(db))
     return DashboardResponse(
         connection=connection,
         summary=summary,
         units=out_units,
         last_sample_at=last_sample_at,
-        timezone=(datetime.now().astimezone().tzname() or "UTC"),
+        timezone=f"{tz.iana} · {tz.label}",
         generated_at=now,
     )

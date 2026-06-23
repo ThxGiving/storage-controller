@@ -284,15 +284,55 @@ class IncidentUpdate(BaseModel):
 
 
 class AppSettingsOut(BaseModel):
+    timezone: str
+    timezone_abbreviation: str
+    timezone_offset: str
+    timezone_label: str
     heartbeat_interval_seconds: int
+    min_temp_delta_c: float
     retention_raw_days: int
-    retention_state_days: int
+    retention_agg15_days: int
+    retention_agg_hourly_days: int
+    storage_budget_bytes: int
+    warning_pct: int
+    critical_pct: int
+    emergency_pct: int
 
 
 class AppSettingsUpdate(BaseModel):
+    timezone: str | None = None
     heartbeat_interval_seconds: int | None = Field(default=None, ge=30, le=86400)
+    min_temp_delta_c: float | None = Field(default=None, ge=0, le=50)
     retention_raw_days: int | None = Field(default=None, ge=1)
-    retention_state_days: int | None = Field(default=None, ge=1)
+    retention_agg15_days: int | None = Field(default=None, ge=1)
+    retention_agg_hourly_days: int | None = Field(default=None, ge=1)
+    storage_budget_bytes: int | None = Field(default=None, ge=104857600)  # >= 100 MB
+    warning_pct: int | None = Field(default=None, ge=1, le=100)
+    critical_pct: int | None = Field(default=None, ge=1, le=100)
+    emergency_pct: int | None = Field(default=None, ge=1, le=100)
+
+
+class StorageCategory(BaseModel):
+    name: str
+    bytes: int
+
+
+class MaintenanceStatus(BaseModel):
+    last_run: datetime | None = None
+    next_run: datetime | None = None
+    last_result: str | None = None
+    database_bytes: int
+    wal_bytes: int
+    reports_bytes: int
+    uploads_bytes: int
+    logs_bytes: int
+    app_total_bytes: int
+    free_bytes: int
+    free_percent: float
+    budget_bytes: int
+    budget_used_percent: float
+    level: str  # ok | warning | critical | emergency
+    categories: list[StorageCategory] = Field(default_factory=list)
 
 
 class HistoryPoint(BaseModel):

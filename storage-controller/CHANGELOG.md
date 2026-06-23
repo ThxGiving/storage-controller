@@ -2,6 +2,31 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.1.9 — Unreleased
+
+### Added — Phase 4.5: bounded retention, aggregation, storage & timezone
+
+- **IANA timezone display**: configurable zone (default `Europe/Berlin`) shown
+  with the current abbreviation and offset (`Europe/Berlin · CEST · UTC+02:00`,
+  auto `CET · UTC+01:00` in winter). Timestamps remain stored in UTC.
+- **Bounded recording**: configurable minimum temperature delta (default 0.1 °C)
+  and heartbeat; binary roles store state changes only; quality/availability
+  transitions are always recorded; reconnect deduplication unchanged.
+- **Data tiers + aggregation**: raw samples are aggregated into 15-minute and
+  hourly tiers (migration 0005). Configurable retention per tier (raw 24 months,
+  15-min 5 years, hourly 10 years).
+- **Bounded daily maintenance**: aggregate → delete expired raw **only after the
+  covering aggregates exist** → delete expired aggregates → WAL checkpoint →
+  integrity check → storage calculation. Batched deletes, no blanket `VACUUM`.
+  Reports, incidents, manual checks and audit records are never deleted.
+- **Storage monitoring**: database/WAL/reports/uploads/logs sizes, app total,
+  free filesystem space; configurable budget (default 2 GB) with warning/
+  critical/emergency thresholds. Emergency suspends non-essential heartbeat
+  samples (critical events still recorded). `GET/POST /api/maintenance`.
+- **Settings UI** for timezone, recording limits, retention, storage budget and
+  thresholds, plus a live storage-usage breakdown and a maintenance run action;
+  a persistent storage-warning banner. Full en/de.
+
 ## 0.1.8 — Unreleased
 
 ### Added — Phase 4: incident engine

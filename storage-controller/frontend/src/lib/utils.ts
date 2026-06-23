@@ -71,6 +71,19 @@ export function formatDateTime(iso: string | null | undefined): string {
   });
 }
 
+/** Human-readable byte size (locale-aware number). */
+export function formatBytes(bytes: number | null | undefined): string {
+  if (bytes == null || Number.isNaN(bytes)) return "—";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let v = bytes;
+  let i = 0;
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i++;
+  }
+  return `${formatNumber(v, { maximumFractionDigits: v < 10 && i > 0 ? 1 : 0 })} ${units[i]}`;
+}
+
 /** Compact duration between two ISO timestamps (end defaults to now). */
 export function formatDuration(
   start: string | null | undefined,

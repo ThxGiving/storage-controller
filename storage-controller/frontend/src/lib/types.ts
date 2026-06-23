@@ -373,9 +373,42 @@ export interface DashboardResponse {
 }
 
 export interface AppSettings {
+  timezone: string;
+  timezone_abbreviation: string;
+  timezone_offset: string;
+  timezone_label: string;
   heartbeat_interval_seconds: number;
+  min_temp_delta_c: number;
   retention_raw_days: number;
-  retention_state_days: number;
+  retention_agg15_days: number;
+  retention_agg_hourly_days: number;
+  storage_budget_bytes: number;
+  warning_pct: number;
+  critical_pct: number;
+  emergency_pct: number;
+}
+
+export interface StorageCategory {
+  name: string;
+  bytes: number;
+}
+
+export interface MaintenanceStatus {
+  last_run: string | null;
+  next_run: string | null;
+  last_result: string | null;
+  database_bytes: number;
+  wal_bytes: number;
+  reports_bytes: number;
+  uploads_bytes: number;
+  logs_bytes: number;
+  app_total_bytes: number;
+  free_bytes: number;
+  free_percent: number;
+  budget_bytes: number;
+  budget_used_percent: number;
+  level: "ok" | "warning" | "critical" | "emergency";
+  categories: StorageCategory[];
 }
 
 export interface AssignmentCurrentValue {

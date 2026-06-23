@@ -490,6 +490,59 @@ class DefrostCycle(Base):
     )
 
 
+class SensorAggregate(Base):
+    """Down-sampled temperature aggregates (15-minute and hourly tiers).
+
+    Computed from raw sensor_samples before eligible raw rows may be deleted, so
+    long-term trends and data-quality coverage survive retention cleanup.
+    """
+
+    __tablename__ = "sensor_aggregates"
+    __table_args__ = (
+        UniqueConstraint(
+            "entity_assignment_id", "tier", "bucket_start", name="uq_aggregate_bucket"
+        ),
+        Index("ix_aggregates_unit_tier_bucket", "storage_unit_id", "tier", "bucket_start"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    storage_unit_id: Mapped[int] = mapped_column(
+        ForeignKey("storage_units.id", ondelete="CASCADE"), nullable=False
+    )
+    entity_assignment_id: Mapped[int] = mapped_column(
+        ForeignKey("entity_assignments.id", ondelete="CASCADE"), nullable=False
+    )
+    role: Mapped[str] = mapped_column(String(40), nullable=False)
+    tier: Mapped[str] = mapped_column(String(10), nullable=False)  # "15min" | "hourly"
+    bucket_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    sample_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    valid_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    min_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    max_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    avg_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class MaintenanceRun(Base):
+    """Result of a bounded daily maintenance run."""
+
+    __tablename__ = "maintenance_runs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    aggregated_15min: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    aggregated_hourly: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    raw_deleted: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    aggregates_deleted: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    wal_checkpointed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    integrity_ok: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    app_total_bytes: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
 class AuditEvent(Base):
     __tablename__ = "audit_events"
 

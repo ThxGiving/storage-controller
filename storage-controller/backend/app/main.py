@@ -7,6 +7,7 @@ Ingress. The application must work under a dynamic path prefix, so it honours
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -27,6 +28,9 @@ from .api import (
     status,
     storage_units,
 )
+from .api import (
+    maintenance as maintenance_api,
+)
 from .api import settings as settings_api
 from .collector import Collector
 from .config import get_settings
@@ -36,6 +40,7 @@ from .ha.client import HomeAssistantRestClient
 from .ha.manager import HAConnectionManager
 from .incident_engine import IncidentEngine
 from .logging_config import configure_logging
+from .maintenance import MaintenanceRunner
 from .seed import run_startup_seed
 
 log = logging.getLogger("api")
@@ -105,17 +110,62 @@ async def lifespan(app: FastAPI):
     incident_engine = IncidentEngine(get_session_factory())
     manager.set_incident_engine(incident_engine)
 
+    # Maintenance runner (Phase 4.5): aggregation, retention, storage, WAL.
+    maintenance = MaintenanceRunner(get_session_factory())
+    try:
+        await maintenance.refresh_storage()
+        collector.suspend_heartbeat = maintenance.emergency
+    except Exception as exc:  # noqa: BLE001
+        log.warning("maintenance: initial storage calc skipped: %s", type(exc).__name__)
+
     app.state.ha_manager = manager
     app.state.collector = collector
     app.state.incident_engine = incident_engine
+    app.state.maintenance = maintenance
     await manager.start()
+
+    maint_stop = asyncio.Event()
+    maint_task = asyncio.create_task(
+        _maintenance_loop(maintenance, collector, maint_stop), name="maintenance"
+    )
 
     try:
         yield
     finally:
+        maint_stop.set()
+        maint_task.cancel()
+        try:
+            await maint_task
+        except (asyncio.CancelledError, Exception):  # noqa: BLE001
+            pass
         await manager.stop()
         await dispose_engine()
         log.info("Storage Controller stopped")
+
+
+async def _maintenance_loop(
+    maintenance: MaintenanceRunner, collector: Collector, stop: asyncio.Event
+) -> None:
+    """Run bounded maintenance once daily (and refresh storage hourly)."""
+    seconds_since_run = 0
+    while not stop.is_set():
+        try:
+            await asyncio.wait_for(stop.wait(), timeout=3600)
+            break  # stop requested
+        except TimeoutError:
+            pass
+        seconds_since_run += 3600
+        try:
+            if seconds_since_run >= 86400:
+                await maintenance.run_once()
+                seconds_since_run = 0
+            else:
+                await maintenance.refresh_storage()
+            collector.suspend_heartbeat = maintenance.emergency
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            log.warning("maintenance: loop error: %s", type(exc).__name__)
 
 
 def create_app() -> FastAPI:
@@ -141,6 +191,7 @@ def create_app() -> FastAPI:
     app.include_router(settings_api.router)
     app.include_router(dashboard.router)
     app.include_router(incidents.router)
+    app.include_router(maintenance_api.router)
 
     _mount_frontend(app)
     return app

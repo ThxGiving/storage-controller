@@ -1,6 +1,6 @@
 {
   "title": "Einstellungen",
-  "subtitle": "Anwendungseinstellungen.",
+  "subtitle": "Anwendungseinstellungen, Aufzeichnungsgrenzen und Speicher.",
   "language": "Sprache",
   "languageHint": "Sprache der Oberfläche wählen. Wird sofort übernommen.",
   "languageSystem": "System / Home Assistant",
@@ -11,5 +11,41 @@
   "about": "Über",
   "version": "Version",
   "demoData": "Demodaten",
-  "demoHint": "Demo-Kühleinheiten werden nur über das Flag STORAGE_CONTROLLER_LOAD_DEMO_DATA oder den Befehl seed-demo geladen. Die Produktion startet leer."
+  "demoHint": "Demo-Kühleinheiten werden nur über das Flag STORAGE_CONTROLLER_LOAD_DEMO_DATA oder den Befehl seed-demo geladen. Die Produktion startet leer.",
+  "timezone": "Zeitzone",
+  "timezoneHint": "Zeitstempel werden in UTC gespeichert und in dieser Zone angezeigt. IANA-Name wie Europe/Berlin verwenden.",
+  "recording": "Aufzeichnungsgrenzen",
+  "recordingHint": "Begrenzte Aufzeichnung hält die Datenbank klein. Qualitäts- und Verfügbarkeitsübergänge werden immer aufgezeichnet.",
+  "heartbeat": "Heartbeat-Intervall (s)",
+  "minDelta": "Minimale Temperaturänderung (°C)",
+  "retention": "Datenaufbewahrung",
+  "retentionHint": "Rohdaten werden vor dem Löschen in 15-Minuten- und Stunden-Aggregate verdichtet.",
+  "retentionRaw": "Rohdaten (Tage)",
+  "retentionAgg15": "15-Minuten-Aggregate (Tage)",
+  "retentionAggHourly": "Stunden-Aggregate (Tage)",
+  "storage": "Speicher",
+  "budget": "Speicherbudget (MB)",
+  "thresholds": "Warnung / Kritisch / Notfall (%)",
+  "usage": "App-Speichernutzung",
+  "free": "Freier Speicher",
+  "level": { "ok": "OK", "warning": "Warnung", "critical": "Kritisch", "emergency": "Notfall" },
+  "category": {
+    "database": "Datenbank",
+    "wal": "WAL",
+    "reports": "Berichte",
+    "uploads": "Uploads",
+    "logs": "Logs"
+  },
+  "lastRun": "Letzte Wartung",
+  "nextRun": "Nächste Wartung",
+  "runNow": "Wartung jetzt ausführen",
+  "running": "Läuft…",
+  "save": "Speichern",
+  "saving": "Speichert…",
+  "saved": "Gespeichert",
+  "banner": {
+    "warning": "Speichernutzung hoch ({{pct}} % des Budgets). Aufbewahrung prüfen.",
+    "critical": "Speichernutzung kritisch ({{pct}} %). Automatische Bereinigung läuft.",
+    "emergency": "Speicher-Notfall ({{pct}} %). Nicht-essenzielle Heartbeat-Samples sind ausgesetzt; kritische Ereignisse werden weiter aufgezeichnet."
+  }
 }

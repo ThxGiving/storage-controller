@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { Sidebar, type TabKey } from "@/components/layout/Sidebar";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { StatusPill } from "@/components/layout/StatusPill";
+import { StorageWarningBanner } from "@/components/layout/StorageWarningBanner";
 import { Dashboard } from "@/pages/Dashboard";
 import { EntityBrowser } from "@/features/entities/EntityBrowser";
 import { UnitsPage } from "@/features/units/UnitsPage";
@@ -36,6 +37,8 @@ export default function App() {
             <ThemeToggle />
           </div>
         </header>
+
+        <StorageWarningBanner />
 
         <main className="mx-auto w-full max-w-6xl flex-1 animate-fade-in p-5 md:p-8">
           {tab === "overview" && <Dashboard onNavigateToUnits={() => setTab("units")} />}

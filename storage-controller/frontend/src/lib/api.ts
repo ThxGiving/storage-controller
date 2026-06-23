@@ -11,6 +11,7 @@ import type {
   Incident,
   IncidentDetail,
   IncidentUpdate,
+  MaintenanceStatus,
   MonitoringProfile,
   StorageUnit,
   StorageUnitInput,
@@ -146,4 +147,8 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(input),
     }),
+
+  getMaintenanceStatus: () => request<MaintenanceStatus>("api/maintenance/status"),
+  runMaintenance: () =>
+    request<MaintenanceStatus>("api/maintenance/run", { method: "POST" }),
 };

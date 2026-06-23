@@ -90,8 +90,15 @@ class Collector:
         self._session_factory = session_factory
         self._index: dict[str, list[AssignmentTarget]] = {}
         self._last_ts: dict[int, datetime | None] = {}
+        # Last STORED value/quality per assignment (for min-delta and
+        # state-change-only suppression). Numeric -> float; state -> bool.
+        self._last_value: dict[int, float | bool | None] = {}
+        self._last_quality: dict[int, str | None] = {}
         self._lock = asyncio.Lock()
         self._heartbeat_interval = 300
+        self._min_temp_delta = 0.1
+        # Emergency storage mode suspends heartbeat samples (set by maintenance).
+        self.suspend_heartbeat = False
 
     @property
     def monitored_entities(self) -> set[str]:
@@ -105,10 +112,13 @@ class Collector:
         """(Re)build the assignment index and seed per-assignment high-water marks."""
         index: dict[str, list[AssignmentTarget]] = {}
         last_ts: dict[int, datetime | None] = {}
+        last_value: dict[int, float | bool | None] = {}
+        last_quality: dict[int, str | None] = {}
 
         async with self._session_factory() as session:
             settings = await get_collector_settings(session)
             self._heartbeat_interval = settings.heartbeat_interval_seconds
+            self._min_temp_delta = settings.min_temp_delta_c
 
             result = await session.execute(
                 select(EntityAssignment, StorageUnit)
@@ -129,20 +139,33 @@ class Collector:
                 )
                 index.setdefault(assignment.entity_id, []).append(target)
 
-                # Seed high-water mark from whichever sample table this role uses.
+                # Seed high-water mark + last stored value/quality from the DB.
                 table = SensorSample if target.numeric else StateSample
-                last_ts[assignment.id] = _as_utc(
-                    await session.scalar(
-                        select(table.event_timestamp)
+                value_col = (
+                    SensorSample.normalized_value_c
+                    if target.numeric
+                    else StateSample.normalized_bool
+                )
+                row = (
+                    await session.execute(
+                        select(table.event_timestamp, value_col, table.quality)
                         .where(table.entity_assignment_id == assignment.id)
                         .order_by(table.event_timestamp.desc())
                         .limit(1)
                     )
-                )
+                ).first()
+                if row is not None:
+                    last_ts[assignment.id] = _as_utc(row[0])
+                    last_value[assignment.id] = row[1]
+                    last_quality[assignment.id] = row[2]
+                else:
+                    last_ts[assignment.id] = None
 
         async with self._lock:
             self._index = index
             self._last_ts = last_ts
+            self._last_value = last_value
+            self._last_quality = last_quality
         log.info(
             "collector: monitoring %d entities (heartbeat %ds)",
             len(index),
@@ -191,6 +214,9 @@ class Collector:
             return False  # duplicate / out-of-order
 
         raw_str = None if raw_state is None else str(raw_state)
+        last_q = self._last_quality.get(aid)
+        last_v = self._last_value.get(aid)
+
         if target.numeric:
             res = normalize_numeric(
                 raw_str,
@@ -198,6 +224,20 @@ class Collector:
                 plausible_min_c=target.plausible_min_c,
                 plausible_max_c=target.plausible_max_c,
             )
+            # Bounded recording: keep quality/availability transitions; for stable
+            # valid values, only store when the change >= the minimum delta.
+            quality_changed = res.quality.value != last_q
+            if (
+                source is not SampleSource.reconcile
+                and res.quality == Quality.valid
+                and not quality_changed
+                and isinstance(last_v, (int, float))
+                and res.normalized_value_c is not None
+                and abs(res.normalized_value_c - last_v) < self._min_temp_delta
+            ):
+                return False  # sub-threshold change suppressed
+            if res.quality != Quality.valid and not quality_changed:
+                return False  # repeated unavailable/unknown — record transition only
             row: SensorSample | StateSample = SensorSample(
                 storage_unit_id=target.storage_unit_id,
                 entity_assignment_id=aid,
@@ -215,6 +255,13 @@ class Collector:
             )
         else:
             res_b = normalize_bool(raw_str, invert=target.invert_state)
+            # Binary roles: store state changes only (incl. quality transitions).
+            if (
+                source is not SampleSource.reconcile
+                and res_b.normalized_bool == last_v
+                and res_b.quality.value == last_q
+            ):
+                return False
             row = StateSample(
                 storage_unit_id=target.storage_unit_id,
                 entity_assignment_id=aid,
@@ -237,6 +284,12 @@ class Collector:
             return False
 
         self._last_ts[aid] = event_ts
+        if target.numeric:
+            self._last_value[aid] = res.normalized_value_c
+            self._last_quality[aid] = res.quality.value
+        else:
+            self._last_value[aid] = res_b.normalized_bool
+            self._last_quality[aid] = res_b.quality.value
         return True
 
     async def reconcile(self, states: list[dict[str, Any]]) -> int:
@@ -259,6 +312,8 @@ class Collector:
 
         ``get_entity(entity_id)`` returns the current cached HAEntity (or None).
         """
+        if self.suspend_heartbeat:
+            return 0  # emergency storage mode: keep only essential event recording
         now = datetime.now(UTC)
         stored = 0
         async with self._session_factory() as session:
