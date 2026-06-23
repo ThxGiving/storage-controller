@@ -2,6 +2,43 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.3.0 — Unreleased
+
+### Added — Home Assistant history import (embedded in the unit flow)
+
+- Import recorded temperature history directly from the storage-unit detail view
+  (no separate menu). When a primary sensor is set, availability is checked and a
+  compact "Import available Home Assistant history" control offers all / current
+  month / last 30 / last 90 days (sensible default). Import runs **asynchronously**
+  (never blocks unit creation) with progress, result and retry shown inline.
+- Uses recorder **raw history** where available and **long-term hourly statistics**
+  (min/max/mean, into `sensor_aggregates` marked `ha_statistics`) for older periods
+  — hourly precision is labelled as such, never minute-level. Imported samples are
+  marked `home_assistant_history_import`; repeated imports are de-duplicated.
+- States surfaced: history available / only long-term hourly statistics / no older
+  history / importing / imported from…to… / failed. Imports **never** create live
+  incidents or notifications (historical threshold crossings are reportable only).
+  Migration 0009 (`history_imports`, `sensor_aggregates.source`).
+
+### Fixed — report chart timeline, gaps and German locale
+
+- Charts now always span the **full reporting period** on the x-axis (e.g.
+  01.06.–30.06.); sparse data appears only at its real position and is never
+  stretched across the width.
+- Genuine gaps are honest: buckets are positioned at their actual timestamps and
+  rendered only when they contain valid data; the line and min–max envelope break
+  at gaps (leading, internal and trailing) with no interpolation and no extension
+  of the first/last value. Missing/unavailable periods are shaded as data gaps,
+  never as violations.
+- **German locale formatting**: `7,7 %`, `3,9 °C`, `0,0 – 8,0 °C`, `16 min`,
+  `23.06.2026, 01:05`. English reports keep English formatting.
+
+### Fixed — theme follows Home Assistant
+
+- The app theme now follows Home Assistant / OS light-dark (`prefers-color-scheme`)
+  by default and live, instead of forcing dark; a manual toggle still overrides and
+  persists.
+
 ## 0.2.2 — Unreleased
 
 ### Fixed — report visual/semantic correction pass

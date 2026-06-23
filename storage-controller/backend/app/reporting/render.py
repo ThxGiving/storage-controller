@@ -10,6 +10,7 @@ from __future__ import annotations
 import base64
 import csv
 import io
+from datetime import datetime
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -21,36 +22,58 @@ from .model import ReportModel
 _TEMPLATES = Path(__file__).parent / "templates"
 
 
-def _fmt_duration(seconds: int | None) -> str:
-    if not seconds:
-        return "0m"
-    s = int(seconds)
+def _num(v: float, digits: int, locale: str) -> str:
+    """Locale-aware decimal: German uses a comma, English a dot."""
+    out = f"{v:.{digits}f}"
+    return out.replace(".", ",") if locale == "de" else out
+
+
+def _fmt_duration(seconds, locale: str) -> str:
+    s = int(seconds or 0)
     h, rem = divmod(s, 3600)
     m, _ = divmod(rem, 60)
     if h and m:
-        return f"{h}h {m}m"
+        return f"{h}\u00a0h\u00a0{m}\u00a0min"
     if h:
-        return f"{h}h"
-    return f"{m}m"
+        return f"{h}\u00a0h"
+    return f"{m}\u00a0min"
 
 
-def _fmt_temp(v: float | None) -> str:
-    # Non-breaking space so a value and its unit never wrap ("-21.0 °C").
-    return "—" if v is None else f"{v:.1f} °C"
+def _fmt_temp(v, locale: str) -> str:
+    return "\u2014" if v is None else f"{_num(v, 1, locale)}\u00a0\u00b0C"
 
 
-def _fmt_pct(v: float | None) -> str:
-    return "—" if v is None else f"{v:.0f}%"
+def _fmt_pct(v, locale: str) -> str:
+    return "\u2014" if v is None else f"{_num(v, 1, locale)}\u00a0%"
 
 
-def _env() -> Environment:
+def _fmt_lim(v, locale: str) -> str:
+    """A bare limit number for ranges like 0,0 \u2013 8,0 \u00b0C."""
+    return "\u2014" if v is None else _num(v, 1, locale)
+
+
+def _fmt_dt(iso, locale: str) -> str:
+    if not iso:
+        return "\u2014"
+    try:
+        dt = datetime.fromisoformat(iso)
+    except ValueError:
+        return iso
+    if locale == "de":
+        return dt.strftime("%d.%m.%Y, %H:%M")
+    return dt.strftime("%Y-%m-%d %H:%M")
+
+
+def _env(locale: str) -> Environment:
     env = Environment(
         loader=FileSystemLoader(str(_TEMPLATES)),
         autoescape=select_autoescape(["html", "xml"]),
     )
-    env.filters["dur"] = _fmt_duration
-    env.filters["temp"] = _fmt_temp
-    env.filters["pct"] = _fmt_pct
+    env.filters["dur"] = lambda s: _fmt_duration(s, locale)
+    env.filters["temp"] = lambda v: _fmt_temp(v, locale)
+    env.filters["pct"] = lambda v: _fmt_pct(v, locale)
+    env.filters["lim"] = lambda v: _fmt_lim(v, locale)
+    env.filters["dt"] = lambda v: _fmt_dt(v, locale)
     return env
 
 
@@ -66,20 +89,30 @@ def _logo_data_uri(logo_path: Path | None) -> str | None:
     return f"data:{mime};base64,{base64.b64encode(data).decode('ascii')}"
 
 
+def _epoch(iso: str) -> float | None:
+    try:
+        return datetime.fromisoformat(iso).timestamp()
+    except ValueError:
+        return None
+
+
 def render_html(model: ReportModel, *, logo_path: Path | None = None) -> str:
     L = labels(model.locale)
+    x0, x1 = _epoch(model.period_start_utc), _epoch(model.period_end_utc)
     overview_svgs = [
         render_chart_svg(
-            c, model.timezone, upper_label=L["upper_limit"], lower_label=L["lower_limit"]
+            c, model.timezone, upper_label=L["upper_limit"], lower_label=L["lower_limit"],
+            x_start=x0, x_end=x1,
         )
         for c in model.overview_charts
     ]
     mini_svgs = {
-        u.id: render_mini_svg(u.chart, model.timezone) for u in model.units if u.chart
+        u.id: render_mini_svg(u.chart, model.timezone, x_start=x0, x_end=x1)
+        for u in model.units if u.chart
     }
     from .. import __version__
 
-    template = _env().get_template("report.html")
+    template = _env(model.locale).get_template("report.html")
     return template.render(
         m=model,
         L=L,

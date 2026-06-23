@@ -1,0 +1,29 @@
+{
+  "title": "Home-Assistant-Verlauf",
+  "subtitle": "Aufgezeichneten Temperaturverlauf für den Sensor dieser Einheit importieren. Der Import läuft im Hintergrund, ist dedupliziert und erzeugt nie aktive Vorfälle.",
+  "import": "Verfügbaren Home-Assistant-Verlauf importieren",
+  "range": {
+    "all": "Alle verfügbaren Daten",
+    "current_month": "Aktueller Monat",
+    "last_30_days": "Letzte 30 Tage",
+    "last_90_days": "Letzte 90 Tage"
+  },
+  "start": "Importieren",
+  "retry": "Erneut versuchen",
+  "availability": {
+    "raw_available": "Verlauf verfügbar",
+    "stats_only": "Nur langfristige Stundenstatistik verfügbar",
+    "no_history": "Kein älterer Verlauf verfügbar",
+    "disconnected": "Home Assistant nicht verbunden"
+  },
+  "status": {
+    "importing": "Verlauf wird importiert…",
+    "completed": "Importiert von {{from}} bis {{to}}",
+    "completed_raw": "{{n}} Rohpunkte",
+    "completed_stats": "{{n}} Stundenstatistiken",
+    "partial": "Nur Stundenstatistik importiert (keine Minuten-Genauigkeit)",
+    "failed": "Import fehlgeschlagen",
+    "no_history": "Kein älterer Verlauf verfügbar"
+  },
+  "noSensor": "Weise einen Raumtemperatur-Sensor zu, um den Verlaufsimport zu aktivieren."
+}

@@ -44,7 +44,7 @@
       <div class="month">{{ m.period_label }}</div>
       <div class="hmeta">
         <div><span>{{ L.report_period }}:</span> {{ m.period_range_label }} ({{ m.timezone }})</div>
-        <div><span>{{ L.created_at }}:</span> {{ m.generated_at[:16] | replace("T", " ") }} · {{ m.timezone_label }}</div>
+        <div><span>{{ L.created_at }}:</span> {{ m.generated_at | dt }} · {{ m.timezone_label }}</div>
         <div><span>{{ L.report_id }}:</span> {{ m.uuid }}</div>
       </div>
     </div>
@@ -99,7 +99,7 @@
         {% for u in m.units %}
         <tr>
           <td class="l"><span class="udot" style="background: {{ u.accent }}"></span><span class="uname">{{ u.name }}</span><span class="utype">{{ u.type_label }}</span></td>
-          <td class="nw">{{ u.thresholds.lower_limit_c if u.thresholds.lower_limit_c is not none else "—" }} – {{ u.thresholds.upper_limit_c if u.thresholds.upper_limit_c is not none else "—" }} °C</td>
+          <td class="nw">{{ u.thresholds.lower_limit_c | lim }} – {{ u.thresholds.upper_limit_c | lim }} °C</td>
           <td class="nw">{{ u.min_c | temp }}</td><td class="nw">{{ u.avg_c | temp }}</td><td class="nw">{{ u.max_c | temp }}</td>
           <td class="{% if u.outside_seconds %}o{% else %}g{% endif %}">{{ u.outside_seconds | dur }}</td>
           <td class="{% if u.data_quality.incomplete %}o{% endif %}">{{ u.data_quality.coverage_percent | pct }}</td>
@@ -144,7 +144,7 @@
         {{ statusbadge(u) }}
       </div>
       <div class="card-row">
-        <span>{{ L.permitted_range }}: <b>{{ u.thresholds.lower_limit_c if u.thresholds.lower_limit_c is not none else "—" }} – {{ u.thresholds.upper_limit_c if u.thresholds.upper_limit_c is not none else "—" }} °C</b></span>
+        <span>{{ L.permitted_range }}: <b>{{ u.thresholds.lower_limit_c | lim }} – {{ u.thresholds.upper_limit_c | lim }} °C</b></span>
         <span>{{ L.coverage }}: <b class="{% if u.data_quality.incomplete %}o{% endif %}">{{ u.data_quality.coverage_percent | pct }}</b></span>
       </div>
       <table class="metrics">
@@ -175,7 +175,7 @@
         <tr>
           <td>{{ "%02d"|format(i.n) }}</td>
           <td class="l">{{ i.unit_name }}</td>
-          <td class="l">{{ i.opened_at[:16] | replace("T", " ") }}</td>
+          <td class="l">{{ i.opened_at | dt }}</td>
           <td>{{ i.duration_seconds | dur }}</td>
           <td>{{ i.extreme_value_c | temp }}</td>
           <td class="l ft">{{ i.cause or "" }}</td>

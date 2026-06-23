@@ -1,7 +1,7 @@
 name: Storage Controller
 slug: storage_controller
 description: HACCP-oriented cold-storage monitoring and reporting
-version: 0.2.2
+version: 0.3.0
 stage: experimental
 
 url: https://github.com/ThxGiving/storage-controller

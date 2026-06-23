@@ -1,0 +1,29 @@
+{
+  "title": "Home Assistant history",
+  "subtitle": "Import recorded temperature history for this unit's sensor. Imports run in the background, are de-duplicated, and never create live incidents.",
+  "import": "Import available Home Assistant history",
+  "range": {
+    "all": "All available data",
+    "current_month": "Current month",
+    "last_30_days": "Last 30 days",
+    "last_90_days": "Last 90 days"
+  },
+  "start": "Import",
+  "retry": "Retry",
+  "availability": {
+    "raw_available": "History available",
+    "stats_only": "Only long-term hourly statistics available",
+    "no_history": "No older history available",
+    "disconnected": "Home Assistant not connected"
+  },
+  "status": {
+    "importing": "Importing history…",
+    "completed": "Imported from {{from}} to {{to}}",
+    "completed_raw": "{{n}} raw points",
+    "completed_stats": "{{n}} hourly statistics",
+    "partial": "Imported hourly statistics only (no minute-level precision)",
+    "failed": "Import failed",
+    "no_history": "No older history available"
+  },
+  "noSensor": "Assign a room-temperature sensor to enable history import."
+}

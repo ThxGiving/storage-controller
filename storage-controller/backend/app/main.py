@@ -32,6 +32,7 @@ from .api import (
 from .api import (
     diagnostics as diagnostics_api,
 )
+from .api import history_import as history_import_api
 from .api import (
     maintenance as maintenance_api,
 )
@@ -130,6 +131,7 @@ async def lifespan(app: FastAPI):
         log.warning("maintenance: initial storage calc skipped: %s", type(exc).__name__)
 
     app.state.ha_manager = manager
+    app.state.rest = rest
     app.state.collector = collector
     app.state.incident_engine = incident_engine
     app.state.maintenance = maintenance
@@ -207,6 +209,7 @@ def create_app() -> FastAPI:
     app.include_router(diagnostics_api.router)
     app.include_router(reports_api.router)
     app.include_router(report_branding_api.router)
+    app.include_router(history_import_api.router)
     app.include_router(maintenance_api.router)
 
     _mount_frontend(app)

@@ -261,9 +261,8 @@ async def build_report_model(
     zone = ZoneInfo(tz_name) if _safe_zone(tz_name) else ZoneInfo("UTC")
     s_local = start_utc.astimezone(zone)
     e_local = (end_utc - timedelta(minutes=1)).astimezone(zone)
-    range_label = (
-        f"{s_local.strftime('%d.%m.%Y %H:%M')} – {e_local.strftime('%d.%m.%Y %H:%M')}"
-    )
+    dfmt = "%d.%m.%Y, %H:%M" if locale == "de" else "%Y-%m-%d %H:%M"
+    range_label = f"{s_local.strftime(dfmt)} – {e_local.strftime(dfmt)}"
 
     return ReportModel(
         version=REPORT_MODEL_VERSION,

@@ -12,6 +12,9 @@ import type {
   DiagnosticsLogsResponse,
   DiagnosticsMode,
   HAEntity,
+  HistoryAvailability,
+  HistoryImportJob,
+  HistoryRange,
   RecentEventsResponse,
   HistoryResponse,
   Incident,
@@ -138,6 +141,18 @@ export const api = {
 
   getDefrostCycles: (id: number, range = "24h") =>
     request<DefrostCycle[]>(`api/storage-units/${id}/defrost-cycles?range=${range}`),
+
+  getHistoryAvailability: (unitId: number, entityId: string) =>
+    request<HistoryAvailability>(
+      `api/storage-units/${unitId}/history/availability?entity_id=${encodeURIComponent(entityId)}`,
+    ),
+  getHistoryImport: (unitId: number) =>
+    request<HistoryImportJob | null>(`api/storage-units/${unitId}/history/import`),
+  startHistoryImport: (unitId: number, input: { entity_id: string; range: HistoryRange }) =>
+    request<HistoryImportJob>(`api/storage-units/${unitId}/history/import`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
 
   getDefrostLearning: (id: number) =>
     request<DefrostLearningStatus>(`api/storage-units/${id}/defrost/learning`),

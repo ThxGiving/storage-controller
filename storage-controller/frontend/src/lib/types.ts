@@ -623,3 +623,32 @@ export interface ReportBranding {
   default_timezone: string;
   default_detail_level: ReportDetailLevel;
 }
+
+// --- Phase 5.1: history import ----------------------------------------------
+
+export type HistoryRange = "all" | "current_month" | "last_30_days" | "last_90_days";
+
+export interface HistoryAvailability {
+  state: "raw_available" | "stats_only" | "no_history";
+  raw_available: boolean;
+  has_statistics: boolean;
+  recommended_range: HistoryRange;
+  connected: boolean;
+}
+
+export interface HistoryImportJob {
+  id: number;
+  storage_unit_id: number;
+  entity_id: string;
+  requested_range: HistoryRange;
+  status: "importing" | "completed" | "partial" | "failed" | "no_history";
+  raw_from: string | null;
+  raw_to: string | null;
+  raw_count: number;
+  stats_from: string | null;
+  stats_to: string | null;
+  stats_count: number;
+  error_message: string | null;
+  created_at: string;
+  finished_at: string | null;
+}

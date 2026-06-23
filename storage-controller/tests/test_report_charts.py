@@ -13,6 +13,38 @@ from app.reporting.metrics import (
     _violation_ranges,
     sample_metrics,
 )
+from app.reporting.render import _fmt_dt, _fmt_duration, _fmt_pct, _fmt_temp
+
+
+def test_german_locale_formatting():
+    assert _fmt_temp(3.9, "de") == "3,9 °C"
+    assert _fmt_temp(3.9, "en") == "3.9 °C"
+    assert _fmt_pct(7.7, "de") == "7,7 %"
+    assert _fmt_pct(7.7, "en") == "7.7 %"
+    assert _fmt_duration(16 * 60, "de") == "16 min"
+    assert _fmt_duration(2 * 3600 + 5 * 60, "de") == "2 h 5 min"
+    assert _fmt_dt("2026-06-23T01:05:00+00:00", "de") == "23.06.2026, 01:05"
+    assert _fmt_dt("2026-06-23T01:05:00+00:00", "en") == "2026-06-23 01:05"
+
+
+def test_buckets_positioned_at_real_timestamps_not_stretched():
+    # A 30-day period with data only on the LAST day. Buckets must sit near the
+    # end, and the leading 29 days must be a gap (not stretched/extended).
+    start = T0
+    end = T0 + timedelta(days=30)
+    last_day = end - timedelta(days=1)
+    samples = [_s_at(last_day + timedelta(minutes=10 * i), 5.0) for i in range(12)]
+    buckets, gaps = _aggregate_buckets(samples, start, end, bucket_seconds=3600, max_points=800)
+    filled = [b for b in buckets if b[1] is not None]
+    assert filled, "expected some filled buckets"
+    # every filled bucket is in the last day, not spread across the month
+    assert all(b[0] >= last_day.timestamp() - 3600 for b in filled)
+    # a long leading gap exists, starting at the period start
+    assert gaps and gaps[0][0] == start.timestamp()
+
+
+def _s_at(dt, value, q="valid"):
+    return (dt, value, q)
 
 T0 = datetime(2026, 6, 1, 0, 0, tzinfo=UTC)
 VALID = "valid"

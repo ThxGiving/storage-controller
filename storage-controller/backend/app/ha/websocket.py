@@ -83,7 +83,47 @@ class HAWebSocketConnection:
         """Receive the next message (e.g. an event)."""
         return await self._recv()
 
+    async def statistics_during_period(
+        self, entity_id: str, start_iso: str, end_iso: str, *, period: str = "hour"
+    ) -> list[dict[str, Any]]:
+        """Long-term statistics (min/max/mean) for one entity. Used for older
+        periods the recorder no longer keeps at raw resolution."""
+        cmd_id = self._next_id()
+        await self._send(
+            {
+                "id": cmd_id,
+                "type": "recorder/statistics_during_period",
+                "start_time": start_iso,
+                "end_time": end_iso,
+                "statistic_ids": [entity_id],
+                "period": period,
+                "types": ["min", "max", "mean"],
+            }
+        )
+        while True:
+            msg = await self._recv()
+            if msg.get("id") == cmd_id and msg.get("type") == "result":
+                result = msg.get("result") or {}
+                rows = result.get(entity_id)
+                return rows if isinstance(rows, list) else []
+
 
 async def connect(url: str) -> HAWebSocketConnection:
     ws = await websockets.connect(url, max_size=8 * 1024 * 1024, ping_interval=30)
     return HAWebSocketConnection(ws)
+
+
+async def fetch_statistics(
+    url: str, token: str, entity_id: str, start_iso: str, end_iso: str, *, period: str = "hour"
+) -> list[dict[str, Any]]:
+    """Open a short-lived authenticated WS connection just to pull statistics, so
+    the long-lived event connection is never disturbed. Returns [] on any failure."""
+    conn = await connect(url)
+    try:
+        await conn.authenticate(token)
+        return await conn.statistics_during_period(entity_id, start_iso, end_iso, period=period)
+    finally:
+        try:
+            await conn.raw.close()
+        except Exception:  # noqa: BLE001
+            pass

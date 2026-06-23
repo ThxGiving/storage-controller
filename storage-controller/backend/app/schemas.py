@@ -759,3 +759,38 @@ class ReportOut(BaseModel):
 class ReportPreviewOut(BaseModel):
     model: dict[str, object]
     html: str
+
+
+# --------------------------------------------------------------------------- #
+# History import (Phase 5.1)
+# --------------------------------------------------------------------------- #
+
+
+class HistoryAvailabilityOut(BaseModel):
+    state: str  # raw_available | stats_only | no_history
+    raw_available: bool = False
+    has_statistics: bool = False
+    recommended_range: str = "last_30_days"
+    connected: bool = False
+
+
+class HistoryImportStart(BaseModel):
+    entity_id: str = Field(min_length=1)
+    range: str = "last_30_days"
+
+
+class HistoryImportOut(BaseModel):
+    id: int
+    storage_unit_id: int
+    entity_id: str
+    requested_range: str
+    status: str  # importing | completed | partial | failed | no_history
+    raw_from: datetime | None = None
+    raw_to: datetime | None = None
+    raw_count: int = 0
+    stats_from: datetime | None = None
+    stats_to: datetime | None = None
+    stats_count: int = 0
+    error_message: str | None = None
+    created_at: datetime
+    finished_at: datetime | None = None

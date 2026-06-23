@@ -615,6 +615,8 @@ class SensorAggregate(Base):
     min_c: Mapped[float | None] = mapped_column(Float, nullable=True)
     max_c: Mapped[float | None] = mapped_column(Float, nullable=True)
     avg_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # "computed" (from raw samples) or "ha_statistics" (imported long-term stats).
+    source: Mapped[str] = mapped_column(String(20), default="computed", nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
@@ -635,6 +637,54 @@ class MaintenanceRun(Base):
     integrity_ok: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     app_total_bytes: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class HistoryImportStatus(str, enum.Enum):
+    importing = "importing"
+    completed = "completed"
+    partial = "partial"  # imported some (e.g. only hourly statistics)
+    failed = "failed"
+    no_history = "no_history"
+
+
+class HistoryRange(str, enum.Enum):
+    all = "all"
+    current_month = "current_month"
+    last_30_days = "last_30_days"
+    last_90_days = "last_90_days"
+
+
+class HistoryImport(Base):
+    """Tracks an asynchronous Home Assistant history import for a storage unit's
+    primary temperature sensor. Imported samples are marked with their source and
+    resolution and never trigger live incident workflows."""
+
+    __tablename__ = "history_imports"
+    __table_args__ = (Index("ix_history_imports_unit", "storage_unit_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    storage_unit_id: Mapped[int] = mapped_column(
+        ForeignKey("storage_units.id", ondelete="CASCADE"), nullable=False
+    )
+    entity_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    requested_range: Mapped[str] = mapped_column(String(20), nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(20), default=HistoryImportStatus.importing.value, nullable=False
+    )
+    # Raw recorder coverage actually imported.
+    raw_from: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    raw_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    raw_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    # Long-term hourly statistics coverage actually imported.
+    stats_from: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    stats_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    stats_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_by: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class ReportStatus(str, enum.Enum):

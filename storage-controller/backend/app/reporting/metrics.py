@@ -8,6 +8,7 @@ as missing data, never interpolated across.
 
 from __future__ import annotations
 
+import math
 import statistics
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -193,10 +194,8 @@ def _aggregate_buckets(
         return [], []
     base = start_utc.timestamp()
     width = max(bucket_seconds, span / max_points) if max_points > 0 else bucket_seconds
-    nbuckets = max(1, int(span / width) + 1)
+    nbuckets = max(1, math.ceil(span / width))
     acc: dict[int, list[float]] = {}
-    first_idx = nbuckets
-    last_idx = -1
     for ts, v, q in samples:
         if ts is None:
             continue
@@ -204,18 +203,19 @@ def _aggregate_buckets(
         if v is None or q != Quality.valid.value:
             continue
         acc.setdefault(idx, []).append(v)
-        first_idx = min(first_idx, idx)
-        last_idx = max(last_idx, idx)
 
     points: list[list[float | None]] = []
     gaps: list[tuple[float, float]] = []
     prev_empty = False
     run_start: int | None = None
-    for i in range(first_idx, last_idx + 1):  # only span observed data (no extension)
+    # Iterate the FULL period so the line/envelope exist only inside buckets that
+    # actually contain valid data, break at every gap (leading, internal and
+    # trailing), and never extend the first/last known value.
+    for i in range(nbuckets):
         epoch = base + (i + 0.5) * width
         vals = acc.get(i)
         if vals:
-            if run_start is not None:  # close a gap run between data
+            if run_start is not None:  # close a gap run
                 gaps.append((base + run_start * width, base + i * width))
                 run_start = None
             points.append(
@@ -228,6 +228,8 @@ def _aggregate_buckets(
             if not prev_empty:
                 points.append([epoch, None, None, None])  # one break marker per gap run
                 prev_empty = True
+    if run_start is not None:  # trailing gap to period end
+        gaps.append((base + run_start * width, base + nbuckets * width))
     return points, gaps
 
 

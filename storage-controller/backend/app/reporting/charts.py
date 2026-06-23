@@ -70,13 +70,20 @@ def render_chart_svg(
     legend: bool = True,
     upper_label: str = "Upper limit",
     lower_label: str = "Lower limit",
+    x_start: float | None = None,
+    x_end: float | None = None,
 ) -> str:
     series = [s for s in chart.series if s.points]
     pad_l, pad_r, pad_t, pad_b = 26, 6, 12, 14
     legend_h = 14 if legend else 0
     height = pad_t + plot_h + pad_b + legend_h
     pw = width - pad_l - pad_r
-    x0, x1 = _x_domain(series)
+    # The x-axis ALWAYS spans the full reporting period, so sparse data appears
+    # only at its real position and is never stretched across the width.
+    if x_start is not None and x_end is not None and x_end > x_start:
+        x0, x1 = x_start, x_end
+    else:
+        x0, x1 = _x_domain(series)
     y0, y1 = _bounds(series, chart.lower_limit_c, chart.upper_limit_c)
     xr = (x1 - x0) or 1.0
     yr = (y1 - y0) or 1.0
@@ -205,7 +212,15 @@ def render_chart_svg(
     return "".join(p)
 
 
-def render_mini_svg(series: ChartSeries, tz: str, *, width: int = 320, plot_h: int = 80) -> str:
+def render_mini_svg(
+    series: ChartSeries,
+    tz: str,
+    *,
+    width: int = 320,
+    plot_h: int = 80,
+    x_start: float | None = None,
+    x_end: float | None = None,
+) -> str:
     chart = OverviewChart(
         group_key="mini",
         label="",
@@ -214,4 +229,6 @@ def render_mini_svg(series: ChartSeries, tz: str, *, width: int = 320, plot_h: i
         upper_limit_c=series.upper_limit_c,
         bands=series.bands,
     )
-    return render_chart_svg(chart, tz, width=width, plot_h=plot_h, legend=False)
+    return render_chart_svg(
+        chart, tz, width=width, plot_h=plot_h, legend=False, x_start=x_start, x_end=x_end
+    )
