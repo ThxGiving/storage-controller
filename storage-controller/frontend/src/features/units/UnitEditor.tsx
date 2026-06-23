@@ -4,12 +4,14 @@ import { AlertTriangle, Sparkles } from "lucide-react";
 import {
   ENTITY_ROLES,
   STORAGE_UNIT_TYPES,
+  type AssignmentInput,
   type EntityRole,
   type HAEntity,
   type MonitoringProfile,
   type StorageUnit,
   type StorageUnitInput,
   type StorageUnitType,
+  type ValueMapping,
 } from "@/lib/types";
 import { parseDecimal } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -40,7 +42,13 @@ export function UnitEditor({
   onSubmit,
   submitting,
 }: UnitEditorProps) {
-  const { t } = useTranslation(["storage-units", "common", "profiles", "validation"]);
+  const { t } = useTranslation([
+    "storage-units",
+    "common",
+    "profiles",
+    "validation",
+    "diagnostics",
+  ]);
 
   const [name, setName] = React.useState("");
   const [shortName, setShortName] = React.useState("");
@@ -62,6 +70,9 @@ export function UnitEditor({
   // Defrost-aware evaluation (single toggle; operational characteristics are
   // learned automatically and never set by hand here).
   const [defrostEnabled, setDefrostEnabled] = React.useState(false);
+  // Optional value mapping for a defrost entity that reports non-on/off states.
+  const [defrostActive, setDefrostActive] = React.useState("");
+  const [defrostInactive, setDefrostInactive] = React.useState("");
 
   React.useEffect(() => {
     if (!open) return;
@@ -83,6 +94,10 @@ export function UnitEditor({
       unit.assignments.forEach((a) => (map[a.role] = a.entity_id));
       setAssignments(map);
       setDefrostEnabled(unit.defrost_evaluation_enabled);
+      const dfa = unit.assignments.find((a) => a.role === "defrost");
+      const vm = dfa?.value_mapping_json ? safeParseMapping(dfa.value_mapping_json) : null;
+      setDefrostActive(vm?.active?.join(", ") ?? "");
+      setDefrostInactive(vm?.inactive?.join(", ") ?? "");
     } else {
       setName("");
       setShortName("");
@@ -96,6 +111,8 @@ export function UnitEditor({
       setAssignments({});
       setAppliedProfile({ key: null, name: null });
       setDefrostEnabled(false);
+      setDefrostActive("");
+      setDefrostInactive("");
     }
     setProfileId("");
     setError(null);
@@ -156,10 +173,14 @@ export function UnitEditor({
       // Only the toggle is user-set; the defrost entity must be assigned for it
       // to take effect. Operational characteristics are learned, never entered.
       defrost_evaluation_enabled: hasDefrostEntity ? defrostEnabled : false,
-      assignments: ENTITY_ROLES.filter((r) => assignments[r]).map((r) => ({
-        role: r,
-        entity_id: assignments[r]!,
-      })),
+      assignments: ENTITY_ROLES.filter((r) => assignments[r]).map((r) => {
+        const a: AssignmentInput = { role: r, entity_id: assignments[r]! };
+        if (r === "defrost") {
+          const mapping = csvMapping(defrostActive, defrostInactive);
+          if (mapping) a.value_mapping = mapping;
+        }
+        return a;
+      }),
     };
     try {
       await onSubmit(input);
@@ -290,6 +311,30 @@ export function UnitEditor({
               ? t("storage-units:editor.defrostHint")
               : t("storage-units:editor.defrostNoEntity")}
           </p>
+          {hasDefrostEntity && defrostEnabled && (
+            <div className="mt-3 rounded-md border border-border bg-muted/30 p-3">
+              <div className="text-xs font-semibold">{t("diagnostics:mapping.title")}</div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {t("diagnostics:mapping.hint")}
+              </p>
+              <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                <Field label={t("diagnostics:mapping.active")}>
+                  <Input
+                    value={defrostActive}
+                    onChange={(e) => setDefrostActive(e.target.value)}
+                    placeholder={t("diagnostics:mapping.activePlaceholder")}
+                  />
+                </Field>
+                <Field label={t("diagnostics:mapping.inactive")}>
+                  <Input
+                    value={defrostInactive}
+                    onChange={(e) => setDefrostInactive(e.target.value)}
+                    placeholder={t("diagnostics:mapping.inactivePlaceholder")}
+                  />
+                </Field>
+              </div>
+            </div>
+          )}
         </div>
 
         <div>
@@ -346,4 +391,24 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       {children}
     </div>
   );
+}
+
+function safeParseMapping(json: string): ValueMapping | null {
+  try {
+    const v = JSON.parse(json);
+    return {
+      active: Array.isArray(v.active) ? v.active : [],
+      inactive: Array.isArray(v.inactive) ? v.inactive : [],
+      invert: Boolean(v.invert),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function csvMapping(active: string, inactive: string): ValueMapping | null {
+  const a = active.split(",").map((s) => s.trim()).filter(Boolean);
+  const i = inactive.split(",").map((s) => s.trim()).filter(Boolean);
+  if (a.length === 0 && i.length === 0) return null;
+  return { active: a, inactive: i, invert: false };
 }

@@ -12,7 +12,7 @@
   "suggestionHint": "Genügend vollständige Zyklen beobachtet. Prüfe die vorgeschlagenen Werte und übernimm sie, damit die Auswertung Abtau-Überschreitungen innerhalb der Hüllkurve als erwartet behandelt.",
   "approvedHint": "Bestätigte Werte dienen der Einordnung erwarteter Abtau-Überschreitungen. Sie ändern niemals die Sicherheits-Temperaturgrenzen.",
   "validCycles": "Gültige Zyklen",
-  "minCycles": "von {{min}} nötig",
+  "remainingCycles": "Noch {{remaining}} vollständige Zyklen bis zum ersten Vorschlag.",
   "confidence": "Konfidenz",
   "confidenceLevel": {
     "insufficient": "Unzureichend",
@@ -44,6 +44,19 @@
   "resetConfirm": "Gelerntes Profil und Vorschlag verwerfen und erneut beobachten?",
   "safetyNote": "Gelernte Werte sind rein betrieblich — keine rechtlichen oder HACCP-zertifizierten Grenzen.",
   "recentCycles": "Letzte Zyklen",
+  "cycle": {
+    "status": {
+      "active": "Abtauung",
+      "recovering": "Erholung",
+      "completed": "Abgeschlossen",
+      "abnormal": "Auffällig",
+      "incomplete": "Unvollständig"
+    },
+    "counts": "zählt zum Lernen",
+    "ignored": "zählt nicht",
+    "noPeak": "keine gültigen Raumdaten",
+    "empty": "Noch keine Abtauzyklen aufgezeichnet."
+  },
   "units": {
     "minutes": "min"
   }

@@ -48,11 +48,20 @@ class AppStatus(BaseModel):
 # --------------------------------------------------------------------------- #
 
 
+class ValueMappingIn(BaseModel):
+    """Per-entity active/inactive state vocabulary for binary roles."""
+
+    active: list[str] = Field(default_factory=list)
+    inactive: list[str] = Field(default_factory=list)
+    invert: bool = False
+
+
 class EntityAssignmentIn(BaseModel):
     role: EntityRole
     entity_id: str = Field(min_length=1, max_length=255)
     enabled: bool = True
     invert_state: bool = False
+    value_mapping: ValueMappingIn | None = None
 
     @field_validator("entity_id")
     @classmethod
@@ -68,6 +77,7 @@ class EntityAssignmentOut(BaseModel):
     entity_id: str
     enabled: bool
     invert_state: bool
+    value_mapping_json: str | None = None
 
 
 # --------------------------------------------------------------------------- #
@@ -552,3 +562,104 @@ class DefrostLearningApprove(BaseModel):
     max_defrost_seconds: int | None = Field(default=None, ge=0)
     max_recovery_seconds: int | None = Field(default=None, ge=0)
     safety_margin_c: float | None = Field(default=None, ge=0)
+
+
+# --------------------------------------------------------------------------- #
+# Diagnostics (Phase 4.6.1) — targeted defrost/entity/event tracing
+# --------------------------------------------------------------------------- #
+
+
+class ValueMappingOut(BaseModel):
+    active: list[str] = Field(default_factory=list)
+    inactive: list[str] = Field(default_factory=list)
+    invert: bool = False
+    configured: bool = False
+
+
+class DefrostMappingDiagnostic(BaseModel):
+    storage_unit_id: int
+    storage_unit_name: str
+    defrost_entity_id: str
+    entity_domain: str
+    evaluation_enabled: bool
+    entity_exists: bool
+    available: bool
+    raw_state: str | None = None
+    normalized_bool: bool | None = None
+    normalization_reason: str = "ok"
+    value_mapping: ValueMappingOut
+    last_state_change: datetime | None = None
+    last_event_received: datetime | None = None
+    last_event_persisted: datetime | None = None
+    last_engine_evaluation: datetime | None = None
+    engine_state: str = "no_cycle"  # no_cycle | active | recovering
+    active_cycle_id: int | None = None
+    last_cycle_started: datetime | None = None
+    last_cycle_ended: datetime | None = None
+    last_ignored_reason: str | None = None
+    connected: bool = False
+    reconnect_attempts: int = 0
+    last_connected_at: datetime | None = None
+    # Human-actionable summary when something blocks detection.
+    problem: str | None = None
+
+
+class DefrostDiagnosticsResponse(BaseModel):
+    generated_at: datetime
+    connected: bool
+    last_event_at: datetime | None = None
+    last_engine_evaluation: datetime | None = None
+    mappings: list[DefrostMappingDiagnostic] = Field(default_factory=list)
+
+
+class EntityAssignmentDiagnostic(BaseModel):
+    storage_unit_id: int
+    storage_unit_name: str
+    role: str
+    value_mapping: ValueMappingOut
+
+
+class EntityDiagnostic(BaseModel):
+    entity_id: str
+    domain: str
+    exists: bool
+    available: bool
+    raw_state: str | None = None
+    last_changed: datetime | None = None
+    last_updated: datetime | None = None
+    numeric_c: float | None = None
+    numeric_quality: str | None = None
+    normalized_bool: bool | None = None
+    bool_reason: str | None = None
+    assignments: list[EntityAssignmentDiagnostic] = Field(default_factory=list)
+
+
+class EventTraceOut(BaseModel):
+    timestamp: datetime
+    entity_id: str
+    storage_unit_id: int | None = None
+    role: str | None = None
+    old_raw: str | None = None
+    new_raw: str | None = None
+    normalized_old: str | None = None
+    normalized_new: str | None = None
+    mapping_found: bool
+    persisted: bool
+    engine_relevant: bool
+    result: str
+
+
+class RecentEventsResponse(BaseModel):
+    entity_id: str | None = None
+    events: list[EventTraceOut] = Field(default_factory=list)
+
+
+class TraceStatusOut(BaseModel):
+    active: bool
+    entity_id: str | None = None
+    expires_at: datetime | None = None
+    remaining_seconds: int = 0
+
+
+class TraceStartIn(BaseModel):
+    entity_id: str = Field(min_length=1)

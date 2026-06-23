@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatBytes, formatDateTime } from "@/lib/utils";
 import { getStoredPreference, setLanguagePreference } from "@/i18n";
 import { SUPPORTED_LOCALES, SYSTEM_LANGUAGE } from "@/i18n/locales";
+import { DefrostDiagnosticsCard } from "@/features/diagnostics/DefrostDiagnosticsCard";
 
 export function SettingsPage() {
   const { t } = useTranslation(["settings", "common"]);
@@ -170,6 +171,8 @@ export function SettingsPage() {
           {save.isPending ? t("settings:saving") : t("settings:save")}
         </Button>
       </div>
+
+      <DefrostDiagnosticsCard />
 
       <Section icon={<Palette className="h-5 w-5" />} title={t("settings:about")}>
         <p className="text-sm text-muted-foreground">

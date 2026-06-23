@@ -111,6 +111,13 @@ export interface EntityAssignment {
   entity_id: string;
   enabled: boolean;
   invert_state: boolean;
+  value_mapping_json: string | null;
+}
+
+export interface ValueMapping {
+  active: string[];
+  inactive: string[];
+  invert: boolean;
 }
 
 export interface StorageUnit {
@@ -148,6 +155,7 @@ export interface AssignmentInput {
   entity_id: string;
   enabled?: boolean;
   invert_state?: boolean;
+  value_mapping?: ValueMapping | null;
 }
 
 export interface StorageUnitInput {
@@ -472,4 +480,68 @@ export interface AssignmentCurrentValue {
   unit_of_measurement: string | null;
   friendly_name: string | null;
   warning: string | null;
+}
+
+// --- Phase 4.6.1: diagnostics ----------------------------------------------
+
+export interface DefrostMappingDiagnostic {
+  storage_unit_id: number;
+  storage_unit_name: string;
+  defrost_entity_id: string;
+  entity_domain: string;
+  evaluation_enabled: boolean;
+  entity_exists: boolean;
+  available: boolean;
+  raw_state: string | null;
+  normalized_bool: boolean | null;
+  normalization_reason: string;
+  value_mapping: { active: string[]; inactive: string[]; invert: boolean; configured: boolean };
+  last_state_change: string | null;
+  last_event_received: string | null;
+  last_event_persisted: string | null;
+  last_engine_evaluation: string | null;
+  engine_state: string;
+  active_cycle_id: number | null;
+  last_cycle_started: string | null;
+  last_cycle_ended: string | null;
+  last_ignored_reason: string | null;
+  connected: boolean;
+  reconnect_attempts: number;
+  last_connected_at: string | null;
+  problem: string | null;
+}
+
+export interface DefrostDiagnosticsResponse {
+  generated_at: string;
+  connected: boolean;
+  last_event_at: string | null;
+  last_engine_evaluation: string | null;
+  mappings: DefrostMappingDiagnostic[];
+}
+
+export interface EventTrace {
+  timestamp: string;
+  entity_id: string;
+  storage_unit_id: number | null;
+  role: string | null;
+  old_raw: string | null;
+  new_raw: string | null;
+  normalized_old: string | null;
+  normalized_new: string | null;
+  mapping_found: boolean;
+  persisted: boolean;
+  engine_relevant: boolean;
+  result: string;
+}
+
+export interface RecentEventsResponse {
+  entity_id: string | null;
+  events: EventTrace[];
+}
+
+export interface TraceStatus {
+  active: boolean;
+  entity_id: string | null;
+  expires_at: string | null;
+  remaining_seconds: number;
 }

@@ -1,0 +1,51 @@
+{
+  "title": "Abtau-Diagnose",
+  "subtitle": "Verfolgt das Abtausignal von Home Assistant über die Normalisierung bis zur Erkennung. So siehst du, warum ein Zyklus erkannt wurde oder nicht.",
+  "refresh": "Aktualisieren",
+  "noMappings": "Es ist noch keine Abtau-Entität zugewiesen.",
+  "problemLabel": "Problem",
+  "problem": {
+    "entity_not_found": "Die Abtau-Entität ist in Home Assistant nicht vorhanden.",
+    "evaluation_disabled": "Die abtau-bewusste Bewertung ist für diese Einheit deaktiviert.",
+    "entity_unavailable": "Die Abtau-Entität ist derzeit nicht verfügbar oder unbekannt.",
+    "normalization_failed": "Home Assistant meldet den Zustand \"{{raw}}\", der nicht on/off ist. Lege unten eine Zustandszuordnung an, damit er erkannt wird.",
+    "none": "Kein Problem erkannt."
+  },
+  "fields": {
+    "rawState": "Rohzustand",
+    "normalized": "Normalisiert",
+    "reason": "Grund",
+    "engineState": "Engine-Status",
+    "activeCycle": "Aktiver Zyklus",
+    "lastCycle": "Letzter Zyklus",
+    "lastEvent": "Letztes Ereignis empfangen",
+    "lastPersisted": "Zuletzt gespeichert",
+    "lastEngineEval": "Letzte Engine-Auswertung",
+    "valueMapping": "Zustandszuordnung",
+    "connection": "Verbindung"
+  },
+  "engineState": {
+    "no_cycle": "Kein aktiver Zyklus",
+    "active": "Abtauung",
+    "recovering": "Erholung"
+  },
+  "boolean": {
+    "true": "aktiv",
+    "false": "inaktiv",
+    "null": "—"
+  },
+  "mapping": {
+    "title": "Abtau-Zustandszuordnung",
+    "hint": "Kommagetrennte Rohzustände. Nutze dies, wenn der Regler andere Werte als on/off meldet (z. B. ein Dixell-Ausgang).",
+    "active": "Aktive Zustände (Abtauen an)",
+    "inactive": "Inaktive Zustände (Abtauen aus)",
+    "activePlaceholder": "defrosting, 1",
+    "inactivePlaceholder": "cooling, idle, 0"
+  },
+  "recent": {
+    "title": "Letzte Ereignisse",
+    "empty": "Noch keine Ereignisse aufgezeichnet.",
+    "old": "alt",
+    "new": "neu"
+  }
+}

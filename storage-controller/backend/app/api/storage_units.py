@@ -7,6 +7,7 @@ other roles are optional and can be assigned, replaced or cleared freely.
 
 from __future__ import annotations
 
+import json
 import logging
 
 from fastapi import APIRouter, Depends, Request
@@ -94,6 +95,20 @@ def _validate_limits(lower: float | None, upper: float | None) -> None:
         raise AppError(ERROR_INVALID_LIMITS, status_code=422)
 
 
+def _mapping_json(a) -> str | None:
+    """Serialize an assignment's optional value mapping to JSON (or None)."""
+    m = getattr(a, "value_mapping", None)
+    if m is None or (not m.active and not m.inactive and not m.invert):
+        return None
+    return json.dumps(
+        {
+            "active": [s.strip() for s in m.active if s.strip()],
+            "inactive": [s.strip() for s in m.inactive if s.strip()],
+            "invert": bool(m.invert),
+        }
+    )
+
+
 def _apply_assignments(unit: StorageUnit, assignments) -> None:
     """Reconcile assignments in place (by role).
 
@@ -107,11 +122,13 @@ def _apply_assignments(unit: StorageUnit, assignments) -> None:
 
     # Update existing roles or add new ones.
     for role, a in incoming.items():
+        mapping_json = _mapping_json(a)
         current = existing.get(role)
         if current is not None:
             current.entity_id = a.entity_id
             current.enabled = a.enabled
             current.invert_state = a.invert_state
+            current.value_mapping_json = mapping_json
         else:
             unit.assignments.append(
                 EntityAssignment(
@@ -119,6 +136,7 @@ def _apply_assignments(unit: StorageUnit, assignments) -> None:
                     entity_id=a.entity_id,
                     enabled=a.enabled,
                     invert_state=a.invert_state,
+                    value_mapping_json=mapping_json,
                 )
             )
 

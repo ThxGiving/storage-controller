@@ -2,6 +2,43 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.1.11 — Unreleased
+
+### Fixed — defrost detection for non-standard controllers
+
+- **Configurable defrost state mapping.** A defrost entity that reports values
+  other than on/off (e.g. a Dixell coil reporting `defrosting`/`cooling`) was
+  normalized to *invalid* → the engine never saw a defrost signal and no cycle
+  was detected. Binary roles now accept an optional per-entity active/inactive
+  value mapping (set in the unit editor, applied by both the collector and the
+  defrost engine). Normalization now reports a precise reason
+  (`unrecognized_state`, `unavailable`, …).
+- **Freezers without an upper limit** could never complete a defrost cycle
+  (recovery target was the upper safety limit). Recovery now falls back to the
+  pre-defrost baseline temperature when no upper limit is configured.
+
+### Added — targeted diagnostics
+
+- `GET /api/diagnostics/defrost` — per defrost mapping: raw state, normalized
+  value + reason, value mapping, engine state, active/last cycle, last event
+  received/persisted, last engine evaluation, connection status, and a
+  human-actionable `problem` when detection is blocked.
+- `GET /api/diagnostics/entities/{entity_id}` and
+  `GET /api/diagnostics/events/recent` — a bounded in-memory event trace
+  (old/new raw + normalized values, mapping found, persisted, result such as
+  `stored`, `ignored_duplicate`, `ignored_unchanged`, `normalization_failed`).
+- Admin-only, auto-expiring (15 min) per-entity **trace mode**. No tokens,
+  credentials or unrelated entity data are ever logged. No raw SQL / DB access.
+- A **Defrost diagnostics** card in Settings surfaces all of the above and
+  highlights the exact blocker (e.g. an unrecognized raw state).
+
+### Changed — defrost learning UX
+
+- The "valid cycles" indicator now reads `1 / 10` with a clear "N more cycles
+  until the first suggestion" hint (the previous "1 of 10 needed" was
+  ambiguous).
+- The learning panel lists recent cycles and whether each counts toward learning.
+
 ## 0.1.10 — Unreleased
 
 ### Added — Phase 4.6: defrost learning + single-toggle UX

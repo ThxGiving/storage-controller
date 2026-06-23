@@ -6,9 +6,12 @@ import type {
   ConnectionStatus,
   DashboardResponse,
   DefrostCycle,
+  DefrostDiagnosticsResponse,
   DefrostLearningApprove,
   DefrostLearningStatus,
   HAEntity,
+  RecentEventsResponse,
+  TraceStatus,
   HistoryResponse,
   Incident,
   IncidentDetail,
@@ -165,4 +168,18 @@ export const api = {
   getMaintenanceStatus: () => request<MaintenanceStatus>("api/maintenance/status"),
   runMaintenance: () =>
     request<MaintenanceStatus>("api/maintenance/run", { method: "POST" }),
+
+  getDefrostDiagnostics: () =>
+    request<DefrostDiagnosticsResponse>("api/diagnostics/defrost"),
+  getRecentEvents: (entityId: string, limit = 50) =>
+    request<RecentEventsResponse>(
+      `api/diagnostics/events/recent?entity_id=${encodeURIComponent(entityId)}&limit=${limit}`,
+    ),
+  getTraceStatus: () => request<TraceStatus>("api/diagnostics/trace"),
+  startTrace: (entityId: string) =>
+    request<TraceStatus>("api/diagnostics/trace", {
+      method: "POST",
+      body: JSON.stringify({ entity_id: entityId }),
+    }),
+  stopTrace: () => request<TraceStatus>("api/diagnostics/trace", { method: "DELETE" }),
 };

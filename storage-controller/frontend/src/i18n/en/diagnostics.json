@@ -1,0 +1,51 @@
+{
+  "title": "Defrost diagnostics",
+  "subtitle": "Traces the defrost signal from Home Assistant through normalization to the detection engine. Use this to see why a cycle was or wasn't detected.",
+  "refresh": "Refresh",
+  "noMappings": "No defrost entities are mapped yet.",
+  "problemLabel": "Problem",
+  "problem": {
+    "entity_not_found": "The defrost entity is not present in Home Assistant.",
+    "evaluation_disabled": "Defrost-aware evaluation is turned off for this unit.",
+    "entity_unavailable": "The defrost entity is currently unavailable or unknown.",
+    "normalization_failed": "Home Assistant reports the state \"{{raw}}\", which is not on/off. Add a value mapping below so it can be recognized.",
+    "none": "No problem detected."
+  },
+  "fields": {
+    "rawState": "Raw state",
+    "normalized": "Normalized",
+    "reason": "Reason",
+    "engineState": "Engine state",
+    "activeCycle": "Active cycle",
+    "lastCycle": "Last cycle",
+    "lastEvent": "Last event received",
+    "lastPersisted": "Last persisted",
+    "lastEngineEval": "Last engine evaluation",
+    "valueMapping": "Value mapping",
+    "connection": "Connection"
+  },
+  "engineState": {
+    "no_cycle": "No active cycle",
+    "active": "Defrosting",
+    "recovering": "Recovering"
+  },
+  "boolean": {
+    "true": "active",
+    "false": "inactive",
+    "null": "—"
+  },
+  "mapping": {
+    "title": "Defrost state mapping",
+    "hint": "Comma-separated raw states. Use this when the controller reports values other than on/off (e.g. a Dixell coil).",
+    "active": "Active states (defrost on)",
+    "inactive": "Inactive states (defrost off)",
+    "activePlaceholder": "defrosting, 1",
+    "inactivePlaceholder": "cooling, idle, 0"
+  },
+  "recent": {
+    "title": "Recent events",
+    "empty": "No events recorded yet.",
+    "old": "old",
+    "new": "new"
+  }
+}

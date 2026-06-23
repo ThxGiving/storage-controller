@@ -34,7 +34,7 @@ from .models import (
     Quality,
     StorageUnit,
 )
-from .normalization import normalize_bool, normalize_numeric
+from .normalization import normalize_bool, normalize_numeric, parse_bool_mapping
 
 log = logging.getLogger("incident_engine")
 
@@ -47,6 +47,11 @@ DISCONNECT_GRACE_SECONDS = 60
 # to suppress or reclassify an excursion as safe.
 FALLBACK_MAX_DEFROST_SECONDS = 2700  # 45 min
 FALLBACK_MAX_RECOVERY_SECONDS = 5400  # 90 min
+
+# When a unit has no upper safety limit (e.g. a freezer configured with only a
+# lower limit), recovery is considered complete once the room returns to within
+# this margin of its pre-defrost baseline temperature.
+RECOVERY_BASELINE_MARGIN_C = 1.0
 
 
 @dataclass
@@ -270,7 +275,9 @@ class IncidentEngine:
                 d_entity = get_entity(defrost.entity_id)
                 if d_entity is not None:
                     defrost_on = normalize_bool(
-                        getattr(d_entity, "state", None), invert=defrost.invert_state
+                        getattr(d_entity, "state", None),
+                        invert=defrost.invert_state,
+                        mapping=parse_bool_mapping(defrost.value_mapping_json),
                     ).normalized_bool
 
             evaporator_c: float | None = None
@@ -461,14 +468,21 @@ class IncidentEngine:
         if cycle.status == DefrostStatus.recovering.value:
             in_window = True
             rec_started = _utc(cycle.recovery_started_at) or now
+            # Recovery target: the unit's upper safety limit, or — when none is
+            # configured — a return to the pre-defrost baseline. Without this
+            # fallback a freezer with only a lower limit could never complete a
+            # cycle and would eventually be flagged as a recovery timeout.
+            recovery_target = ds.recovery_target_c
+            if recovery_target is None and cycle.initial_room_temperature_c is not None:
+                recovery_target = cycle.initial_room_temperature_c + RECOVERY_BASELINE_MARGIN_C
             if r.defrost_on:
                 cycle.status = DefrostStatus.active.value
                 cycle.ended_at = None
                 cycle.recovery_started_at = None
             elif (
                 valid_room
-                and ds.recovery_target_c is not None
-                and r.normalized_c <= ds.recovery_target_c
+                and recovery_target is not None
+                and r.normalized_c <= recovery_target
             ):
                 cycle.recovered_at = now
                 cycle.status = DefrostStatus.completed.value

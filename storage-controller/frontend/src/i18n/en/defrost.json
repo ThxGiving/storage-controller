@@ -12,7 +12,7 @@
   "suggestionHint": "Enough complete cycles observed. Review the suggested values and approve them to let the engine treat in-envelope defrost excursions as expected.",
   "approvedHint": "Approved values are used to reclassify expected defrost excursions. They never change storage-temperature safety limits.",
   "validCycles": "Valid cycles",
-  "minCycles": "of {{min}} needed",
+  "remainingCycles": "{{remaining}} more complete cycle(s) until the first suggestion.",
   "confidence": "Confidence",
   "confidenceLevel": {
     "insufficient": "Insufficient",
@@ -44,6 +44,19 @@
   "resetConfirm": "Discard the learned profile and any suggestion and re-enter observation?",
   "safetyNote": "Learned values are operational only — never legal or HACCP-certified limits.",
   "recentCycles": "Recent cycles",
+  "cycle": {
+    "status": {
+      "active": "Defrosting",
+      "recovering": "Recovering",
+      "completed": "Completed",
+      "abnormal": "Abnormal",
+      "incomplete": "Incomplete"
+    },
+    "counts": "counts toward learning",
+    "ignored": "not counted",
+    "noPeak": "no valid room data",
+    "empty": "No defrost cycles recorded yet."
+  },
   "units": {
     "minutes": "min"
   }

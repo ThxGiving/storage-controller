@@ -3,11 +3,13 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Snowflake, CheckCircle2, RotateCcw, AlertTriangle, Info } from "lucide-react";
 import { api } from "@/lib/api";
-import type { DefrostLearningStatus, LearnedDefrostModel } from "@/lib/types";
+import type { DefrostCycle, DefrostLearningStatus, LearnedDefrostModel } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatNumber } from "@/lib/utils";
+import { formatNumber, timeAgo } from "@/lib/utils";
+
+const LEARNABLE = new Set(["expected_defrost", "expected_defrost_excursion"]);
 
 /** Advanced/diagnostic view of a unit's defrost learning. Hidden unless a
  *  defrost entity is assigned and defrost-aware evaluation is enabled. */
@@ -56,10 +58,8 @@ export function DefrostLearningPanel({ unitId }: { unitId: number }) {
 
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
           <Metric label={t("defrost:validCycles")}>
-            <span className="tabular-nums">{data.valid_cycle_count}</span>{" "}
-            <span className="text-xs text-muted-foreground">
-              {t("defrost:minCycles", { min: data.min_cycles })}
-            </span>
+            <span className="tabular-nums">{data.valid_cycle_count}</span>
+            <span className="text-muted-foreground"> / {data.min_cycles}</span>
           </Metric>
           <Metric label={t("defrost:confidence")}>
             {t(`defrost:confidenceLevel.${data.confidence}`)}{" "}
@@ -68,6 +68,14 @@ export function DefrostLearningPanel({ unitId }: { unitId: number }) {
             </span>
           </Metric>
         </div>
+
+        {data.state !== "approved" && data.valid_cycle_count < data.min_cycles && (
+          <p className="text-xs text-muted-foreground">
+            {t("defrost:remainingCycles", {
+              remaining: data.min_cycles - data.valid_cycle_count,
+            })}
+          </p>
+        )}
 
         {data.drift_warning && (
           <Banner tone="warn" icon={<AlertTriangle className="h-4 w-4" />}>
@@ -87,6 +95,22 @@ export function DefrostLearningPanel({ unitId }: { unitId: number }) {
             {t("defrost:outliers", { list: data.outliers.join(", ") })}
           </p>
         )}
+
+        {/* Diagnostic: why each observed cycle did or didn't count toward learning. */}
+        <div className="flex flex-col gap-1.5">
+          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+            {t("defrost:recentCycles")}
+          </div>
+          {data.recent_cycles.length === 0 ? (
+            <p className="text-xs text-muted-foreground">{t("defrost:cycle.empty")}</p>
+          ) : (
+            <ul className="flex flex-col divide-y divide-border rounded-md border border-border">
+              {data.recent_cycles.slice(0, 8).map((c) => (
+                <CycleRow key={c.id} cycle={c} />
+              ))}
+            </ul>
+          )}
+        </div>
 
         <Banner tone="info" icon={<Info className="h-4 w-4" />}>
           {t("defrost:safetyNote")}
@@ -136,6 +160,39 @@ function ModelGrid({ model }: { model: LearnedDefrostModel }) {
       <Metric label={t("defrost:metrics.variation")}>{deg(model.room_peak_variation_c)}</Metric>
       <Metric label={t("defrost:metrics.safetyMargin")}>{deg(model.safety_margin_c)}</Metric>
     </div>
+  );
+}
+
+function CycleRow({ cycle }: { cycle: DefrostCycle }) {
+  const { t } = useTranslation(["defrost"]);
+  const counts = cycle.status === "completed" && LEARNABLE.has(cycle.classification ?? "");
+  const start = cycle.started_at ? new Date(cycle.started_at).getTime() : null;
+  const end = cycle.ended_at ? new Date(cycle.ended_at).getTime() : null;
+  const durMin = start && end && end > start ? Math.round((end - start) / 60000) : null;
+  const statusKey = ["active", "recovering", "completed", "abnormal", "incomplete"].includes(
+    cycle.status,
+  )
+    ? cycle.status
+    : "active";
+
+  return (
+    <li className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-xs">
+      <Badge tone={counts ? "ok" : cycle.status === "abnormal" ? "warn" : "neutral"}>
+        {t(`defrost:cycle.status.${statusKey}`)}
+      </Badge>
+      <span className="text-muted-foreground">{timeAgo(cycle.started_at)}</span>
+      <span className="tabular-nums">
+        {durMin != null ? `${durMin} ${t("defrost:units.minutes")}` : "—"}
+      </span>
+      <span className="tabular-nums">
+        {cycle.peak_room_temperature_c != null
+          ? `↑ ${formatNumber(cycle.peak_room_temperature_c, { maximumFractionDigits: 1 })} °C`
+          : t("defrost:cycle.noPeak")}
+      </span>
+      <span className={`ml-auto ${counts ? "text-ok" : "text-muted-foreground"}`}>
+        {counts ? t("defrost:cycle.counts") : t("defrost:cycle.ignored")}
+      </span>
+    </li>
   );
 }
 

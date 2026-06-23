@@ -83,6 +83,7 @@ class HAConnectionManager:
         self._detail: str | None = None
         self._last_event_at: datetime | None = None
         self._last_connected_at: datetime | None = None
+        self._last_incident_eval_at: datetime | None = None
         self._reconnect_attempts = 0
 
         self._entities: dict[str, HAEntity] = {}
@@ -123,6 +124,18 @@ class HAConnectionManager:
     def entities(self) -> list[HAEntity]:
         return sorted(self._entities.values(), key=lambda e: e.entity_id)
 
+    @property
+    def last_event_at(self) -> datetime | None:
+        return self._last_event_at
+
+    @property
+    def last_incident_eval_at(self) -> datetime | None:
+        return self._last_incident_eval_at
+
+    @property
+    def connected(self) -> bool:
+        return self._status == STATUS_CONNECTED
+
     def get_entity(self, entity_id: str) -> HAEntity | None:
         return self._entities.get(entity_id)
 
@@ -153,6 +166,7 @@ class HAConnectionManager:
                 await self._incident_engine.run(
                     self.get_entity, connected=self._status == STATUS_CONNECTED
                 )
+                self._last_incident_eval_at = datetime.now(UTC)
             except asyncio.CancelledError:
                 raise
             except Exception as exc:  # noqa: BLE001
@@ -283,6 +297,7 @@ class HAConnectionManager:
     async def _handle_event(self, event: dict[str, Any]) -> None:
         data = event.get("data") or {}
         new_state = data.get("new_state")
+        old_state = data.get("old_state")
         entity_id = data.get("entity_id")
         if not entity_id:
             return
@@ -295,9 +310,10 @@ class HAConnectionManager:
 
         # Record the sample if this entity is assigned to a storage unit.
         if self._collector is not None:
+            old_raw = (old_state or {}).get("state")
             try:
                 await self._collector.handle_state(
-                    entity_id, new_state, SampleSource.live_websocket
+                    entity_id, new_state, SampleSource.live_websocket, old_raw=old_raw
                 )
             except Exception as exc:  # noqa: BLE001
                 log.warning("collector: handle_state error: %s", type(exc).__name__)

@@ -24,7 +24,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
@@ -32,6 +32,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from . import diagnostics as diag
 from .models import (
     NUMERIC_ROLES,
     EntityAssignment,
@@ -41,12 +42,13 @@ from .models import (
     StateSample,
     StorageUnit,
 )
-from .normalization import normalize_bool, normalize_numeric
+from .normalization import BoolMapping, normalize_bool, normalize_numeric, parse_bool_mapping
 from .settings_store import get_collector_settings
 
 log = logging.getLogger("collector")
 
 _NUMERIC_ROLE_VALUES = {r.value for r in NUMERIC_ROLES}
+_DEFROST_ROLE = "defrost"
 
 
 @dataclass
@@ -59,6 +61,7 @@ class AssignmentTarget:
     plausible_min_c: float | None
     plausible_max_c: float | None
     numeric: bool
+    bool_mapping: BoolMapping = field(default_factory=BoolMapping)
 
 
 def _as_utc(ts: datetime | None) -> datetime | None:
@@ -66,6 +69,21 @@ def _as_utc(ts: datetime | None) -> datetime | None:
     if ts is None:
         return None
     return ts if ts.tzinfo is not None else ts.replace(tzinfo=UTC)
+
+
+def _fmt(value: float | bool | None) -> str | None:
+    """Compact display of a normalized numeric value for diagnostics."""
+    if value is None or isinstance(value, bool):
+        return None if value is None else _fmt_bool(value)
+    return f"{value:.2f}"
+
+
+def _fmt_bool(value: float | bool | None) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return "on" if value else "off"
+    return str(value)
 
 
 def _parse_ts(value: Any) -> datetime | None:
@@ -99,6 +117,8 @@ class Collector:
         self._min_temp_delta = 0.1
         # Emergency storage mode suspends heartbeat samples (set by maintenance).
         self.suspend_heartbeat = False
+        # Optional diagnostics recorder (set by the app at startup).
+        self.diagnostics: diag.DiagnosticsRecorder | None = None
 
     @property
     def monitored_entities(self) -> set[str]:
@@ -136,6 +156,7 @@ class Collector:
                     plausible_min_c=unit.plausible_min_c,
                     plausible_max_c=unit.plausible_max_c,
                     numeric=assignment.role in _NUMERIC_ROLE_VALUES,
+                    bool_mapping=parse_bool_mapping(assignment.value_mapping_json),
                 )
                 index.setdefault(assignment.entity_id, []).append(target)
 
@@ -175,7 +196,11 @@ class Collector:
     # -- event handling ---------------------------------------------------- #
 
     async def handle_state(
-        self, entity_id: str, state: dict[str, Any] | None, source: SampleSource
+        self,
+        entity_id: str,
+        state: dict[str, Any] | None,
+        source: SampleSource,
+        old_raw: str | None = None,
     ) -> int:
         """Process a single entity state for all its assignments. Returns #stored."""
         targets = self._index.get(entity_id)
@@ -191,9 +216,10 @@ class Collector:
         stored = 0
         async with self._session_factory() as session:
             for target in targets:
-                if await self._store_one(
-                    session, target, event_ts, raw_state, unit, context_id, source
-                ):
+                reason = await self._store_one(
+                    session, target, event_ts, raw_state, unit, context_id, source, old_raw
+                )
+                if reason == diag.STORED:
                     stored += 1
             await session.commit()
         return stored
@@ -207,16 +233,19 @@ class Collector:
         unit: str | None,
         context_id: str | None,
         source: SampleSource,
-    ) -> bool:
+        old_raw: str | None = None,
+    ) -> str:
+        """Process one assignment; returns a diagnostics result code."""
         aid = target.entity_assignment_id
-        high = self._last_ts.get(aid)
-        if high is not None and event_ts <= high:
-            return False  # duplicate / out-of-order
-
         raw_str = None if raw_state is None else str(raw_state)
         last_q = self._last_quality.get(aid)
         last_v = self._last_value.get(aid)
 
+        high = self._last_ts.get(aid)
+        if high is not None and event_ts <= high:
+            return self._diag(target, old_raw, raw_str, last_v, None, False, diag.IGNORED_DUPLICATE)
+
+        row: SensorSample | StateSample
         if target.numeric:
             res = normalize_numeric(
                 raw_str,
@@ -224,8 +253,7 @@ class Collector:
                 plausible_min_c=target.plausible_min_c,
                 plausible_max_c=target.plausible_max_c,
             )
-            # Bounded recording: keep quality/availability transitions; for stable
-            # valid values, only store when the change >= the minimum delta.
+            norm_new = _fmt(res.normalized_value_c)
             quality_changed = res.quality.value != last_q
             if (
                 source is not SampleSource.reconcile
@@ -235,10 +263,12 @@ class Collector:
                 and res.normalized_value_c is not None
                 and abs(res.normalized_value_c - last_v) < self._min_temp_delta
             ):
-                return False  # sub-threshold change suppressed
+                return self._diag(target, old_raw, raw_str, _fmt(last_v), norm_new, False,
+                                  diag.IGNORED_UNCHANGED)
             if res.quality != Quality.valid and not quality_changed:
-                return False  # repeated unavailable/unknown — record transition only
-            row: SensorSample | StateSample = SensorSample(
+                return self._diag(target, old_raw, raw_str, _fmt(last_v), norm_new, False,
+                                  diag.IGNORED_UNCHANGED)
+            row = SensorSample(
                 storage_unit_id=target.storage_unit_id,
                 entity_assignment_id=aid,
                 entity_id=target.entity_id,
@@ -253,15 +283,19 @@ class Collector:
                 source=source.value,
                 source_context_id=context_id,
             )
+            new_value, new_quality, norm = res.normalized_value_c, res.quality.value, norm_new
         else:
-            res_b = normalize_bool(raw_str, invert=target.invert_state)
-            # Binary roles: store state changes only (incl. quality transitions).
+            res_b = normalize_bool(
+                raw_str, invert=target.invert_state, mapping=target.bool_mapping
+            )
+            norm_new = _fmt_bool(res_b.normalized_bool)
             if (
                 source is not SampleSource.reconcile
                 and res_b.normalized_bool == last_v
                 and res_b.quality.value == last_q
             ):
-                return False
+                return self._diag(target, old_raw, raw_str, _fmt_bool(last_v), norm_new, False,
+                                  diag.IGNORED_UNCHANGED)
             row = StateSample(
                 storage_unit_id=target.storage_unit_id,
                 entity_assignment_id=aid,
@@ -275,22 +309,54 @@ class Collector:
                 source=source.value,
                 source_context_id=context_id,
             )
+            new_value, new_quality, norm = res_b.normalized_bool, res_b.quality.value, norm_new
 
         session.add(row)
         try:
             await session.flush()
         except IntegrityError:
             await session.rollback()
-            return False
+            return self._diag(target, old_raw, raw_str, None, norm, False, diag.IGNORED_DUPLICATE)
 
+        prev = _fmt_bool(last_v) if not target.numeric else _fmt(last_v)
         self._last_ts[aid] = event_ts
-        if target.numeric:
-            self._last_value[aid] = res.normalized_value_c
-            self._last_quality[aid] = res.quality.value
+        self._last_value[aid] = new_value
+        self._last_quality[aid] = new_quality
+        # Persisted, but surface a precise result so a failed normalization (a
+        # defrost coil reporting an unrecognized value) is visible, not hidden.
+        if new_quality == Quality.invalid.value:
+            result = diag.NORMALIZATION_FAILED
+        elif new_quality in (Quality.unavailable.value, Quality.unknown.value):
+            result = diag.UNAVAILABLE
         else:
-            self._last_value[aid] = res_b.normalized_bool
-            self._last_quality[aid] = res_b.quality.value
-        return True
+            result = diag.STORED
+        return self._diag(target, old_raw, raw_str, prev, norm, True, result)
+
+    def _diag(
+        self,
+        target: AssignmentTarget,
+        old_raw: str | None,
+        new_raw: str | None,
+        norm_old: str | None,
+        norm_new: str | None,
+        persisted: bool,
+        result: str,
+    ) -> str:
+        if self.diagnostics is not None:
+            self.diagnostics.record(
+                entity_id=target.entity_id,
+                storage_unit_id=target.storage_unit_id,
+                role=target.role,
+                old_raw=old_raw,
+                new_raw=new_raw,
+                normalized_old=norm_old,
+                normalized_new=norm_new,
+                mapping_found=True,
+                persisted=persisted,
+                engine_relevant=target.role == _DEFROST_ROLE,
+                result=result,
+            )
+        return result
 
     async def reconcile(self, states: list[dict[str, Any]]) -> int:
         """After (re)connect: process current states for monitored entities only."""

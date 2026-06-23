@@ -128,6 +128,46 @@ async def test_excursion_not_suppressed_without_approved_model(app_client):
 
 
 @pytest.mark.asyncio
+async def test_freezer_without_upper_limit_completes_via_baseline(app_client):
+    """A freezer with only a lower limit (no upper) must still complete a cycle:
+    recovery falls back to the pre-defrost baseline instead of never finishing."""
+    resp = await app_client.post(
+        "/api/storage-units",
+        json={
+            "name": "TK",
+            "lower_limit_c": -25.0,  # only a lower limit; no upper
+            "assignments": [
+                {"role": "room_temperature", "entity_id": "sensor.tk_temp"},
+                {"role": "defrost", "entity_id": "switch.tk_defrost"},
+            ],
+        },
+    )
+    uid = resp.json()["id"]
+    eng = _engine(app_client)
+
+    def rr(now, *, value, defrost_on):
+        return UnitReading(
+            storage_unit_id=uid, now=now, connected=True, has_room=True, room_exists=True,
+            quality="valid", normalized_c=value, last_update=now, defrost_on=defrost_on,
+            lower=-25.0, upper=None, warning_margin=0.5, violation_delay=900,
+            recovery_delay=300, offline_delay=600, evaporator_c=None,
+            defrost_entity_id="switch.tk_defrost",
+            defrost=_ds(learned=False, recovery_target_c=None),
+        )
+
+    await _feed(eng, [
+        rr(T0, value=-20.0, defrost_on=True),                       # baseline -20
+        rr(T0 + timedelta(minutes=4), value=-10.0, defrost_on=True),  # peak -10
+        rr(T0 + timedelta(minutes=8), value=-12.0, defrost_on=False),  # recovering
+        rr(T0 + timedelta(minutes=20), value=-20.5, defrost_on=False),  # <= -20+1 -> done
+    ])
+    cycles = await _cycles(uid)
+    assert len(cycles) == 1
+    assert cycles[0].status == "completed"
+    assert cycles[0].classification == "expected_defrost"
+
+
+@pytest.mark.asyncio
 async def test_normal_defrost_without_excursion(app_client):
     unit = await _make_unit(app_client)
     uid = unit["id"]

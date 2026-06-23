@@ -30,12 +30,16 @@ from .api import (
     storage_units,
 )
 from .api import (
+    diagnostics as diagnostics_api,
+)
+from .api import (
     maintenance as maintenance_api,
 )
 from .api import settings as settings_api
 from .collector import Collector
 from .config import get_settings
 from .db import dispose_engine, get_engine, get_session_factory
+from .diagnostics import DiagnosticsRecorder
 from .errors import AppError, app_error_handler
 from .ha.client import HomeAssistantRestClient
 from .ha.manager import HAConnectionManager
@@ -101,6 +105,9 @@ async def lifespan(app: FastAPI):
 
     # Sample collector (Phase 3): records assigned-entity samples independently.
     collector = Collector(get_session_factory())
+    # Diagnostics recorder (Phase 4.6.1): in-memory event/sample trace.
+    diagnostics = DiagnosticsRecorder()
+    collector.diagnostics = diagnostics
     try:
         await collector.refresh_index()
     except Exception as exc:  # noqa: BLE001
@@ -123,6 +130,7 @@ async def lifespan(app: FastAPI):
     app.state.collector = collector
     app.state.incident_engine = incident_engine
     app.state.maintenance = maintenance
+    app.state.diagnostics = diagnostics
     await manager.start()
 
     maint_stop = asyncio.Event()
@@ -193,6 +201,7 @@ def create_app() -> FastAPI:
     app.include_router(dashboard.router)
     app.include_router(incidents.router)
     app.include_router(defrost.router)
+    app.include_router(diagnostics_api.router)
     app.include_router(maintenance_api.router)
 
     _mount_frontend(app)
