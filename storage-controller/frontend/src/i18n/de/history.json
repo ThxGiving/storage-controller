@@ -1,6 +1,6 @@
 {
   "title": "Home-Assistant-Verlauf",
-  "subtitle": "Aufgezeichneten Temperaturverlauf für den Sensor dieser Einheit importieren. Der Import läuft im Hintergrund, ist dedupliziert und erzeugt nie aktive Vorfälle.",
+  "subtitle": "Aufgezeichneten Temperaturverlauf je Einheit importieren. Der Import läuft im Hintergrund in Datums-Abschnitten, ist fortsetzbar, dedupliziert und erzeugt nie aktive Vorfälle.",
   "import": "Verfügbaren Home-Assistant-Verlauf importieren",
   "range": {
     "all": "Alle verfügbaren Daten",
@@ -9,7 +9,17 @@
     "last_90_days": "Letzte 90 Tage"
   },
   "start": "Importieren",
+  "resume": "Fortsetzen",
   "retry": "Erneut versuchen",
+  "extend": "Erneut / erweitern",
+  "cancel": "Abbrechen",
+  "prompt": "Vorhandener Home-Assistant-Verlauf ist verfügbar. Jetzt importieren?",
+  "importedRanges": "Importiert: {{ranges}}",
+  "failedRanges": "Fehlgeschlagen: {{ranges}}",
+  "noSensorBadge": "Kein Temperatursensor zugewiesen",
+  "manageHint": "Importe auf der Kühleinheiten-Seite verwalten",
+  "detailNone": "Noch kein Import",
+  "detailPartial": "Teilweise importiert — siehe Kühleinheiten-Seite",
   "availability": {
     "raw_available": "Verlauf verfügbar",
     "stats_only": "Nur langfristige Stundenstatistik verfügbar",
@@ -22,7 +32,9 @@
     "completed_raw": "{{n}} Rohpunkte",
     "completed_stats": "{{n}} Stundenstatistiken",
     "partial": "Nur Stundenstatistik importiert (keine Minuten-Genauigkeit)",
+    "statsNote": "enthält Stundenstatistik (keine Minuten-Genauigkeit)",
     "failed": "Import fehlgeschlagen",
+    "cancelled": "Import abgebrochen",
     "no_history": "Kein älterer Verlauf verfügbar"
   },
   "noSensor": "Weise einen Raumtemperatur-Sensor zu, um den Verlaufsimport zu aktivieren."

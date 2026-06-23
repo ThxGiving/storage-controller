@@ -9,12 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatTemperature, formatNumber } from "@/lib/utils";
 import { UnitEditor } from "./UnitEditor";
+import { HistoryImportSection } from "./HistoryImportSection";
 
 export function UnitsPage() {
   const { t } = useTranslation(["storage-units", "common"]);
   const qc = useQueryClient();
   const [editorOpen, setEditorOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<StorageUnit | null>(null);
+  const [promptUnitId, setPromptUnitId] = React.useState<number | null>(null);
 
   const unitsQuery = useQuery({ queryKey: ["units"], queryFn: api.listUnits });
   const entitiesQuery = useQuery({
@@ -30,9 +32,13 @@ export function UnitsPage() {
 
   const createMut = useMutation({
     mutationFn: (input: StorageUnitInput) => api.createUnit(input),
-    onSuccess: () => {
+    onSuccess: (created: StorageUnit) => {
       invalidate();
       setEditorOpen(false);
+      // Continue the setup flow: offer history import for the new unit if it has
+      // a primary temperature sensor.
+      const hasSensor = created.assignments?.some((a) => a.role === "room_temperature");
+      setPromptUnitId(hasSensor ? created.id : null);
     },
   });
   const updateMut = useMutation({
@@ -105,6 +111,10 @@ export function UnitsPage() {
           />
         ))}
       </div>
+
+      {units.length > 0 && (
+        <HistoryImportSection units={units} promptUnitId={promptUnitId} />
+      )}
 
       <UnitEditor
         open={editorOpen}

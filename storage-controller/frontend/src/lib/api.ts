@@ -153,6 +153,10 @@ export const api = {
       method: "POST",
       body: JSON.stringify(input),
     }),
+  cancelHistoryImport: (unitId: number) =>
+    request<HistoryImportJob | null>(`api/storage-units/${unitId}/history/import/cancel`, {
+      method: "POST",
+    }),
 
   getDefrostLearning: (id: number) =>
     request<DefrostLearningStatus>(`api/storage-units/${id}/defrost/learning`),

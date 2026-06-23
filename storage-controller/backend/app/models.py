@@ -642,8 +642,9 @@ class MaintenanceRun(Base):
 class HistoryImportStatus(str, enum.Enum):
     importing = "importing"
     completed = "completed"
-    partial = "partial"  # imported some (e.g. only hourly statistics)
+    partial = "partial"  # some chunks done, some failed (or only hourly statistics)
     failed = "failed"
+    cancelled = "cancelled"
     no_history = "no_history"
 
 
@@ -681,6 +682,10 @@ class HistoryImport(Base):
     stats_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Per-chunk progress for resumable imports: JSON list of {s, e, st} where
+    # st is pending|done|failed. Lets an interrupted/failed import resume without
+    # restarting completed windows, and the UI show which date range failed.
+    chunks_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_by: Mapped[str | None] = mapped_column(String(200), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

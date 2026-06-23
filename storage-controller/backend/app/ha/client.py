@@ -32,9 +32,9 @@ class HomeAssistantRestClient:
             headers["Authorization"] = f"Bearer {self._token}"
         return headers
 
-    async def _get(self, path: str) -> Any:
+    async def _get(self, path: str, *, timeout: float | None = None) -> Any:
         url = f"{self._base_url}/{path.lstrip('/')}"
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
+        async with httpx.AsyncClient(timeout=timeout or self._timeout) as client:
             resp = await client.get(url, headers=self._headers())
             resp.raise_for_status()
             return resp.json()
@@ -47,19 +47,20 @@ class HomeAssistantRestClient:
         return data if isinstance(data, list) else []
 
     async def get_history(
-        self, entity_id: str, start_iso: str, end_iso: str
+        self, entity_id: str, start_iso: str, end_iso: str, *, timeout: float = 120.0
     ) -> list[dict[str, Any]]:
         """Recorder raw history for one entity in [start, end).
 
         ``minimal_response`` + ``no_attributes`` so each point is roughly
         ``{state, last_changed|last_updated}``. Empty list when the recorder has
-        no data for the window.
+        no data for the window. A generous timeout is used because recorder
+        history queries over long windows can be slow.
         """
         path = (
             f"history/period/{quote(start_iso)}?filter_entity_id={quote(entity_id)}"
             f"&end_time={quote(end_iso)}&minimal_response&no_attributes"
         )
-        data = await self._get(path)
+        data = await self._get(path, timeout=timeout)
         if isinstance(data, list) and data and isinstance(data[0], list):
             return data[0]
         return []

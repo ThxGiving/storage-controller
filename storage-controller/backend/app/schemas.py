@@ -772,6 +772,8 @@ class HistoryAvailabilityOut(BaseModel):
     has_statistics: bool = False
     recommended_range: str = "last_30_days"
     connected: bool = False
+    earliest: datetime | None = None  # earliest known history (where known)
+    latest: datetime | None = None
 
 
 class HistoryImportStart(BaseModel):
@@ -779,12 +781,17 @@ class HistoryImportStart(BaseModel):
     range: str = "last_30_days"
 
 
+class HistoryDateRange(BaseModel):
+    start: datetime
+    end: datetime
+
+
 class HistoryImportOut(BaseModel):
     id: int
     storage_unit_id: int
     entity_id: str
     requested_range: str
-    status: str  # importing | completed | partial | failed | no_history
+    status: str  # importing | completed | partial | failed | cancelled | no_history
     raw_from: datetime | None = None
     raw_to: datetime | None = None
     raw_count: int = 0
@@ -792,5 +799,7 @@ class HistoryImportOut(BaseModel):
     stats_to: datetime | None = None
     stats_count: int = 0
     error_message: str | None = None
+    imported_ranges: list[HistoryDateRange] = Field(default_factory=list)
+    failed_ranges: list[HistoryDateRange] = Field(default_factory=list)
     created_at: datetime
     finished_at: datetime | None = None

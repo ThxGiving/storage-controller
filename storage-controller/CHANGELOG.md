@@ -2,6 +2,42 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.3.2 — Unreleased
+
+### Fixed — resilient, resumable history import (was `ReadTimeout`)
+
+- Home Assistant history is now fetched in **bounded date chunks** (5 days)
+  instead of one large request, so a long range no longer hits a read timeout.
+  Each window has a **generous timeout** and **bounded exponential-backoff
+  retries**.
+- **Progress is persisted after every chunk**, so a failed or interrupted import
+  (including an App restart mid-import) can **resume** without restarting
+  completed windows. The import is idempotent and never creates duplicate
+  samples, and never overwrites newer native samples (existing timestamps of any
+  source are skipped).
+- Import results now distinguish **completed / partially completed / failed /
+  cancelled**, and the UI shows **exactly which date range failed** (e.g.
+  "01.05.–21.05. imported · 22.05.–28.05. failed · Resume") rather than a generic
+  error. A running import can be **cancelled**. Migration 0010 adds per-chunk
+  progress; new status `cancelled`.
+
+### Changed — history-import placement & creation flow
+
+- The history-import controls moved out of the unit **detail** view onto the
+  **storage-units management page**, as a **compact row per unit** (never one
+  ambiguous global box). Each row shows whether a temperature sensor is assigned,
+  whether history is available (with earliest/latest where known), the current
+  status, the already-imported period, any failed range, and buttons to
+  **import / resume / retry / extend / cancel**.
+- After creating a unit with a primary temperature sensor, the management page
+  shows an inline prompt — *"Existing Home Assistant history is available. Import
+  it now?"* — so the feature is discoverable as one continuous setup flow.
+- The unit **detail** view keeps only a small **read-only** import status with a
+  pointer to the management page.
+- Hourly long-term statistics remain clearly labelled as hourly (no implied
+  minute-level incident precision); imports still never create live incidents,
+  active incidents, or alter approved defrost models.
+
 ## 0.3.1 — Unreleased
 
 ### Changed

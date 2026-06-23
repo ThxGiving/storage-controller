@@ -1,6 +1,6 @@
 {
   "title": "Home Assistant history",
-  "subtitle": "Import recorded temperature history for this unit's sensor. Imports run in the background, are de-duplicated, and never create live incidents.",
+  "subtitle": "Import recorded temperature history per unit. Imports run in the background in date chunks, can be resumed, are de-duplicated, and never create live incidents.",
   "import": "Import available Home Assistant history",
   "range": {
     "all": "All available data",
@@ -9,7 +9,17 @@
     "last_90_days": "Last 90 days"
   },
   "start": "Import",
+  "resume": "Resume",
   "retry": "Retry",
+  "extend": "Re-import / extend",
+  "cancel": "Cancel",
+  "prompt": "Existing Home Assistant history is available. Import it now?",
+  "importedRanges": "Imported: {{ranges}}",
+  "failedRanges": "Failed: {{ranges}}",
+  "noSensorBadge": "No temperature sensor assigned",
+  "manageHint": "Manage imports on the Storage Units page",
+  "detailNone": "No import yet",
+  "detailPartial": "Partially imported — see the Storage Units page",
   "availability": {
     "raw_available": "History available",
     "stats_only": "Only long-term hourly statistics available",
@@ -22,7 +32,9 @@
     "completed_raw": "{{n}} raw points",
     "completed_stats": "{{n}} hourly statistics",
     "partial": "Imported hourly statistics only (no minute-level precision)",
+    "statsNote": "includes hourly statistics (no minute-level precision)",
     "failed": "Import failed",
+    "cancelled": "Import cancelled",
     "no_history": "No older history available"
   },
   "noSensor": "Assign a room-temperature sensor to enable history import."

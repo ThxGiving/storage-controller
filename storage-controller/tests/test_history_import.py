@@ -144,6 +144,149 @@ async def test_statistics_fallback_imports_hourly_aggregates(app_client, monkeyp
         assert aggs[0].min_c == 3.0 and aggs[0].max_c == 6.0 and aggs[0].avg_c == 4.5
 
 
+class _WindowRest:
+    """Realistic fake: returns only points inside [start, end); can fail chosen
+    windows (always, or only the first N calls to exercise retry)."""
+
+    def __init__(self, points, fail_days=None, fail_times=0):
+        self._points = points
+        self.calls: dict[str, int] = {}
+        self._fail_days = set(fail_days or [])
+        self._fail_times = fail_times  # 0 == always fail
+
+    async def get_history(self, entity_id, start_iso, end_iso):
+        day = start_iso[:10]
+        self.calls[day] = self.calls.get(day, 0) + 1
+        if day in self._fail_days and (self._fail_times == 0 or self.calls[day] <= self._fail_times):
+            raise TimeoutError("boom")
+        s = datetime.fromisoformat(start_iso)
+        e = datetime.fromisoformat(end_iso)
+        return [
+            p for p in self._points
+            if s <= datetime.fromisoformat(p["last_changed"]) < e
+        ]
+
+
+def _spread(days, per_day=4, end=NOW):
+    """Points spread across the last `days` days."""
+    pts = []
+    for d in range(days):
+        for h in range(per_day):
+            t = end - timedelta(days=days - d) + timedelta(hours=6 * h)
+            pts.append({"state": "4.0", "last_changed": t.isoformat()})
+    return pts
+
+
+async def _run_job(uid, aid, rest, *, token=None, resume=False, job_id=None):
+    factory = db_module.get_session_factory()
+    async with factory() as s:
+        if job_id is None:
+            job = HistoryImport(storage_unit_id=uid, entity_id="sensor.kh",
+                                requested_range="last_30_days", status="importing", created_at=NOW)
+            s.add(job)
+            await s.flush()
+        else:
+            job = await s.get(HistoryImport, job_id)
+        assignment = await s.get(EntityAssignment, aid)
+        await hi.run_import(s, job=job, assignment=assignment, storage_unit_id=uid, rest=rest,
+                            ws_url="ws://x", token=token, entity_unit="°C",
+                            tz_name="Europe/Berlin", now=NOW, resume=resume)
+        await s.commit()
+        return job.id, job.status, job.raw_count
+
+
+@pytest.mark.asyncio
+async def test_seven_day_import(app_client):
+    uid, aid = await _unit_with_assignment(app_client)
+    _, status, count = await _run_job(uid, aid, _WindowRest(_spread(7)))
+    assert status == "completed" and count == 7 * 4
+
+
+@pytest.mark.asyncio
+async def test_chunk_timeout_yields_partial_with_failed_range(app_client):
+    uid, aid = await _unit_with_assignment(app_client)
+    # Fail the window that starts 25 days before NOW (one 5-day chunk).
+    fail_day = (NOW - timedelta(days=25)).date().isoformat()
+    rest = _WindowRest(_spread(30), fail_days=[fail_day])
+    job_id, status, count = await _run_job(uid, aid, rest)
+    assert status == "partial" and count > 0
+    factory = db_module.get_session_factory()
+    async with factory() as s:
+        job = await s.get(HistoryImport, job_id)
+        ranges = hi.summarize_chunks(job.chunks_json)
+        assert len(ranges["failed"]) == 1  # exactly the failed window is reported
+        assert ranges["imported"]  # the rest imported
+
+
+@pytest.mark.asyncio
+async def test_failed_window_is_retried_with_backoff(app_client, monkeypatch):
+    monkeypatch.setattr(hi, "_RETRY_BASE_DELAY", 0.0)  # no real sleeping
+    uid, aid = await _unit_with_assignment(app_client)
+    fail_day = (NOW - timedelta(days=25)).date().isoformat()
+    rest = _WindowRest(_spread(30), fail_days=[fail_day], fail_times=2)  # fail twice, then ok
+    _, status, count = await _run_job(uid, aid, rest)
+    assert status == "completed" and count == 30 * 4
+    assert rest.calls[fail_day] == 3  # 2 failures + 1 success
+
+
+@pytest.mark.asyncio
+async def test_resume_skips_done_and_retries_failed(app_client, monkeypatch):
+    monkeypatch.setattr(hi, "_RETRY_BASE_DELAY", 0.0)
+    uid, aid = await _unit_with_assignment(app_client)
+    fail_day = (NOW - timedelta(days=25)).date().isoformat()
+    rest1 = _WindowRest(_spread(30), fail_days=[fail_day])  # one window fails
+    job_id, status, count1 = await _run_job(uid, aid, rest1)
+    assert status == "partial"
+    # Resume with a healthy client: only the failed window is re-fetched.
+    rest2 = _WindowRest(_spread(30))
+    _, status2, count2 = await _run_job(uid, aid, rest2, resume=True, job_id=job_id)
+    assert status2 == "completed"
+    assert count2 == 30 * 4  # cumulative full coverage after resume, no duplicates
+    assert count1 < count2  # resume added the previously-failed window
+    assert list(rest2.calls.keys()) == [fail_day]  # done windows not re-fetched
+
+
+@pytest.mark.asyncio
+async def test_restart_orphaned_import_resumes(app_client, monkeypatch):
+    monkeypatch.setattr(hi, "_RETRY_BASE_DELAY", 0.0)
+    uid, aid = await _unit_with_assignment(app_client)
+    # Simulate a crash mid-import: an "importing" job with a half-done plan.
+    import json
+    factory = db_module.get_session_factory()
+    async with factory() as s:
+        plan = [
+            {"s": (NOW - timedelta(days=30)).isoformat(), "e": (NOW - timedelta(days=25)).isoformat(), "st": "done"},
+            {"s": (NOW - timedelta(days=25)).isoformat(), "e": (NOW - timedelta(days=20)).isoformat(), "st": "pending"},
+        ]
+        job = HistoryImport(storage_unit_id=uid, entity_id="sensor.kh", requested_range="last_30_days",
+                            status="importing", created_at=NOW, chunks_json=json.dumps(plan))
+        s.add(job)
+        await s.commit()
+        jid = job.id
+    rest = _WindowRest(_spread(30))
+    _, status, _count = await _run_job(uid, aid, rest, resume=True, job_id=jid)
+    # The already-done window must not be refetched; pending ones complete.
+    assert (NOW - timedelta(days=30)).date().isoformat() not in rest.calls
+    assert status in ("completed", "partial")
+
+
+@pytest.mark.asyncio
+async def test_sparse_history_completes_without_bridging(app_client):
+    uid, aid = await _unit_with_assignment(app_client)
+    # Data on a single day only, inside a 30-day request.
+    one_day = [{"state": "4.0", "last_changed": (NOW - timedelta(days=12) + timedelta(hours=h)).isoformat()}
+               for h in range(6)]
+    _, status, count = await _run_job(uid, aid, _WindowRest(one_day))
+    assert status == "completed" and count == 6  # only the real points, no filling
+
+
+@pytest.mark.asyncio
+async def test_unit_or_sensor_removed_mid_import_is_safe(app_client):
+    # The background runner must no-op when the job/assignment vanished.
+    from app.api import history_import as api
+    await api._run(999999, 999999, 999999, _FakeRest([]), "ws://x", None, "°C", "Europe/Berlin")
+
+
 @pytest.mark.asyncio
 async def test_api_availability_no_ha(app_client):
     uid, _ = await _unit_with_assignment(app_client)

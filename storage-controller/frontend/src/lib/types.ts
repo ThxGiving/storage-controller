@@ -634,14 +634,29 @@ export interface HistoryAvailability {
   has_statistics: boolean;
   recommended_range: HistoryRange;
   connected: boolean;
+  earliest: string | null;
+  latest: string | null;
 }
+
+export interface HistoryDateRange {
+  start: string;
+  end: string;
+}
+
+export type HistoryImportStatus =
+  | "importing"
+  | "completed"
+  | "partial"
+  | "failed"
+  | "cancelled"
+  | "no_history";
 
 export interface HistoryImportJob {
   id: number;
   storage_unit_id: number;
   entity_id: string;
   requested_range: HistoryRange;
-  status: "importing" | "completed" | "partial" | "failed" | "no_history";
+  status: HistoryImportStatus;
   raw_from: string | null;
   raw_to: string | null;
   raw_count: number;
@@ -649,6 +664,8 @@ export interface HistoryImportJob {
   stats_to: string | null;
   stats_count: number;
   error_message: string | null;
+  imported_ranges: HistoryDateRange[];
+  failed_ranges: HistoryDateRange[];
   created_at: string;
   finished_at: string | null;
 }
