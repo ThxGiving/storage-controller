@@ -57,5 +57,31 @@ def set_entities(client: httpx.AsyncClient, states: list[dict]) -> None:
     }
 
 
+def get_collector(client: httpx.AsyncClient):
+    return client._app.state.collector  # type: ignore[attr-defined]
+
+
+def get_manager(client: httpx.AsyncClient):
+    return client._app.state.ha_manager  # type: ignore[attr-defined]
+
+
+def ha_state(
+    entity_id: str,
+    state: str,
+    *,
+    unit: str | None = "°C",
+    last_updated: str,
+    context_id: str | None = None,
+) -> dict:
+    return {
+        "entity_id": entity_id,
+        "state": state,
+        "attributes": {"unit_of_measurement": unit} if unit else {},
+        "last_updated": last_updated,
+        "last_changed": last_updated,
+        "context": {"id": context_id} if context_id else {},
+    }
+
+
 # Some environments require an explicit event loop policy for async fixtures.
 os.environ.setdefault("PYTEST_ASYNCIO_MODE", "auto")

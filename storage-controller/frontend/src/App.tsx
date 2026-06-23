@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 import { Sidebar, type TabKey } from "@/components/layout/Sidebar";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { StatusPill } from "@/components/layout/StatusPill";
-import { Overview } from "@/pages/Overview";
+import { Dashboard } from "@/pages/Dashboard";
 import { EntityBrowser } from "@/features/entities/EntityBrowser";
 import { UnitsPage } from "@/features/units/UnitsPage";
 import { SettingsPage } from "@/pages/Settings";
@@ -37,7 +37,7 @@ export default function App() {
         </header>
 
         <main className="mx-auto w-full max-w-6xl flex-1 animate-fade-in p-5 md:p-8">
-          {tab === "overview" && <Overview />}
+          {tab === "overview" && <Dashboard onNavigateToUnits={() => setTab("units")} />}
           {tab === "units" && <UnitsPage />}
           {tab === "entities" && <EntityBrowser />}
           {tab === "settings" && <SettingsPage />}

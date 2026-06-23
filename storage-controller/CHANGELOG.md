@@ -2,6 +2,42 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.1.6 — Unreleased
+
+### Added — Phase 3A: independent data collection
+
+- A backend **sample collector** records assigned-entity samples from the single
+  Home Assistant WebSocket connection into SQLite, independently of the Recorder.
+  Only entities assigned to a storage unit are recorded.
+- `sensor_samples` and `state_samples` tables (migration 0002) with
+  `UNIQUE(entity_assignment_id, event_timestamp)` deduplication.
+- Celsius/Fahrenheit normalization with quality flags (`valid`, `unknown`,
+  `unavailable`, `invalid`, `implausible`); unknown/unavailable/NaN/missing
+  values are **never** coerced to zero — they become visible chart gaps.
+- Reconnect reconciliation (idempotent), out-of-order protection, and a
+  configurable **heartbeat** sample interval for stable temperatures.
+- High-water marks are seeded from the DB so collection survives App restarts
+  without duplicates.
+- History API `GET /api/storage-units/{id}/samples` with time-bucket
+  downsampling and visible gaps; `GET/PATCH /api/settings` for heartbeat and
+  retention. Retention values are stored but destructive cleanup is intentionally
+  not yet implemented (will land with tests).
+
+### Added — Phase 3B: operational dashboard
+
+- New `GET /api/dashboard` aggregation with server-computed operational status
+  (`normal`, `near_limit`, `outside_range`, `unavailable`, `stale`,
+  `disconnected`, `configuration_error`).
+- A purpose-built, responsive dashboard (shadcn/ui foundation) with one rich card
+  per unit: dominant temperature hero, 24h mini-chart with gaps, horizontal
+  temperature range gauge (with numeric values, not color-only), data-quality and
+  status indicators, and an operational-state strip for assigned compressor / fan
+  / defrost / setpoint / evaporator. Dashboard header with connection state and
+  unit counts; loading skeletons, empty and error states.
+- Storage-unit detail view with a large ECharts time-series chart, threshold and
+  setpoint lines, visible gaps, a segmented 24h/7d/30d time-range control, and
+  range statistics. Full English/German translations, dark/light mode.
+
 ## 0.1.5 — Unreleased
 
 ### Added

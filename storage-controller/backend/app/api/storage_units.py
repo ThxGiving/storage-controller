@@ -47,6 +47,13 @@ def _ingress_user(request: Request) -> str | None:
     )
 
 
+async def _refresh_collector(request: Request) -> None:
+    """Rebuild the sample collector's assignment index after a config change."""
+    collector = getattr(request.app.state, "collector", None)
+    if collector is not None:
+        await collector.refresh_index()
+
+
 async def _audit(
     db: AsyncSession, *, action: str, unit: StorageUnit, user: str | None, detail: str | None
 ) -> None:
@@ -131,6 +138,7 @@ async def create_unit(
         db, action="create", unit=unit, user=_ingress_user(request), detail=unit.name
     )
     await db.commit()
+    await _refresh_collector(request)
     return await _get_unit(db, unit.id)
 
 
@@ -164,6 +172,7 @@ async def update_unit(
         db, action="update", unit=unit, user=_ingress_user(request), detail=unit.name
     )
     await db.commit()
+    await _refresh_collector(request)
     return await _get_unit(db, unit_id)
 
 
@@ -177,6 +186,7 @@ async def delete_unit(
     )
     await db.delete(unit)
     await db.commit()
+    await _refresh_collector(request)
 
 
 @router.get("/{unit_id}/current", response_model=list[AssignmentCurrentValue])

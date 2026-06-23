@@ -17,9 +17,11 @@ from fastapi.staticfiles import StaticFiles
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from . import __version__
-from .api import health, home_assistant, profiles, status, storage_units
+from .api import dashboard, health, history, home_assistant, profiles, status, storage_units
+from .api import settings as settings_api
+from .collector import Collector
 from .config import get_settings
-from .db import dispose_engine, get_engine
+from .db import dispose_engine, get_engine, get_session_factory
 from .errors import AppError, app_error_handler
 from .ha.client import HomeAssistantRestClient
 from .ha.manager import HAConnectionManager
@@ -80,7 +82,17 @@ async def lifespan(app: FastAPI):
         reconnect_initial=settings.ha_reconnect_initial_seconds,
         reconnect_max=settings.ha_reconnect_max_seconds,
     )
+
+    # Sample collector (Phase 3): records assigned-entity samples independently.
+    collector = Collector(get_session_factory())
+    try:
+        await collector.refresh_index()
+    except Exception as exc:  # noqa: BLE001
+        log.warning("collector: initial index build skipped: %s", type(exc).__name__)
+    manager.set_collector(collector)
+
     app.state.ha_manager = manager
+    app.state.collector = collector
     await manager.start()
 
     try:
@@ -110,6 +122,9 @@ def create_app() -> FastAPI:
     app.include_router(home_assistant.router)
     app.include_router(storage_units.router)
     app.include_router(profiles.router)
+    app.include_router(history.router)
+    app.include_router(settings_api.router)
+    app.include_router(dashboard.router)
 
     _mount_frontend(app)
     return app

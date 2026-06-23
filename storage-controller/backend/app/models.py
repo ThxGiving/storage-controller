@@ -16,6 +16,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -45,6 +46,31 @@ class EntityRole(str, enum.Enum):
 
 
 MANDATORY_ROLES = {EntityRole.room_temperature}
+
+# Roles whose value is recorded as a numeric temperature/measurement sample.
+NUMERIC_ROLES = {
+    EntityRole.room_temperature,
+    EntityRole.evaporator_temperature,
+    EntityRole.setpoint,
+    EntityRole.hysteresis,
+}
+
+
+class Quality(str, enum.Enum):
+    valid = "valid"
+    unknown = "unknown"
+    unavailable = "unavailable"
+    invalid = "invalid"
+    implausible = "implausible"
+    stale = "stale"
+    missing = "missing"
+
+
+class SampleSource(str, enum.Enum):
+    live_websocket = "live_websocket"
+    reconcile = "reconcile"
+    heartbeat = "heartbeat"
+    home_assistant_history_import = "home_assistant_history_import"
 
 
 class StorageUnitType(str, enum.Enum):
@@ -187,6 +213,89 @@ class MonitoringProfile(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
+
+
+class SensorSample(Base):
+    """A numeric measurement sample (temperature, setpoint, …).
+
+    Raw, original-unit and normalized-Celsius values are all retained. Unknown /
+    unavailable / invalid readings are stored with a quality flag and NULL
+    numeric values — never coerced to zero.
+    """
+
+    __tablename__ = "sensor_samples"
+    __table_args__ = (
+        UniqueConstraint(
+            "entity_assignment_id", "event_timestamp", name="uq_sensor_sample_assignment_ts"
+        ),
+        Index("ix_sensor_samples_unit_ts", "storage_unit_id", "event_timestamp"),
+        Index("ix_sensor_samples_assignment_ts", "entity_assignment_id", "event_timestamp"),
+        Index("ix_sensor_samples_role_ts", "role", "event_timestamp"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    storage_unit_id: Mapped[int] = mapped_column(
+        ForeignKey("storage_units.id", ondelete="CASCADE"), nullable=False
+    )
+    entity_assignment_id: Mapped[int] = mapped_column(
+        ForeignKey("entity_assignments.id", ondelete="CASCADE"), nullable=False
+    )
+    entity_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(String(40), nullable=False)
+
+    event_timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    received_timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+    raw_value: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    numeric_value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    normalized_value_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    original_unit: Mapped[str | None] = mapped_column(String(20), nullable=True)
+
+    quality: Mapped[str] = mapped_column(String(20), nullable=False, default=Quality.valid.value)
+    source: Mapped[str] = mapped_column(
+        String(40), nullable=False, default=SampleSource.live_websocket.value
+    )
+    source_context_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+
+class StateSample(Base):
+    """An operational on/off (or textual) state sample for non-numeric roles
+    (compressor, fan, defrost, light, controller, door, alarm) and availability
+    transitions."""
+
+    __tablename__ = "state_samples"
+    __table_args__ = (
+        UniqueConstraint(
+            "entity_assignment_id", "event_timestamp", name="uq_state_sample_assignment_ts"
+        ),
+        Index("ix_state_samples_unit_role_ts", "storage_unit_id", "role", "event_timestamp"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    storage_unit_id: Mapped[int] = mapped_column(
+        ForeignKey("storage_units.id", ondelete="CASCADE"), nullable=False
+    )
+    entity_assignment_id: Mapped[int] = mapped_column(
+        ForeignKey("entity_assignments.id", ondelete="CASCADE"), nullable=False
+    )
+    entity_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(String(40), nullable=False)
+
+    event_timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    received_timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+    raw_state: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    normalized_bool: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
+    quality: Mapped[str] = mapped_column(String(20), nullable=False, default=Quality.valid.value)
+    source: Mapped[str] = mapped_column(
+        String(40), nullable=False, default=SampleSource.live_websocket.value
+    )
+    source_context_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 
 class AuditEvent(Base):

@@ -170,6 +170,104 @@ export interface StorageUnitInput {
   assignments: AssignmentInput[];
 }
 
+// --- Phase 3: history + dashboard -------------------------------------------
+
+export interface HistoryPoint {
+  t: string;
+  v: number | null;
+  vmin?: number | null;
+  vmax?: number | null;
+  q?: string | null;
+}
+
+export interface HistoryResponse {
+  storage_unit_id: number;
+  role: EntityRole;
+  entity_id: string | null;
+  unit: string;
+  from_ts: string;
+  to_ts: string;
+  lower_limit_c: number | null;
+  upper_limit_c: number | null;
+  sample_count: number;
+  downsampled: boolean;
+  bucket_seconds: number | null;
+  points: HistoryPoint[];
+  min_c: number | null;
+  max_c: number | null;
+  avg_c: number | null;
+  coverage_ratio: number | null;
+}
+
+export type OperationalStatus =
+  | "normal"
+  | "near_limit"
+  | "outside_range"
+  | "unavailable"
+  | "stale"
+  | "disconnected"
+  | "configuration_error";
+
+export interface DashboardRoleValue {
+  role: EntityRole;
+  entity_id: string;
+  exists: boolean;
+  available: boolean;
+  quality: string;
+  numeric_c: number | null;
+  raw: string | null;
+  unit: string | null;
+  bool_value: boolean | null;
+}
+
+export interface DashboardSpark {
+  t: string;
+  v: number | null;
+}
+
+export interface DashboardUnit {
+  id: number;
+  name: string;
+  short_report_name: string | null;
+  unit_type: StorageUnitType;
+  profile_name: string | null;
+  lower_limit_c: number | null;
+  upper_limit_c: number | null;
+  warning_margin_c: number;
+  setpoint_c: number | null;
+  status: OperationalStatus;
+  room: DashboardRoleValue | null;
+  last_update: string | null;
+  roles: DashboardRoleValue[];
+  spark: DashboardSpark[];
+}
+
+export interface DashboardSummary {
+  total: number;
+  normal: number;
+  near_limit: number;
+  outside_range: number;
+  unavailable: number;
+  stale: number;
+  disconnected: number;
+  configuration_error: number;
+}
+
+export interface DashboardResponse {
+  connection: ConnectionStatus;
+  summary: DashboardSummary;
+  units: DashboardUnit[];
+  last_sample_at: string | null;
+  timezone: string;
+  generated_at: string;
+}
+
+export interface AppSettings {
+  heartbeat_interval_seconds: number;
+  retention_raw_days: number;
+  retention_state_days: number;
+}
+
 export interface AssignmentCurrentValue {
   role: EntityRole;
   entity_id: string;

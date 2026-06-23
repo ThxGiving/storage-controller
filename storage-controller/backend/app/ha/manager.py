@@ -16,6 +16,7 @@ import logging
 from datetime import UTC, datetime
 from typing import Any
 
+from ..models import SampleSource
 from ..schemas import ConnectionStatus, HAEntity
 from . import websocket as ws_proto
 from .client import HomeAssistantRestClient
@@ -88,10 +89,17 @@ class HAConnectionManager:
         self._device_names: dict[str, str] = {}
 
         self._task: asyncio.Task | None = None
+        self._heartbeat_task: asyncio.Task | None = None
         self._stop = asyncio.Event()
         self._lock = asyncio.Lock()
 
+        # Optional sample collector (Phase 3). Set via set_collector().
+        self._collector = None
+
     # -- public API -------------------------------------------------------- #
+
+    def set_collector(self, collector) -> None:
+        self._collector = collector
 
     @property
     def configured(self) -> bool:
@@ -118,17 +126,42 @@ class HAConnectionManager:
             return
         self._stop.clear()
         self._task = asyncio.create_task(self._run(), name="ha-connection")
+        if self._collector is not None and self._heartbeat_task is None:
+            self._heartbeat_task = asyncio.create_task(
+                self._heartbeat_loop(), name="ha-heartbeat"
+            )
 
     async def stop(self) -> None:
         self._stop.set()
-        if self._task is not None:
-            self._task.cancel()
-            try:
-                await self._task
-            except (asyncio.CancelledError, Exception):  # noqa: BLE001
-                pass
-            self._task = None
+        for task_attr in ("_task", "_heartbeat_task"):
+            task = getattr(self, task_attr)
+            if task is not None:
+                task.cancel()
+                try:
+                    await task
+                except (asyncio.CancelledError, Exception):  # noqa: BLE001
+                    pass
+                setattr(self, task_attr, None)
         self._status = STATUS_DISCONNECTED
+
+    async def _heartbeat_loop(self) -> None:
+        """Periodically ask the collector to write heartbeat samples for stable
+        temperatures. Ticks frequently; the collector decides what is due."""
+        while not self._stop.is_set():
+            interval = max(15, min(self._collector.heartbeat_interval, 60))
+            try:
+                await asyncio.wait_for(self._stop.wait(), timeout=interval)
+                break  # stop requested
+            except TimeoutError:
+                pass
+            if self._status != STATUS_CONNECTED:
+                continue
+            try:
+                await self._collector.heartbeat_tick(self.get_entity)
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:  # noqa: BLE001
+                log.warning("collector: heartbeat error: %s", type(exc).__name__)
 
     # -- internal loop ----------------------------------------------------- #
 
@@ -188,10 +221,17 @@ class HAConnectionManager:
             await conn.subscribe_state_changed()
             log.info("ha_client: subscribed to state_changed (%d entities)", len(states))
 
+            # Reconcile current states into the sample store (idempotent).
+            if self._collector is not None:
+                try:
+                    await self._collector.reconcile(states)
+                except Exception as exc:  # noqa: BLE001
+                    log.warning("collector: reconcile error: %s", type(exc).__name__)
+
             while not self._stop.is_set():
                 msg = await conn.receive()
                 if msg.get("type") == "event":
-                    self._handle_event(msg.get("event", {}))
+                    await self._handle_event(msg.get("event", {}))
         finally:
             await conn.raw.close()
 
@@ -213,7 +253,7 @@ class HAConnectionManager:
                 if s.get("entity_id")
             }
 
-    def _handle_event(self, event: dict[str, Any]) -> None:
+    async def _handle_event(self, event: dict[str, Any]) -> None:
         data = event.get("data") or {}
         new_state = data.get("new_state")
         entity_id = data.get("entity_id")
@@ -225,3 +265,12 @@ class HAConnectionManager:
             self._entities.pop(entity_id, None)
             return
         self._entities[entity_id] = parse_entity(new_state, self._device_names)
+
+        # Record the sample if this entity is assigned to a storage unit.
+        if self._collector is not None:
+            try:
+                await self._collector.handle_state(
+                    entity_id, new_state, SampleSource.live_websocket
+                )
+            except Exception as exc:  # noqa: BLE001
+                log.warning("collector: handle_state error: %s", type(exc).__name__)

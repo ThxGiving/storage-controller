@@ -1,14 +1,77 @@
 {
   "title": "Übersicht",
-  "subtitle": "Status von Storage Controller und der Home-Assistant-Verbindung.",
+  "subtitle": "Live-Status deiner Kühleinheiten.",
   "homeAssistant": "Home Assistant",
-  "entities": "Entities",
-  "lastEvent": "Letztes Event",
-  "reconnects": "Reconnects",
-  "storageUnits": "Kühleinheiten",
-  "database": "Datenbank",
-  "ok": "OK",
-  "version": "Version",
-  "trendPreview": "Trend (Vorschau)",
-  "phaseNote": "Hinweis: Unabhängige Temperaturaufzeichnung, Vorfälle und Berichte folgen in den nächsten Ausbaustufen. Aktuell zeigt die App Live-Status und die Konfiguration der Kühleinheiten."
+  "header": {
+    "units": "Einheiten",
+    "normal": "Normal",
+    "outsideRange": "Außerhalb",
+    "unavailable": "Nicht verfügbar",
+    "lastSample": "Letzte Messung",
+    "timezone": "Zeitzone",
+    "refresh": "Aktualisieren"
+  },
+  "status": {
+    "normal": "Normal",
+    "near_limit": "Grenzwertnah",
+    "outside_range": "Außerhalb des Bereichs",
+    "unavailable": "Nicht verfügbar",
+    "stale": "Keine aktuellen Daten",
+    "disconnected": "Getrennt",
+    "configuration_error": "Konfigurationsfehler"
+  },
+  "quality": {
+    "valid": "Live-Daten",
+    "unknown": "Unbekannt",
+    "unavailable": "Nicht verfügbar",
+    "invalid": "Ungültiger Wert",
+    "implausible": "Unplausibel",
+    "stale": "Veraltet",
+    "missing": "Keine Daten"
+  },
+  "card": {
+    "range": "Bereich",
+    "setpoint": "Sollwert",
+    "lastUpdate": "Letzte Aktualisierung",
+    "noData": "Keine Messung",
+    "openDetail": "Details öffnen"
+  },
+  "state": {
+    "on": "An",
+    "off": "Aus",
+    "unknown": "—"
+  },
+  "gauge": {
+    "low": "Min",
+    "high": "Max",
+    "current": "Aktuell"
+  },
+  "detail": {
+    "back": "Zurück zur Übersicht",
+    "current": "Aktuell",
+    "sourceEntity": "Quell-Entity",
+    "min": "Min",
+    "max": "Max",
+    "avg": "Durchschnitt",
+    "coverage": "Datenabdeckung",
+    "noSamples": "In diesem Zeitraum wurden noch keine Messwerte aufgezeichnet.",
+    "loading": "Verlauf wird geladen…",
+    "thresholds": "Grenzwerte",
+    "downsampledNote": "Großer Zeitraum – Werte werden zur Darstellung aggregiert."
+  },
+  "range": {
+    "24h": "24 Std.",
+    "7d": "7 T.",
+    "30d": "30 T.",
+    "custom": "Eigen"
+  },
+  "empty": {
+    "title": "Noch keine Kühleinheiten",
+    "hint": "Lege deine erste Kühleinheit an, um die Überwachung zu starten.",
+    "action": "Einheit anlegen"
+  },
+  "error": {
+    "title": "Dashboard konnte nicht geladen werden",
+    "retry": "Erneut versuchen"
+  }
 }

@@ -1,13 +1,24 @@
 import { apiUrl } from "./ingress";
 import type {
+  AppSettings,
   AppStatus,
   AssignmentCurrentValue,
   ConnectionStatus,
+  DashboardResponse,
   HAEntity,
+  HistoryResponse,
   MonitoringProfile,
   StorageUnit,
   StorageUnitInput,
 } from "./types";
+
+export interface SamplesParams {
+  role?: string;
+  range?: "24h" | "7d" | "30d" | "custom";
+  from?: string;
+  to?: string;
+  max_points?: number;
+}
 
 export class ApiError extends Error {
   /** Stable machine-readable error code the frontend translates (errors.<code>). */
@@ -95,4 +106,23 @@ export const api = {
     request<AssignmentCurrentValue[]>(`api/storage-units/${id}/current`),
 
   listProfiles: () => request<MonitoringProfile[]>("api/monitoring-profiles"),
+
+  getDashboard: () => request<DashboardResponse>("api/dashboard"),
+
+  getSamples: (id: number, params?: SamplesParams) => {
+    const q = new URLSearchParams();
+    if (params?.role) q.set("role", params.role);
+    if (params?.range) q.set("range", params.range);
+    if (params?.from) q.set("from", params.from);
+    if (params?.to) q.set("to", params.to);
+    q.set("max_points", String(params?.max_points ?? 800));
+    return request<HistoryResponse>(`api/storage-units/${id}/samples?${q.toString()}`);
+  },
+
+  getSettings: () => request<AppSettings>("api/settings"),
+  updateSettings: (input: Partial<AppSettings>) =>
+    request<AppSettings>("api/settings", {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
 };

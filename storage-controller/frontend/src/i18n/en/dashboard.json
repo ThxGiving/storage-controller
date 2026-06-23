@@ -1,14 +1,77 @@
 {
   "title": "Overview",
-  "subtitle": "Status of Storage Controller and the Home Assistant connection.",
+  "subtitle": "Live status of your cold-storage units.",
   "homeAssistant": "Home Assistant",
-  "entities": "Entities",
-  "lastEvent": "Last event",
-  "reconnects": "Reconnects",
-  "storageUnits": "Storage units",
-  "database": "Database",
-  "ok": "OK",
-  "version": "Version",
-  "trendPreview": "Trend (preview)",
-  "phaseNote": "Note: independent temperature recording, incidents and reports follow in upcoming stages. The app currently shows live status and the storage-unit configuration."
+  "header": {
+    "units": "Units",
+    "normal": "Normal",
+    "outsideRange": "Out of range",
+    "unavailable": "Unavailable",
+    "lastSample": "Last sample",
+    "timezone": "Timezone",
+    "refresh": "Refresh"
+  },
+  "status": {
+    "normal": "Normal",
+    "near_limit": "Near limit",
+    "outside_range": "Out of range",
+    "unavailable": "Unavailable",
+    "stale": "No recent data",
+    "disconnected": "Disconnected",
+    "configuration_error": "Configuration error"
+  },
+  "quality": {
+    "valid": "Live data",
+    "unknown": "Unknown",
+    "unavailable": "Unavailable",
+    "invalid": "Invalid value",
+    "implausible": "Implausible",
+    "stale": "Stale",
+    "missing": "No data"
+  },
+  "card": {
+    "range": "Range",
+    "setpoint": "Setpoint",
+    "lastUpdate": "Last update",
+    "noData": "No measurement",
+    "openDetail": "Open details"
+  },
+  "state": {
+    "on": "On",
+    "off": "Off",
+    "unknown": "—"
+  },
+  "gauge": {
+    "low": "Low",
+    "high": "High",
+    "current": "Current"
+  },
+  "detail": {
+    "back": "Back to overview",
+    "current": "Current",
+    "sourceEntity": "Source entity",
+    "min": "Min",
+    "max": "Max",
+    "avg": "Average",
+    "coverage": "Data coverage",
+    "noSamples": "No samples recorded in this period yet.",
+    "loading": "Loading history…",
+    "thresholds": "Thresholds",
+    "downsampledNote": "Long range — values are aggregated for display."
+  },
+  "range": {
+    "24h": "24 h",
+    "7d": "7 d",
+    "30d": "30 d",
+    "custom": "Custom"
+  },
+  "empty": {
+    "title": "No storage units yet",
+    "hint": "Create your first cold-storage unit to start monitoring.",
+    "action": "Create unit"
+  },
+  "error": {
+    "title": "Could not load the dashboard",
+    "retry": "Retry"
+  }
 }

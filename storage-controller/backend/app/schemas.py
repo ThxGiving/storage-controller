@@ -206,6 +206,109 @@ class MonitoringProfileOut(MonitoringProfileBase):
     updated_at: datetime
 
 
+class AppSettingsOut(BaseModel):
+    heartbeat_interval_seconds: int
+    retention_raw_days: int
+    retention_state_days: int
+
+
+class AppSettingsUpdate(BaseModel):
+    heartbeat_interval_seconds: int | None = Field(default=None, ge=30, le=86400)
+    retention_raw_days: int | None = Field(default=None, ge=1)
+    retention_state_days: int | None = Field(default=None, ge=1)
+
+
+class HistoryPoint(BaseModel):
+    t: datetime
+    # Null value = gap (unavailable / missing / no valid data in the bucket).
+    v: float | None = None
+    vmin: float | None = None
+    vmax: float | None = None
+    q: str | None = None
+
+
+class HistoryResponse(BaseModel):
+    storage_unit_id: int
+    role: EntityRole
+    entity_id: str | None = None
+    unit: str = "°C"
+    from_ts: datetime
+    to_ts: datetime
+    lower_limit_c: float | None = None
+    upper_limit_c: float | None = None
+    sample_count: int
+    downsampled: bool
+    bucket_seconds: int | None = None
+    points: list[HistoryPoint] = Field(default_factory=list)
+    # Range stats over valid samples only (None when no valid data).
+    min_c: float | None = None
+    max_c: float | None = None
+    avg_c: float | None = None
+    coverage_ratio: float | None = None
+
+
+# --------------------------------------------------------------------------- #
+# Operational dashboard (Phase 3B)
+# --------------------------------------------------------------------------- #
+
+
+class DashboardRoleValue(BaseModel):
+    role: EntityRole
+    entity_id: str
+    exists: bool
+    available: bool
+    quality: str
+    numeric_c: float | None = None  # normalized Celsius (numeric roles)
+    raw: str | None = None
+    unit: str | None = None
+    bool_value: bool | None = None  # operational on/off (state roles)
+
+
+class DashboardSpark(BaseModel):
+    t: datetime
+    v: float | None = None
+
+
+class DashboardUnit(BaseModel):
+    id: int
+    name: str
+    short_report_name: str | None = None
+    unit_type: StorageUnitType
+    profile_name: str | None = None
+    lower_limit_c: float | None = None
+    upper_limit_c: float | None = None
+    warning_margin_c: float = 0.0
+    setpoint_c: float | None = None
+
+    # normal | near_limit | outside_range | unavailable | stale | disconnected |
+    # configuration_error
+    status: str
+    room: DashboardRoleValue | None = None
+    last_update: datetime | None = None
+    roles: list[DashboardRoleValue] = Field(default_factory=list)
+    spark: list[DashboardSpark] = Field(default_factory=list)
+
+
+class DashboardSummary(BaseModel):
+    total: int = 0
+    normal: int = 0
+    near_limit: int = 0
+    outside_range: int = 0
+    unavailable: int = 0
+    stale: int = 0
+    disconnected: int = 0
+    configuration_error: int = 0
+
+
+class DashboardResponse(BaseModel):
+    connection: ConnectionStatus
+    summary: DashboardSummary
+    units: list[DashboardUnit] = Field(default_factory=list)
+    last_sample_at: datetime | None = None
+    timezone: str = "UTC"
+    generated_at: datetime
+
+
 class AssignmentCurrentValue(BaseModel):
     """Live value for an assigned entity, enriched from the HA entity cache."""
 

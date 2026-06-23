@@ -28,7 +28,7 @@ async def test_no_token_stays_disconnected():
 @pytest.mark.asyncio
 async def test_handle_event_updates_and_removes_entities():
     manager = make_manager()
-    manager._handle_event(
+    await manager._handle_event(
         {
             "data": {
                 "entity_id": "sensor.a",
@@ -40,7 +40,7 @@ async def test_handle_event_updates_and_removes_entities():
     assert manager.status().last_event_at is not None
 
     # new_state None => entity removed
-    manager._handle_event({"data": {"entity_id": "sensor.a", "new_state": None}})
+    await manager._handle_event({"data": {"entity_id": "sensor.a", "new_state": None}})
     assert manager.get_entity("sensor.a") is None
 
 
