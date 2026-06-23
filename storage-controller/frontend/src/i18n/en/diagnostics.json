@@ -36,7 +36,7 @@
   },
   "mapping": {
     "title": "Defrost state mapping",
-    "hint": "Comma-separated raw states. Use this when the controller reports values other than on/off (e.g. a Dixell coil).",
+    "hint": "A normal switch (on/off) is recognized automatically — leave this empty. Only fill it in if the controller reports other values (e.g. a Dixell output reporting \"defrosting\"/\"cooling\").",
     "active": "Active states (defrost on)",
     "inactive": "Inactive states (defrost off)",
     "activePlaceholder": "defrosting, 1",

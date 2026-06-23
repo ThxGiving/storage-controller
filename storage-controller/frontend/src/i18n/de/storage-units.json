@@ -52,6 +52,7 @@
     "defrostSection": "Abtau-bewusste Bewertung",
     "defrostEnabled": "Abtau-bewusste Bewertung aktivieren",
     "defrostHint": "Die App beobachtet Abtauzyklen automatisch und lernt die typische Hüllkurve. Bis ein gelerntes Profil bestätigt ist, bleiben Abtau-Überschreitungen normale Ereignisse — keine pauschale Ausnahme. Das gelernte Profil wird in der Detailansicht der Einheit verwaltet.",
-    "defrostNoEntity": "Weise eine Abtau-Entität zu, um die abtau-bewusste Bewertung zu aktivieren. Ohne sie gilt die normale Temperaturlogik."
+    "defrostNoEntity": "Weise eine Abtau-Entität zu, um die abtau-bewusste Bewertung zu aktivieren. Ohne sie gilt die normale Temperaturlogik.",
+    "optionalAdvanced": "(optional — nur für Regler mit abweichenden Werten)"
   }
 }

@@ -36,7 +36,7 @@
   },
   "mapping": {
     "title": "Abtau-Zustandszuordnung",
-    "hint": "Kommagetrennte Rohzustände. Nutze dies, wenn der Regler andere Werte als on/off meldet (z. B. ein Dixell-Ausgang).",
+    "hint": "Ein normaler Switch (on/off) wird automatisch erkannt — leer lassen. Nur ausfüllen, wenn der Regler andere Werte meldet (z. B. ein Dixell-Ausgang mit \"defrosting\"/\"cooling\").",
     "active": "Aktive Zustände (Abtauen an)",
     "inactive": "Inaktive Zustände (Abtauen aus)",
     "activePlaceholder": "defrosting, 1",

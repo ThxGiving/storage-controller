@@ -52,6 +52,7 @@
     "defrostSection": "Defrost-aware evaluation",
     "defrostEnabled": "Enable defrost-aware evaluation",
     "defrostHint": "The app observes defrost cycles automatically and learns the typical envelope. Until a learned profile is approved, defrost excursions stay normal incidents — never a blanket exemption. Manage the learned profile in the unit's detail view.",
-    "defrostNoEntity": "Assign a defrost entity to enable defrost-aware evaluation. Without it, normal temperature logic applies."
+    "defrostNoEntity": "Assign a defrost entity to enable defrost-aware evaluation. Without it, normal temperature logic applies.",
+    "optionalAdvanced": "(optional — only for non-standard controllers)"
   }
 }

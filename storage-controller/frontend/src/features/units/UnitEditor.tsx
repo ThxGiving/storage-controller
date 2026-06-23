@@ -312,9 +312,14 @@ export function UnitEditor({
               : t("storage-units:editor.defrostNoEntity")}
           </p>
           {hasDefrostEntity && defrostEnabled && (
-            <div className="mt-3 rounded-md border border-border bg-muted/30 p-3">
-              <div className="text-xs font-semibold">{t("diagnostics:mapping.title")}</div>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+            <details className="mt-3 rounded-md border border-border bg-muted/30 p-3">
+              <summary className="cursor-pointer text-xs font-semibold">
+                {t("diagnostics:mapping.title")}{" "}
+                <span className="font-normal text-muted-foreground">
+                  {t("storage-units:editor.optionalAdvanced")}
+                </span>
+              </summary>
+              <p className="mt-1.5 text-xs text-muted-foreground">
                 {t("diagnostics:mapping.hint")}
               </p>
               <div className="mt-2 grid gap-3 sm:grid-cols-2">
@@ -333,7 +338,7 @@ export function UnitEditor({
                   />
                 </Field>
               </div>
-            </div>
+            </details>
           )}
         </div>
 

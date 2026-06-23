@@ -2,6 +2,16 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.3.1 — Unreleased
+
+### Changed
+
+- The defrost **state mapping** in the unit editor is now a collapsed, clearly
+  **optional/advanced** disclosure. A normal `switch` (on/off — plus
+  unavailable/unknown) is recognized automatically, so the field can stay empty;
+  it's only needed for controllers that report other values (e.g. a Dixell output
+  reporting `defrosting`/`cooling`).
+
 ## 0.3.0 — Unreleased
 
 ### Added — Home Assistant history import (embedded in the unit flow)
