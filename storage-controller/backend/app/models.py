@@ -651,7 +651,7 @@ class ReportDetailLevel(str, enum.Enum):
 
 
 # Bump when the immutable report-model structure changes.
-REPORT_MODEL_VERSION = "1"
+REPORT_MODEL_VERSION = "2"
 
 
 class ReportBrandingSettings(Base):

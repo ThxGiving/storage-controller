@@ -56,6 +56,7 @@ class SampleMetrics:
     time_below_seconds: int = 0
     data_quality: DataQuality = field(default_factory=DataQuality)
     chart_points: list[list[float | None]] = field(default_factory=list)
+    gap_ranges: list[tuple[float, float]] = field(default_factory=list)  # (start, end) epoch
 
 
 async def sample_metrics(
@@ -103,6 +104,7 @@ async def sample_metrics(
 
     unavailable = invalid = gap = above = below = 0.0
     gaps_count = 0
+    gap_ranges: list[tuple[float, float]] = []
     # Attribute the interval after each sample to that sample's state.
     for (ts, v, q), (nts, _nv, _nq) in zip(samples, samples[1:], strict=False):
         if ts is None or nts is None:
@@ -113,6 +115,7 @@ async def sample_metrics(
         if dt > gap_threshold:
             gap += dt
             gaps_count += 1
+            gap_ranges.append((ts.timestamp(), nts.timestamp()))
             continue
         dt = min(dt, attribute_cap)
         if q == Quality.valid.value and v is not None:
@@ -147,6 +150,7 @@ async def sample_metrics(
         incomplete=bool(coverage is not None and coverage < 90.0),
     )
     m.chart_points = _downsample(samples, start_utc, end_utc, chart_buckets)
+    m.gap_ranges = gap_ranges
     return m
 
 
@@ -268,6 +272,27 @@ async def defrost_summary(
         max_recovery_seconds=int(max(recoveries)) if recoveries else None,
         has_approved_model=has_approved_model,
     )
+
+
+async def defrost_ranges(
+    session: AsyncSession, *, storage_unit_id: int, start_utc: datetime, end_utc: datetime
+) -> list[tuple[float, float]]:
+    rows = (
+        await session.scalars(
+            select(DefrostCycle).where(
+                DefrostCycle.storage_unit_id == storage_unit_id,
+                DefrostCycle.started_at >= start_utc,
+                DefrostCycle.started_at < end_utc,
+            )
+        )
+    ).all()
+    out: list[tuple[float, float]] = []
+    for c in rows:
+        s = _utc(c.started_at)
+        e = _utc(c.ended_at) or _utc(c.recovered_at)
+        if s and e and e > s:
+            out.append((s.timestamp(), e.timestamp()))
+    return out
 
 
 def chart_group_for(unit: StorageUnit) -> str:

@@ -74,12 +74,20 @@ class DataQuality(BaseModel):
     incomplete: bool = False
 
 
+class ChartBand(BaseModel):
+    kind: str  # deviation | gap | defrost
+    start: float  # epoch seconds
+    end: float
+
+
 class ChartSeries(BaseModel):
     unit_id: int
     name: str
+    color: str = "#2563eb"
     points: list[list[float | None]] = Field(default_factory=list)  # [epoch_s, value|None]
     lower_limit_c: float | None = None
     upper_limit_c: float | None = None
+    bands: list[ChartBand] = Field(default_factory=list)
 
 
 class OverviewChart(BaseModel):
@@ -89,6 +97,7 @@ class OverviewChart(BaseModel):
     series: list[ChartSeries] = Field(default_factory=list)
     lower_limit_c: float | None = None
     upper_limit_c: float | None = None
+    bands: list[ChartBand] = Field(default_factory=list)
 
 
 class UnitReport(BaseModel):
@@ -96,8 +105,11 @@ class UnitReport(BaseModel):
     name: str
     short_name: str | None = None
     unit_type: str
+    type_label: str = ""  # subtitle shown under the name
     profile_name: str | None = None
     chart_group: str
+    status: str = "ok"  # ok | reviewed | attention
+    accent: str = "#16a34a"  # header/accent color derived from status
     thresholds: ThresholdSnapshot
 
     min_c: float | None = None
@@ -106,6 +118,7 @@ class UnitReport(BaseModel):
 
     time_above_seconds: int = 0
     time_below_seconds: int = 0
+    outside_seconds: int = 0
 
     incident_count: int = 0
     total_incident_seconds: int = 0
@@ -118,11 +131,27 @@ class UnitReport(BaseModel):
     chart: ChartSeries | None = None  # per-unit mini chart
 
 
+class FlatIncident(BaseModel):
+    n: int
+    unit_name: str
+    opened_at: str
+    duration_seconds: int
+    extreme_value_c: float | None = None
+    cause: str | None = None
+    corrective_action: str | None = None
+    state: str
+    documented: bool = False
+
+
 class ReportSummary(BaseModel):
     total_units: int = 0
+    monitored_count: int = 0
     units_with_incidents: int = 0
     total_incidents: int = 0
+    confirmed_deviations: int = 0
+    open_incidents: int = 0
     overall_status: str = "ok"  # ok | attention | incomplete
+    verdict: str = "ok"  # ok | documented | open | incomplete
     coverage_percent: float | None = None
 
 
@@ -141,7 +170,11 @@ class ReportModel(BaseModel):
     period_end_utc: str
     detail_level: str
 
+    period_range_label: str = ""  # e.g. "01.05.2026 00:00 – 31.05.2026 23:59"
     branding: BrandingSnapshot
     summary: ReportSummary
     units: list[UnitReport] = Field(default_factory=list)
     overview_charts: list[OverviewChart] = Field(default_factory=list)
+    incidents_flat: list[FlatIncident] = Field(default_factory=list)
+    data_quality_ok: bool = True
+    data_quality_note: str = ""

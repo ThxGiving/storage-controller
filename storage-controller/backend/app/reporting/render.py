@@ -67,10 +67,17 @@ def _logo_data_uri(logo_path: Path | None) -> str | None:
 
 def render_html(model: ReportModel, *, logo_path: Path | None = None) -> str:
     L = labels(model.locale)
-    overview_svgs = [render_chart_svg(c, model.timezone) for c in model.overview_charts]
+    overview_svgs = [
+        render_chart_svg(
+            c, model.timezone, upper_label=L["upper_limit"], lower_label=L["lower_limit"]
+        )
+        for c in model.overview_charts
+    ]
     mini_svgs = {
         u.id: render_mini_svg(u.chart, model.timezone) for u in model.units if u.chart
     }
+    from .. import __version__
+
     template = _env().get_template("report.html")
     return template.render(
         m=model,
@@ -78,6 +85,7 @@ def render_html(model: ReportModel, *, logo_path: Path | None = None) -> str:
         overview_svgs=overview_svgs,
         mini_svgs=mini_svgs,
         logo_uri=_logo_data_uri(logo_path),
+        version=__version__,
     )
 
 

@@ -6,146 +6,196 @@
   <title>{{ m.branding.report_title }} — {{ m.period_label }}</title>
 </head>
 <body class="status-{{ m.summary.overall_status }}">
+{% macro statusbadge(u) -%}
+{% if u.status == "ok" %}<span class="badge b-green">✓ {{ L.status_ok_unit }}</span>
+{%- elif u.status == "reviewed" %}<span class="badge b-blue">✓ {{ L.status_reviewed }}</span>
+{%- else %}<span class="badge b-orange">{{ L.status_reviewed }}</span>{% endif %}
+{%- endmacro %}
+
+<!-- running-footer sources -->
+<span class="src set-pagelabel">{{ L.page }}</span>
+<span class="src set-pageof">{{ L.of }}</span>
 
 <!-- ============================ PAGE 1 ============================ -->
 <section class="page">
-  <header class="rep-head">
-    <div class="brand">
+  <span class="src set-footleft">Storage Controller v{{ version }}</span>
+
+  <header class="head">
+    <div class="head-brand">
       {% if logo_uri %}<img class="logo" src="{{ logo_uri }}" alt=""/>{% endif %}
-      <div>
+      <div class="org-block">
         <div class="org">{{ m.branding.organization_name or "" }}</div>
-        <div class="site">{{ m.branding.site_name or "" }}</div>
+        {% if m.branding.address %}<div class="addr">{{ m.branding.address | replace("\n", " · ") }}</div>{% endif %}
+        {% if m.branding.site_name %}<div class="addr">{{ m.branding.site_name }}</div>{% endif %}
       </div>
     </div>
-    <div class="title-block">
+    <div class="head-title">
       <h1>{{ m.branding.report_title }}</h1>
-      {% if m.branding.subtitle %}<div class="subtitle">{{ m.branding.subtitle }}</div>{% endif %}
-      <div class="period">{{ m.period_label }}</div>
-    </div>
-    <div class="meta">
-      <div><span>{{ L.report_id }}</span> {{ m.uuid[:8] }}</div>
-      <div><span>{{ L.generated }}</span> {{ m.generated_at[:16] | replace("T", " ") }}</div>
-      <div><span>{{ L.timezone }}</span> {{ m.timezone_label }}</div>
+      <div class="month">{{ m.period_label }}</div>
+      <div class="hmeta">
+        <div><span>{{ L.report_period }}:</span> {{ m.period_range_label }} ({{ m.timezone }})</div>
+        <div><span>{{ L.created_at }}:</span> {{ m.generated_at[:16] | replace("T", " ") }} · {{ m.timezone_label }}</div>
+        <div><span>{{ L.report_id }}:</span> {{ m.uuid }}</div>
+      </div>
     </div>
   </header>
 
-  <div class="status-strip">
-    <span class="dot"></span>
-    <strong>{{ L.overall_status }}:</strong>
-    {% if m.summary.overall_status == "ok" %}{{ L.status_ok }}
-    {% elif m.summary.overall_status == "attention" %}{{ L.status_attention }}
-    {% else %}{{ L.status_incomplete }}{% endif %}
-    <span class="sep">·</span> {{ L.summary_units }}: {{ m.summary.total_units }}
-    <span class="sep">·</span> {{ L.summary_incidents }}: {{ m.summary.total_incidents }}
-    {% if m.summary.coverage_percent is not none %}
-      <span class="sep">·</span> {{ L.coverage }}: {{ m.summary.coverage_percent | pct }}
-    {% endif %}
-  </div>
-
-  <table class="cmp">
-    <thead>
-      <tr>
-        <th>{{ L.unit }}</th><th>{{ L.range }}</th><th>{{ L.min }}</th><th>{{ L.max }}</th>
-        <th>{{ L.avg }}</th><th>{{ L.coverage }}</th><th>{{ L.incidents }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for u in m.units %}
-      <tr>
-        <td class="name">{{ u.name }}</td>
-        <td>{% if u.thresholds.lower_limit_c is not none %}{{ u.thresholds.lower_limit_c }}{% else %}—{% endif %} … {% if u.thresholds.upper_limit_c is not none %}{{ u.thresholds.upper_limit_c }}{% else %}—{% endif %} °C</td>
-        <td>{{ u.min_c | temp }}</td>
-        <td>{{ u.max_c | temp }}</td>
-        <td>{{ u.avg_c | temp }}</td>
-        <td class="{% if u.data_quality.incomplete %}warn{% endif %}">{{ u.data_quality.coverage_percent | pct }}</td>
-        <td class="{% if u.incident_count %}warn{% endif %}">{{ u.incident_count }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-
-  <div class="overview">
-    {% for svg in overview_svgs %}
-    <figure class="chart">
-      <figcaption>{{ m.overview_charts[loop.index0].label }} ({{ L.chart_unit }})</figcaption>
-      {{ svg | safe }}
-    </figure>
-    {% endfor %}
-  </div>
-</section>
-
-<!-- ============================ PAGE 2 ============================ -->
-<section class="page page-2">
-  <div class="grid">
-    {% for u in m.units %}
-    <div class="card">
-      <div class="card-head">
-        <div class="card-name">{{ u.name }}</div>
-        <div class="card-type">{{ u.profile_name or u.unit_type }}</div>
+  <!-- GESAMTÜBERSICHT -->
+  <section class="box">
+    <div class="box-head">{{ L.overview_title }}</div>
+    <div class="box-body summary">
+      <div class="metric">
+        <svg viewBox="0 0 24 24" class="ic ic-b"><path d="M12 3a3 3 0 0 1 3 3v7.5a4.5 4.5 0 1 1-6 0V6a3 3 0 0 1 3-3z"/><circle cx="12" cy="17.5" r="2.2" fill="currentColor"/></svg>
+        <div class="num">{{ m.summary.monitored_count }}</div>
+        <div class="lbl">{{ L.monitored }}</div>
       </div>
-      {% if mini_svgs.get(u.id) %}<div class="mini">{{ mini_svgs[u.id] | safe }}</div>{% endif %}
-      <table class="kv">
-        <tr><td>{{ L.min }}/{{ L.max }}</td><td>{{ u.min_c | temp }} / {{ u.max_c | temp }}</td></tr>
-        <tr><td>{{ L.avg }}</td><td>{{ u.avg_c | temp }}</td></tr>
-        <tr><td>{{ L.coverage }}</td><td class="{% if u.data_quality.incomplete %}warn{% endif %}">{{ u.data_quality.coverage_percent | pct }}</td></tr>
-        <tr><td>{{ L.unavailable }}</td><td>{{ u.data_quality.unavailable_seconds | dur }}</td></tr>
-        <tr><td>{{ L.time_above }}</td><td class="{% if u.time_above_seconds %}warn{% endif %}">{{ u.time_above_seconds | dur }}</td></tr>
-        <tr><td>{{ L.time_below }}</td><td class="{% if u.time_below_seconds %}warn{% endif %}">{{ u.time_below_seconds | dur }}</td></tr>
-        <tr><td>{{ L.incidents }}</td><td class="{% if u.incident_count %}warn{% endif %}">{{ u.incident_count }} ({{ L.longest_incident }} {{ u.longest_incident_seconds | dur }})</td></tr>
-        {% if u.defrost %}
-        <tr><td>{{ L.defrost_cycles }}</td><td>{{ u.defrost.cycle_count }}{% if u.defrost.typical_duration_seconds %} · {{ L.typical_duration }} {{ u.defrost.typical_duration_seconds | dur }}{% endif %}{% if u.defrost.abnormal_count %} · {{ L.abnormal }} {{ u.defrost.abnormal_count }}{% endif %}</td></tr>
-        {% endif %}
-      </table>
-      {% if u.data_quality.missing_entity %}
-        <div class="quality warn">{{ L.missing_entity }}</div>
-      {% elif u.data_quality.incomplete %}
-        <div class="quality warn">{{ L.incomplete_warning }}</div>
-      {% endif %}
+      <div class="metric">
+        <svg viewBox="0 0 24 24" class="ic ic-g"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5 5-5.5"/></svg>
+        <div class="num g">{{ m.summary.coverage_percent if m.summary.coverage_percent is not none else "—" }}{% if m.summary.coverage_percent is not none %} %{% endif %}</div>
+        <div class="lbl">{{ L.coverage_total }}</div>
+      </div>
+      <div class="metric">
+        <svg viewBox="0 0 24 24" class="ic ic-o"><path d="M12 3l9 16H3z"/><path d="M12 9v5M12 16.5v.5" stroke-width="2"/></svg>
+        <div class="num {% if m.summary.confirmed_deviations %}o{% endif %}">{{ m.summary.confirmed_deviations }}</div>
+        <div class="lbl">{{ L.confirmed_deviations }}</div>
+      </div>
+      <div class="metric">
+        <svg viewBox="0 0 24 24" class="ic ic-r"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
+        <div class="num {% if m.summary.open_incidents %}r{% endif %}">{{ m.summary.open_incidents }}</div>
+        <div class="lbl">{{ L.open_incidents }}</div>
+      </div>
+      <div class="verdict">
+        <div class="vhead">{{ L.assessment }}</div>
+        <div class="vbody">
+          <svg viewBox="0 0 24 24" class="ic ic-g"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5 5-5.5"/></svg>
+          <span>{{ L["verdict_" + m.summary.verdict] }}</span>
+        </div>
+      </div>
     </div>
-    {% endfor %}
-  </div>
+  </section>
 
-  {% if m.detail_level == "detailed" %}
-  <div class="detail-incidents">
-    {% for u in m.units if u.incidents %}
-    <h3>{{ u.name }} — {{ L.incidents }}</h3>
-    <table class="inc">
-      <thead><tr><th>{{ L.incident_type }}</th><th>{{ L.incident_start }}</th><th>{{ L.incident_end }}</th><th>{{ L.incident_duration }}</th><th>{{ L.incident_extreme }}</th><th>{{ L.incident_state }}</th><th>{{ L.corrective_action }}</th></tr></thead>
-      <tbody>
-        {% for i in u.incidents %}
+  <!-- ZUSAMMENFASSUNG ALLER KÜHLBEREICHE -->
+  <section class="box">
+    <div class="box-head">{{ L.summary_table_title }}</div>
+    <table class="cmp">
+      <thead>
         <tr>
-          <td>{{ i.type }}</td>
-          <td>{{ i.opened_at[:16] | replace("T", " ") }}</td>
-          <td>{% if i.closed_at %}{{ i.closed_at[:16] | replace("T", " ") }}{% else %}—{% endif %}</td>
-          <td>{{ i.duration_seconds | dur }}</td>
-          <td>{{ i.extreme_value_c | temp }}</td>
-          <td>{{ i.state }}</td>
-          <td class="freetext">{{ i.corrective_action or "" }}</td>
+          <th class="l">{{ L.unit }}</th><th>{{ L.permitted_range }}</th><th>{{ L.min }}</th>
+          <th>ø</th><th>{{ L.max }}</th><th>{{ L.outside_range }}</th>
+          <th>{{ L.coverage }}</th><th>{{ L.incidents }}</th><th>{{ L.status }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in m.units %}
+        <tr>
+          <td class="l"><span class="uname">{{ u.name }}</span><span class="utype">{{ u.type_label }}</span></td>
+          <td>{{ u.thresholds.lower_limit_c if u.thresholds.lower_limit_c is not none else "—" }} – {{ u.thresholds.upper_limit_c if u.thresholds.upper_limit_c is not none else "—" }} °C</td>
+          <td>{{ u.min_c | temp }}</td><td>{{ u.avg_c | temp }}</td><td>{{ u.max_c | temp }}</td>
+          <td class="{% if u.outside_seconds %}o{% else %}g{% endif %}">{{ u.outside_seconds | dur }}</td>
+          <td class="{% if u.data_quality.incomplete %}o{% endif %}">{{ u.data_quality.coverage_percent | pct }}</td>
+          <td>{{ u.incident_count }}</td>
+          <td>{{ statusbadge(u) }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
+  </section>
+
+  <!-- TEMPERATURVERLAUF -->
+  <section class="box">
+    <div class="box-head">{{ L.charts_title }}</div>
+    <div class="box-body charts">
+      {% for svg in overview_svgs %}
+      <figure class="chart">
+        <figcaption>{{ m.overview_charts[loop.index0].label }}</figcaption>
+        {{ svg | safe }}
+      </figure>
+      {% endfor %}
+      <div class="bandleg">
+        <span><i class="bd dev"></i>{{ L.band_deviation }}</span>
+        <span><i class="bd gap"></i>{{ L.band_gap }}</span>
+        <span><i class="bd def"></i>{{ L.band_defrost }}</span>
+      </div>
+    </div>
+  </section>
+</section>
+
+<!-- ============================ PAGE 2 ============================ -->
+<section class="page page-2">
+  <span class="src set-footleft">{{ m.branding.disclaimer or L.disclaimer_default }}</span>
+
+  <div class="section-title">{{ L.details_title }}</div>
+  <div class="grid">
+    {% for u in m.units %}
+    <div class="card{% if loop.last and (m.units|length) % 2 == 1 %} wide{% endif %}">
+      <div class="accent" style="background: {{ u.accent }}"></div>
+      <div class="card-head">
+        <div class="ctitle" style="color: {{ u.accent }}">{{ u.name }} – {{ u.type_label }}</div>
+        {{ statusbadge(u) }}
+      </div>
+      <div class="card-row">
+        <span>{{ L.permitted_range }}: <b>{{ u.thresholds.lower_limit_c if u.thresholds.lower_limit_c is not none else "—" }} – {{ u.thresholds.upper_limit_c if u.thresholds.upper_limit_c is not none else "—" }} °C</b></span>
+        <span>{{ L.coverage }}: <b class="{% if u.data_quality.incomplete %}o{% endif %}">{{ u.data_quality.coverage_percent | pct }}</b></span>
+      </div>
+      <table class="metrics">
+        <tr><th>{{ L.min }}</th><th>ø</th><th>{{ L.max }}</th><th>{{ L.outside_short }}</th><th>{{ L.incidents }}</th></tr>
+        <tr>
+          <td>{{ u.min_c | temp }}</td><td>{{ u.avg_c | temp }}</td><td>{{ u.max_c | temp }}</td>
+          <td class="{% if u.outside_seconds %}o{% else %}g{% endif %}">{{ u.outside_seconds | dur }}</td>
+          <td class="{% if u.incident_count %}o{% endif %}">{{ u.incident_count }}</td>
+        </tr>
+      </table>
+      {% if mini_svgs.get(u.id) %}<div class="mini">{{ mini_svgs[u.id] | safe }}</div>{% endif %}
+    </div>
     {% endfor %}
   </div>
+
+  <!-- VORFÄLLE -->
+  {% if m.incidents_flat %}
+  <section class="box">
+    <div class="box-head">{{ L.incidents_title }}</div>
+    <table class="inc">
+      <thead><tr>
+        <th>{{ L.inc_no }}</th><th class="l">{{ L.inc_unit }}</th><th class="l">{{ L.inc_start }}</th>
+        <th>{{ L.inc_duration }}</th><th>{{ L.inc_extreme }}</th><th class="l">{{ L.inc_cause }}</th>
+        <th class="l">{{ L.inc_action }}</th><th>{{ L.status }}</th>
+      </tr></thead>
+      <tbody>
+        {% for i in m.incidents_flat[:6] %}
+        <tr>
+          <td>{{ "%02d"|format(i.n) }}</td>
+          <td class="l">{{ i.unit_name }}</td>
+          <td class="l">{{ i.opened_at[:16] | replace("T", " ") }}</td>
+          <td>{{ i.duration_seconds | dur }}</td>
+          <td>{{ i.extreme_value_c | temp }}</td>
+          <td class="l ft">{{ i.cause or "" }}</td>
+          <td class="l ft">{{ i.corrective_action or "" }}</td>
+          <td class="badge-cell">{% if i.documented %}<span class="badge b-blue">✓ {{ L.status_reviewed }}</span>{% else %}<span class="badge b-orange">{{ L.status_reviewed }}</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
   {% endif %}
 
-  <div class="legal">
-    <div>{{ L.configured_limits }}. {{ L.operational_note }}</div>
-    {% if m.branding.disclaimer %}<div>{{ m.branding.disclaimer }}</div>{% endif %}
-  </div>
-
-  <div class="review">
-    <div class="review-title">{{ L.review }}</div>
-    <div class="sign-row">
-      {% set sigs = m.branding.signature_labels if m.branding.signature_labels else [L.prepared_by, L.reviewed_by] %}
-      {% for s in sigs %}
-      <div class="sign">
-        <div class="sign-line"></div>
-        <div class="sign-label">{{ s }}</div>
-        <div class="sign-date">{{ L.date }}</div>
+  <!-- DATENQUALITÄT + FREIGABE -->
+  <div class="panels">
+    <section class="box panel">
+      <div class="box-head">{{ L.data_quality_title }}</div>
+      <div class="box-body dq">
+        <svg viewBox="0 0 24 24" class="ic {% if m.data_quality_ok %}ic-g{% else %}ic-o{% endif %}"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5 5-5.5"/></svg>
+        <span>{{ m.data_quality_note }}</span>
       </div>
-      {% endfor %}
-    </div>
+    </section>
+    <section class="box panel">
+      <div class="box-head">{{ L.approval_title }}</div>
+      <div class="box-body approval">
+        {% set sigs = [L.reviewed_by, L.date, L.signature, L.comment] %}
+        {% for s in sigs %}
+        <div class="sig-line"><span class="sig-label">{{ s }}:</span><span class="sig-rule"></span></div>
+        {% endfor %}
+      </div>
+    </section>
   </div>
 </section>
 

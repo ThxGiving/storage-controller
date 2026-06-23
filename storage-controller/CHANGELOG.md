@@ -2,6 +2,37 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.2.1 — Unreleased
+
+### Changed — report PDF redesigned to match `report_mockup.png`
+
+Focused redesign of the report HTML template, print CSS and chart rendering (the
+report model, snapshot logic, exports and generation pipeline are unchanged; the
+immutable model gained additive presentation fields → model version 2).
+
+- **Branded header**: logo + organization + address (left), title + month +
+  full reporting period + creation timestamp + report ID + IANA timezone/offset
+  (right).
+- **Overall summary** (`GESAMTÜBERSICHT`): four metric tiles with icons
+  (monitored units, overall coverage, confirmed deviations, open incidents) plus
+  an overall-assessment verdict.
+- **Comparison table** in a section container with type subtitle, permitted
+  range, min/ø/max, time outside range, coverage, incidents and a status badge.
+- **Monthly charts**: two compact stacked groups (chilled / deep-freeze) with
+  colored per-unit lines, configured limit lines, deviation / data-gap / defrost
+  shading, a compact legend and month date labels — no interpolation across gaps.
+  Localized limit-line legend (Upper/Lower limit · Oberer/Unterer Grenzwert).
+- **2×2 detail cards** with a colored accent line, accent-colored title, status
+  badge, permitted-range + coverage row, a horizontal metric row and a compact
+  mini-chart. **Adaptive layout**: 3 units render as two cards + one wide card;
+  4 units as 2×2; 5+ flow into balanced rows. No fake fillers.
+- **Incident summary table** (`VORFÄLLE`) and separate **data-quality** and
+  **approval/signature** panels; complete footer (app version + page numbers +
+  disclaimer) via running margin boxes.
+- Verified by rendering the deterministic fixture in German and English at 3, 4
+  and 5 units — all two pages, no clipping/overflow, balanced page usage.
+  `docs/design/report-layout-spec.md` documents the measured target.
+
 ## 0.2.0 — Unreleased
 
 ### Added — Phase 5: HACCP reporting & PDF export
