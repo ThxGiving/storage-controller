@@ -90,16 +90,21 @@ class HAConnectionManager:
 
         self._task: asyncio.Task | None = None
         self._heartbeat_task: asyncio.Task | None = None
+        self._incident_task: asyncio.Task | None = None
         self._stop = asyncio.Event()
         self._lock = asyncio.Lock()
 
-        # Optional sample collector (Phase 3). Set via set_collector().
+        # Optional sample collector (Phase 3) and incident engine (Phase 4).
         self._collector = None
+        self._incident_engine = None
 
     # -- public API -------------------------------------------------------- #
 
     def set_collector(self, collector) -> None:
         self._collector = collector
+
+    def set_incident_engine(self, engine) -> None:
+        self._incident_engine = engine
 
     @property
     def configured(self) -> bool:
@@ -130,10 +135,32 @@ class HAConnectionManager:
             self._heartbeat_task = asyncio.create_task(
                 self._heartbeat_loop(), name="ha-heartbeat"
             )
+        if self._incident_engine is not None and self._incident_task is None:
+            self._incident_task = asyncio.create_task(
+                self._incident_loop(), name="incident-engine"
+            )
+
+    async def _incident_loop(self) -> None:
+        """Periodically evaluate incident conditions (runs even while disconnected
+        so a Home Assistant disconnect is itself detected)."""
+        while not self._stop.is_set():
+            try:
+                await asyncio.wait_for(self._stop.wait(), timeout=30)
+                break  # stop requested
+            except TimeoutError:
+                pass
+            try:
+                await self._incident_engine.run(
+                    self.get_entity, connected=self._status == STATUS_CONNECTED
+                )
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:  # noqa: BLE001
+                log.warning("incident_engine: evaluation error: %s", type(exc).__name__)
 
     async def stop(self) -> None:
         self._stop.set()
-        for task_attr in ("_task", "_heartbeat_task"):
+        for task_attr in ("_task", "_heartbeat_task", "_incident_task"):
             task = getattr(self, task_attr)
             if task is not None:
                 task.cancel()

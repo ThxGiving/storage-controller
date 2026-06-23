@@ -206,6 +206,59 @@ class MonitoringProfileOut(MonitoringProfileBase):
     updated_at: datetime
 
 
+# --------------------------------------------------------------------------- #
+# Incidents (Phase 4)
+# --------------------------------------------------------------------------- #
+
+
+class IncidentEventOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    timestamp: datetime
+    kind: str
+    from_state: str | None = None
+    to_state: str | None = None
+    value_c: float | None = None
+    user: str | None = None
+    detail: str | None = None
+
+
+class IncidentOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    storage_unit_id: int | None
+    type: str
+    state: str
+    opened_at: datetime
+    confirmed_at: datetime | None = None
+    recovering_at: datetime | None = None
+    closed_at: datetime | None = None
+    limit_value_c: float | None = None
+    extreme_value_c: float | None = None
+    extreme_at: datetime | None = None
+    defrost_overlap: bool = False
+    acknowledged_at: datetime | None = None
+    acknowledged_by: str | None = None
+    cause: str | None = None
+    corrective_action: str | None = None
+    note: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class IncidentDetail(IncidentOut):
+    storage_unit_name: str | None = None
+    events: list[IncidentEventOut] = Field(default_factory=list)
+
+
+class IncidentUpdate(BaseModel):
+    acknowledge: bool | None = None
+    cause: str | None = None
+    corrective_action: str | None = None
+    note: str | None = None
+
+
 class AppSettingsOut(BaseModel):
     heartbeat_interval_seconds: int
     retention_raw_days: int
@@ -269,6 +322,18 @@ class DashboardSpark(BaseModel):
     v: float | None = None
 
 
+class DashboardIncident(BaseModel):
+    id: int
+    type: str
+    state: str
+    opened_at: datetime
+    confirmed_at: datetime | None = None
+    extreme_value_c: float | None = None
+    defrost_overlap: bool = False
+    acknowledged: bool = False
+    documented: bool = False
+
+
 class DashboardUnit(BaseModel):
     id: int
     name: str
@@ -287,6 +352,7 @@ class DashboardUnit(BaseModel):
     last_update: datetime | None = None
     roles: list[DashboardRoleValue] = Field(default_factory=list)
     spark: list[DashboardSpark] = Field(default_factory=list)
+    active_incidents: list[DashboardIncident] = Field(default_factory=list)
 
 
 class DashboardSummary(BaseModel):
@@ -298,6 +364,9 @@ class DashboardSummary(BaseModel):
     stale: int = 0
     disconnected: int = 0
     configuration_error: int = 0
+    open_incidents: int = 0
+    unacknowledged_incidents: int = 0
+    undocumented_incidents: int = 0
 
 
 class DashboardResponse(BaseModel):

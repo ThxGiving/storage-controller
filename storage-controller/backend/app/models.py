@@ -73,6 +73,30 @@ class SampleSource(str, enum.Enum):
     home_assistant_history_import = "home_assistant_history_import"
 
 
+class IncidentType(str, enum.Enum):
+    temperature_high = "temperature_high"
+    temperature_low = "temperature_low"
+    sensor_unavailable = "sensor_unavailable"
+    sensor_stale = "sensor_stale"
+    sensor_invalid = "sensor_invalid"
+    home_assistant_disconnected = "home_assistant_disconnected"
+
+
+class IncidentState(str, enum.Enum):
+    pending_violation = "pending_violation"
+    active_violation = "active_violation"
+    recovering = "recovering"
+    closed = "closed"
+
+
+# Incident states that are still ongoing (not closed).
+OPEN_INCIDENT_STATES = {
+    IncidentState.pending_violation,
+    IncidentState.active_violation,
+    IncidentState.recovering,
+}
+
+
 class StorageUnitType(str, enum.Enum):
     """Physical installation / operational purpose of a storage unit.
 
@@ -296,6 +320,78 @@ class StateSample(Base):
         String(40), nullable=False, default=SampleSource.live_websocket.value
     )
     source_context_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+
+class Incident(Base):
+    """A detected deviation/condition with a lifecycle.
+
+    The original threshold-crossing time (``opened_at``) is preserved across
+    state transitions. ``confirmed_at`` marks when it became an active violation
+    after the configured delay. Extremes are tracked continuously.
+    """
+
+    __tablename__ = "incidents"
+    __table_args__ = (
+        Index("ix_incidents_unit_state", "storage_unit_id", "state"),
+        Index("ix_incidents_opened_at", "opened_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    storage_unit_id: Mapped[int | None] = mapped_column(
+        ForeignKey("storage_units.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    type: Mapped[str] = mapped_column(String(40), nullable=False)
+    state: Mapped[str] = mapped_column(String(30), nullable=False)
+
+    opened_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    recovering_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    limit_value_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    extreme_value_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    extreme_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    defrost_overlap: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    # Documentation (HACCP)
+    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    acknowledged_by: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    cause: Mapped[str | None] = mapped_column(Text, nullable=True)
+    corrective_action: Mapped[str | None] = mapped_column(Text, nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    events: Mapped[list[IncidentEvent]] = relationship(
+        back_populates="incident",
+        cascade="all, delete-orphan",
+        order_by="IncidentEvent.timestamp",
+    )
+
+
+class IncidentEvent(Base):
+    """Lifecycle/audit entry for an incident (state transitions, documentation)."""
+
+    __tablename__ = "incident_events"
+    __table_args__ = (Index("ix_incident_events_incident", "incident_id", "timestamp"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    incident_id: Mapped[int] = mapped_column(
+        ForeignKey("incidents.id", ondelete="CASCADE"), nullable=False
+    )
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    kind: Mapped[str] = mapped_column(String(40), nullable=False)  # transition|extreme|doc
+    from_state: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    to_state: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    value_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    user: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    incident: Mapped[Incident] = relationship(back_populates="events")
 
 
 class AuditEvent(Base):

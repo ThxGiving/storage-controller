@@ -17,9 +17,18 @@ from sqlalchemy.orm import selectinload
 
 from ..db import get_db
 from ..ha.manager import STATUS_CONNECTED, HAConnectionManager
-from ..models import NUMERIC_ROLES, EntityRole, Quality, SensorSample, StorageUnit
+from ..models import (
+    NUMERIC_ROLES,
+    OPEN_INCIDENT_STATES,
+    EntityRole,
+    Incident,
+    Quality,
+    SensorSample,
+    StorageUnit,
+)
 from ..normalization import normalize_bool, normalize_numeric
 from ..schemas import (
+    DashboardIncident,
     DashboardResponse,
     DashboardRoleValue,
     DashboardSpark,
@@ -136,7 +145,45 @@ async def dashboard(
         )
     ).all()
 
-    summary = DashboardSummary(total=len(units_db))
+    # Open incidents grouped by unit (one query).
+    open_incidents = (
+        await db.scalars(
+            select(Incident)
+            .where(Incident.state.in_([s.value for s in OPEN_INCIDENT_STATES]))
+            .order_by(Incident.opened_at.asc())
+        )
+    ).all()
+    incidents_by_unit: dict[int, list[DashboardIncident]] = {}
+    open_count = unack_count = undoc_count = 0
+    for inc in open_incidents:
+        documented = bool(inc.cause or inc.corrective_action)
+        acknowledged = inc.acknowledged_at is not None
+        open_count += 1
+        if not acknowledged:
+            unack_count += 1
+        if not documented:
+            undoc_count += 1
+        if inc.storage_unit_id is not None:
+            incidents_by_unit.setdefault(inc.storage_unit_id, []).append(
+                DashboardIncident(
+                    id=inc.id,
+                    type=inc.type,
+                    state=inc.state,
+                    opened_at=_as_utc(inc.opened_at),
+                    confirmed_at=_as_utc(inc.confirmed_at),
+                    extreme_value_c=inc.extreme_value_c,
+                    defrost_overlap=inc.defrost_overlap,
+                    acknowledged=acknowledged,
+                    documented=documented,
+                )
+            )
+
+    summary = DashboardSummary(
+        total=len(units_db),
+        open_incidents=open_count,
+        unacknowledged_incidents=unack_count,
+        undocumented_incidents=undoc_count,
+    )
     out_units: list[DashboardUnit] = []
     last_sample_at: datetime | None = _as_utc(connection.last_event_at)
 
@@ -211,6 +258,7 @@ async def dashboard(
                 last_update=last_update,
                 roles=roles,
                 spark=await _spark(db, unit.id),
+                active_incidents=incidents_by_unit.get(unit.id, []),
             )
         )
 

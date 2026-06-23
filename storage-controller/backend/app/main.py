@@ -17,7 +17,16 @@ from fastapi.staticfiles import StaticFiles
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from . import __version__
-from .api import dashboard, health, history, home_assistant, profiles, status, storage_units
+from .api import (
+    dashboard,
+    health,
+    history,
+    home_assistant,
+    incidents,
+    profiles,
+    status,
+    storage_units,
+)
 from .api import settings as settings_api
 from .collector import Collector
 from .config import get_settings
@@ -25,6 +34,7 @@ from .db import dispose_engine, get_engine, get_session_factory
 from .errors import AppError, app_error_handler
 from .ha.client import HomeAssistantRestClient
 from .ha.manager import HAConnectionManager
+from .incident_engine import IncidentEngine
 from .logging_config import configure_logging
 from .seed import run_startup_seed
 
@@ -91,8 +101,13 @@ async def lifespan(app: FastAPI):
         log.warning("collector: initial index build skipped: %s", type(exc).__name__)
     manager.set_collector(collector)
 
+    # Incident engine (Phase 4): evaluates limit/availability conditions.
+    incident_engine = IncidentEngine(get_session_factory())
+    manager.set_incident_engine(incident_engine)
+
     app.state.ha_manager = manager
     app.state.collector = collector
+    app.state.incident_engine = incident_engine
     await manager.start()
 
     try:
@@ -125,6 +140,7 @@ def create_app() -> FastAPI:
     app.include_router(history.router)
     app.include_router(settings_api.router)
     app.include_router(dashboard.router)
+    app.include_router(incidents.router)
 
     _mount_frontend(app)
     return app
