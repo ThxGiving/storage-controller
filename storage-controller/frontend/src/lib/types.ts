@@ -136,6 +136,13 @@ export interface StorageUnit {
   report_enabled: boolean;
   applied_profile_key: string | null;
   applied_profile_name: string | null;
+  defrost_evaluation_enabled: boolean;
+  maximum_expected_defrost_duration_seconds: number;
+  post_defrost_recovery_seconds: number;
+  maximum_expected_room_temperature_c: number | null;
+  maximum_expected_evaporator_temperature_c: number | null;
+  recovery_target_temperature_c: number | null;
+  maximum_recovery_duration_seconds: number;
   created_at: string;
   updated_at: string;
   assignments: EntityAssignment[];
@@ -167,6 +174,13 @@ export interface StorageUnitInput {
   chart_group?: string | null;
   applied_profile_key?: string | null;
   applied_profile_name?: string | null;
+  defrost_evaluation_enabled?: boolean;
+  maximum_expected_defrost_duration_seconds?: number;
+  post_defrost_recovery_seconds?: number;
+  maximum_expected_room_temperature_c?: number | null;
+  maximum_expected_evaporator_temperature_c?: number | null;
+  recovery_target_temperature_c?: number | null;
+  maximum_recovery_duration_seconds?: number;
   assignments: AssignmentInput[];
 }
 
@@ -225,6 +239,30 @@ export interface DashboardSpark {
   v: number | null;
 }
 
+export interface DashboardIncident {
+  id: number;
+  type: string;
+  state: string;
+  opened_at: string;
+  confirmed_at: string | null;
+  extreme_value_c: number | null;
+  defrost_overlap: boolean;
+  acknowledged: boolean;
+  documented: boolean;
+}
+
+export interface DashboardDefrost {
+  id: number;
+  status: string;
+  started_at: string;
+  recovery_started_at: string | null;
+  peak_room_temperature_c: number | null;
+  peak_evaporator_temperature_c: number | null;
+  max_expected_duration_seconds: number;
+  max_recovery_seconds: number;
+  recovery_target_c: number | null;
+}
+
 export interface DashboardUnit {
   id: number;
   name: string;
@@ -240,6 +278,78 @@ export interface DashboardUnit {
   last_update: string | null;
   roles: DashboardRoleValue[];
   spark: DashboardSpark[];
+  active_incidents: DashboardIncident[];
+  defrost: DashboardDefrost | null;
+}
+
+export type IncidentType =
+  | "temperature_high"
+  | "temperature_low"
+  | "sensor_unavailable"
+  | "sensor_stale"
+  | "sensor_invalid"
+  | "home_assistant_disconnected"
+  | "abnormal_defrost"
+  | "recovery_timeout";
+
+export interface IncidentEvent {
+  timestamp: string;
+  kind: string;
+  from_state: string | null;
+  to_state: string | null;
+  value_c: number | null;
+  user: string | null;
+  detail: string | null;
+}
+
+export interface Incident {
+  id: number;
+  storage_unit_id: number | null;
+  type: string;
+  state: string;
+  opened_at: string;
+  confirmed_at: string | null;
+  recovering_at: string | null;
+  closed_at: string | null;
+  limit_value_c: number | null;
+  extreme_value_c: number | null;
+  extreme_at: string | null;
+  defrost_overlap: boolean;
+  acknowledged_at: string | null;
+  acknowledged_by: string | null;
+  cause: string | null;
+  corrective_action: string | null;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IncidentDetail extends Incident {
+  storage_unit_name: string | null;
+  events: IncidentEvent[];
+}
+
+export interface IncidentUpdate {
+  acknowledge?: boolean;
+  cause?: string;
+  corrective_action?: string;
+  note?: string;
+}
+
+export interface DefrostCycle {
+  id: number;
+  storage_unit_id: number;
+  started_at: string;
+  ended_at: string | null;
+  recovery_started_at: string | null;
+  recovered_at: string | null;
+  initial_room_temperature_c: number | null;
+  peak_room_temperature_c: number | null;
+  initial_evaporator_temperature_c: number | null;
+  peak_evaporator_temperature_c: number | null;
+  status: string;
+  classification: string | null;
+  triggering_rule: string | null;
 }
 
 export interface DashboardSummary {

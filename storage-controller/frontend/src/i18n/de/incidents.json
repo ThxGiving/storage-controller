@@ -1,0 +1,65 @@
+{
+  "title": "Vorfälle",
+  "subtitle": "Temperaturabweichungen und technische Zustände.",
+  "filter": { "all": "Alle", "open": "Offen", "closed": "Geschlossen" },
+  "empty": "Keine Vorfälle in dieser Ansicht.",
+  "types": {
+    "temperature_high": "Temperatur zu hoch",
+    "temperature_low": "Temperatur zu niedrig",
+    "sensor_unavailable": "Sensor nicht verfügbar",
+    "sensor_stale": "Keine aktuellen Daten",
+    "sensor_invalid": "Ungültiger Wert",
+    "home_assistant_disconnected": "Home Assistant getrennt",
+    "abnormal_defrost": "Auffällige Abtauung",
+    "recovery_timeout": "Erholung überfällig"
+  },
+  "states": {
+    "pending_violation": "Anstehend",
+    "active_violation": "Aktiv",
+    "recovering": "Erholt sich",
+    "closed": "Geschlossen"
+  },
+  "col": {
+    "type": "Typ",
+    "unit": "Einheit",
+    "started": "Beginn",
+    "duration": "Dauer",
+    "extreme": "Extremwert",
+    "status": "Status",
+    "documentation": "Dokumentation"
+  },
+  "badge": { "defrostOverlap": "während Abtauung", "unacknowledged": "zu dokumentieren" },
+  "detail": {
+    "back": "Zurück zu den Vorfällen",
+    "opened": "Geöffnet",
+    "confirmed": "Bestätigt",
+    "recovering": "Erholung seit",
+    "closed": "Geschlossen",
+    "duration": "Dauer",
+    "limit": "Grenzwert",
+    "extreme": "Extremwert",
+    "timeline": "Verlauf",
+    "documentation": "Dokumentation",
+    "acknowledge": "Bestätigen",
+    "acknowledged": "Bestätigt von {{user}}",
+    "cause": "Ursache",
+    "causePlaceholder": "Was war die Ursache der Abweichung?",
+    "correctiveAction": "Korrekturmaßnahme",
+    "correctiveActionPlaceholder": "Was wurde unternommen?",
+    "note": "Bemerkung",
+    "save": "Dokumentation speichern",
+    "saving": "Speichert…",
+    "ongoing": "laufend"
+  },
+  "defrost": {
+    "active": "Abtauung aktiv",
+    "recovering": "Erholung nach Abtauung",
+    "elapsed": "Vergangen",
+    "maxDuration": "Max. Dauer",
+    "target": "Erholungsziel",
+    "maxRecovery": "Max. Erholung",
+    "peakRoom": "Spitze Raum",
+    "noSensorTitle": "Kein Abtausensor konfiguriert",
+    "noSensorHint": "Temperaturspitzen werden nach den normalen Überwachungsregeln bewertet und nicht automatisch einer Abtauung zugeordnet."
+  }
+}

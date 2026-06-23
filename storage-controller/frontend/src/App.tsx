@@ -8,6 +8,7 @@ import { StatusPill } from "@/components/layout/StatusPill";
 import { Dashboard } from "@/pages/Dashboard";
 import { EntityBrowser } from "@/features/entities/EntityBrowser";
 import { UnitsPage } from "@/features/units/UnitsPage";
+import { IncidentsPage } from "@/pages/Incidents";
 import { SettingsPage } from "@/pages/Settings";
 
 export default function App() {
@@ -39,6 +40,7 @@ export default function App() {
         <main className="mx-auto w-full max-w-6xl flex-1 animate-fade-in p-5 md:p-8">
           {tab === "overview" && <Dashboard onNavigateToUnits={() => setTab("units")} />}
           {tab === "units" && <UnitsPage />}
+          {tab === "incidents" && <IncidentsPage />}
           {tab === "entities" && <EntityBrowser />}
           {tab === "settings" && <SettingsPage />}
         </main>

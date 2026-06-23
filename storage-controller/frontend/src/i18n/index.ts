@@ -18,6 +18,7 @@ import enProfiles from "./en/profiles.json";
 import enSettings from "./en/settings.json";
 import enValidation from "./en/validation.json";
 import enErrors from "./en/errors.json";
+import enIncidents from "./en/incidents.json";
 
 import deCommon from "./de/common.json";
 import deNavigation from "./de/navigation.json";
@@ -28,6 +29,7 @@ import deProfiles from "./de/profiles.json";
 import deSettings from "./de/settings.json";
 import deValidation from "./de/validation.json";
 import deErrors from "./de/errors.json";
+import deIncidents from "./de/incidents.json";
 
 export const NAMESPACES = [
   "common",
@@ -39,6 +41,7 @@ export const NAMESPACES = [
   "settings",
   "validation",
   "errors",
+  "incidents",
 ] as const;
 
 export const resources = {
@@ -52,6 +55,7 @@ export const resources = {
     settings: enSettings,
     validation: enValidation,
     errors: enErrors,
+    incidents: enIncidents,
   },
   de: {
     common: deCommon,
@@ -63,6 +67,7 @@ export const resources = {
     settings: deSettings,
     validation: deValidation,
     errors: deErrors,
+    incidents: deIncidents,
   },
 } as const;
 

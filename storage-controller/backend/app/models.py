@@ -80,6 +80,27 @@ class IncidentType(str, enum.Enum):
     sensor_stale = "sensor_stale"
     sensor_invalid = "sensor_invalid"
     home_assistant_disconnected = "home_assistant_disconnected"
+    abnormal_defrost = "abnormal_defrost"
+    recovery_timeout = "recovery_timeout"
+
+
+class DefrostStatus(str, enum.Enum):
+    active = "active"
+    recovering = "recovering"
+    completed = "completed"
+    abnormal = "abnormal"
+    incomplete = "incomplete"
+
+
+class DefrostClassification(str, enum.Enum):
+    expected_defrost = "expected_defrost"
+    expected_defrost_excursion = "expected_defrost_excursion"
+    abnormal_defrost = "abnormal_defrost"
+    recovery_timeout = "recovery_timeout"
+
+
+# Defrost cycle statuses that are still ongoing.
+OPEN_DEFROST_STATUSES = {DefrostStatus.active, DefrostStatus.recovering}
 
 
 class IncidentState(str, enum.Enum):
@@ -160,6 +181,39 @@ class StorageUnit(Base):
     # effective values above are what actually governs monitoring and reports).
     applied_profile_key: Mapped[str | None] = mapped_column(String(60), nullable=True)
     applied_profile_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+
+    # Defrost-aware evaluation (Phase 4). Suggested by profiles, editable per unit.
+    defrost_evaluation_enabled: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
+    maximum_expected_defrost_duration_seconds: Mapped[int] = mapped_column(
+        Integer, default=1800, nullable=False
+    )
+    pre_defrost_correlation_seconds: Mapped[int] = mapped_column(
+        Integer, default=300, nullable=False
+    )
+    post_defrost_recovery_seconds: Mapped[int] = mapped_column(
+        Integer, default=1800, nullable=False
+    )
+    maximum_expected_room_temperature_c: Mapped[float | None] = mapped_column(
+        Float, nullable=True
+    )
+    maximum_expected_evaporator_temperature_c: Mapped[float | None] = mapped_column(
+        Float, nullable=True
+    )
+    recovery_target_temperature_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    maximum_recovery_duration_seconds: Mapped[int] = mapped_column(
+        Integer, default=3600, nullable=False
+    )
+    expected_defrost_excursions_visible_in_incident_list: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
+    abnormal_defrost_creates_incident: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False
+    )
+    manual_review_required_after_abnormal_defrost: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
@@ -392,6 +446,48 @@ class IncidentEvent(Base):
     detail: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     incident: Mapped[Incident] = relationship(back_populates="events")
+
+
+class DefrostCycle(Base):
+    """A persisted defrost cycle (operational event, not a critical incident).
+
+    Captures start/end, snapshots and peaks of room/evaporator temperature, the
+    recovery phase, and a status/classification. Normal cycles stay operational;
+    only abnormal cycles or failed recovery become incidents.
+    """
+
+    __tablename__ = "defrost_cycles"
+    __table_args__ = (
+        Index("ix_defrost_cycles_unit_status", "storage_unit_id", "status"),
+        Index("ix_defrost_cycles_started_at", "started_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    storage_unit_id: Mapped[int] = mapped_column(
+        ForeignKey("storage_units.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    source_entity_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    recovery_started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    recovered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    initial_room_temperature_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    peak_room_temperature_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    initial_evaporator_temperature_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    peak_evaporator_temperature_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    classification: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    triggering_rule: Mapped[str | None] = mapped_column(String(120), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
 
 
 class AuditEvent(Base):

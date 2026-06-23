@@ -38,7 +38,7 @@ export function UnitDetail({
   unit: DashboardUnit;
   onBack: () => void;
 }) {
-  const { t } = useTranslation(["dashboard", "profiles"]);
+  const { t } = useTranslation(["dashboard", "profiles", "incidents"]);
   const [range, setRange] = React.useState<TimeRange>("24h");
 
   const history = useQuery({
@@ -47,6 +47,13 @@ export function UnitDetail({
     refetchInterval: 30000,
   });
 
+  const cyclesQuery = useQuery({
+    queryKey: ["defrost-cycles", unit.id, range],
+    queryFn: () => api.getDefrostCycles(unit.id, range),
+    refetchInterval: 30000,
+  });
+
+  const hasDefrostSensor = unit.roles.some((r) => r.role === "defrost");
   const room = unit.room;
   const stripRoles = STRIP_ROLES.map((r) => unit.roles.find((x) => x.role === r)).filter(
     (x): x is NonNullable<typeof x> => Boolean(x),
@@ -94,6 +101,15 @@ export function UnitDetail({
               </div>
             )}
             <OperationalStateStrip roles={stripRoles} />
+
+            {!hasDefrostSensor && (
+              <div className="rounded-md border border-border bg-muted/40 p-2.5 text-xs text-muted-foreground">
+                <div className="font-medium text-foreground">
+                  {t("incidents:defrost.noSensorTitle")}
+                </div>
+                {t("incidents:defrost.noSensorHint")}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -132,6 +148,7 @@ export function UnitDetail({
                   lower={history.data.lower_limit_c}
                   upper={history.data.upper_limit_c}
                   setpoint={unit.setpoint_c}
+                  defrostCycles={cyclesQuery.data ?? []}
                 />
                 {history.data.downsampled && (
                   <p className="text-[11px] text-muted-foreground">

@@ -5,8 +5,12 @@ import type {
   AssignmentCurrentValue,
   ConnectionStatus,
   DashboardResponse,
+  DefrostCycle,
   HAEntity,
   HistoryResponse,
+  Incident,
+  IncidentDetail,
+  IncidentUpdate,
   MonitoringProfile,
   StorageUnit,
   StorageUnitInput,
@@ -118,6 +122,23 @@ export const api = {
     q.set("max_points", String(params?.max_points ?? 800));
     return request<HistoryResponse>(`api/storage-units/${id}/samples?${q.toString()}`);
   },
+
+  getDefrostCycles: (id: number, range = "24h") =>
+    request<DefrostCycle[]>(`api/storage-units/${id}/defrost-cycles?range=${range}`),
+
+  listIncidents: (params?: { state?: "all" | "open" | "closed"; storage_unit_id?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.state) q.set("state", params.state);
+    if (params?.storage_unit_id != null) q.set("storage_unit_id", String(params.storage_unit_id));
+    const qs = q.toString();
+    return request<Incident[]>(`api/incidents${qs ? `?${qs}` : ""}`);
+  },
+  getIncident: (id: number) => request<IncidentDetail>(`api/incidents/${id}`),
+  updateIncident: (id: number, input: IncidentUpdate) =>
+    request<IncidentDetail>(`api/incidents/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
 
   getSettings: () => request<AppSettings>("api/settings"),
   updateSettings: (input: Partial<AppSettings>) =>

@@ -15,8 +15,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db import get_db
 from ..errors import ERROR_STORAGE_UNIT_NOT_FOUND, AppError
-from ..models import EntityAssignment, EntityRole, Quality, SensorSample, StorageUnit
-from ..schemas import HistoryPoint, HistoryResponse
+from ..models import (
+    DefrostCycle,
+    EntityAssignment,
+    EntityRole,
+    Quality,
+    SensorSample,
+    StorageUnit,
+)
+from ..schemas import DefrostCycleOut, HistoryPoint, HistoryResponse
 
 router = APIRouter(prefix="/api/storage-units", tags=["history"])
 
@@ -115,6 +122,32 @@ async def unit_samples(
         avg_c=avg_c,
         coverage_ratio=coverage,
     )
+
+
+@router.get("/{unit_id}/defrost-cycles", response_model=list[DefrostCycleOut])
+async def unit_defrost_cycles(
+    unit_id: int,
+    range: str = Query(default="24h"),
+    from_ts: datetime | None = Query(default=None, alias="from"),
+    to_ts: datetime | None = Query(default=None, alias="to"),
+    db: AsyncSession = Depends(get_db),
+) -> list[DefrostCycle]:
+    """Defrost cycles overlapping the range (for chart bands + operational history)."""
+    if await db.get(StorageUnit, unit_id) is None:
+        raise AppError(ERROR_STORAGE_UNIT_NOT_FOUND, status_code=404)
+    start, end = _resolve_range(range, from_ts, to_ts)
+    rows = (
+        await db.scalars(
+            select(DefrostCycle)
+            .where(
+                DefrostCycle.storage_unit_id == unit_id,
+                # overlaps [start, end]: started before end and (still open or ended after start)
+                DefrostCycle.started_at <= end,
+            )
+            .order_by(DefrostCycle.started_at.asc())
+        )
+    ).all()
+    return [c for c in rows if c.ended_at is None or _as_utc(c.ended_at) >= start]
 
 
 def _build_points(

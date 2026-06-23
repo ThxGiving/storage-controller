@@ -71,6 +71,28 @@ export function formatDateTime(iso: string | null | undefined): string {
   });
 }
 
+/** Compact duration between two ISO timestamps (end defaults to now). */
+export function formatDuration(
+  start: string | null | undefined,
+  end?: string | null,
+): string {
+  if (!start) return "—";
+  const s = new Date(start).getTime();
+  const e = end ? new Date(end).getTime() : Date.now();
+  if (Number.isNaN(s) || Number.isNaN(e)) return "—";
+  let secs = Math.max(0, Math.round((e - s) / 1000));
+  const d = Math.floor(secs / 86400);
+  secs -= d * 86400;
+  const h = Math.floor(secs / 3600);
+  secs -= h * 3600;
+  const m = Math.floor(secs / 60);
+  const parts: string[] = [];
+  if (d) parts.push(`${d}d`);
+  if (h) parts.push(`${h}h`);
+  if (m || (!d && !h)) parts.push(`${m}min`);
+  return parts.join(" ");
+}
+
 /** Relative "x ago" formatting using the locale's RelativeTimeFormat. */
 export function timeAgo(iso: string | null | undefined): string {
   if (!iso) return "—";

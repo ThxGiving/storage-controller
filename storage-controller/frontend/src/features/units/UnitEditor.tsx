@@ -59,6 +59,14 @@ export function UnitEditor({
   const [assignments, setAssignments] = React.useState<AssignmentMap>({});
   const [error, setError] = React.useState<string | null>(null);
 
+  // Defrost-aware evaluation
+  const [defrostEnabled, setDefrostEnabled] = React.useState(false);
+  const [maxDefrostMin, setMaxDefrostMin] = React.useState("30");
+  const [postRecoveryMin, setPostRecoveryMin] = React.useState("30");
+  const [maxRoomC, setMaxRoomC] = React.useState("");
+  const [recoveryTargetC, setRecoveryTargetC] = React.useState("");
+  const [maxRecoveryMin, setMaxRecoveryMin] = React.useState("60");
+
   React.useEffect(() => {
     if (!open) return;
     if (unit) {
@@ -78,6 +86,12 @@ export function UnitEditor({
       const map: AssignmentMap = {};
       unit.assignments.forEach((a) => (map[a.role] = a.entity_id));
       setAssignments(map);
+      setDefrostEnabled(unit.defrost_evaluation_enabled);
+      setMaxDefrostMin(Math.round(unit.maximum_expected_defrost_duration_seconds / 60).toString());
+      setPostRecoveryMin(Math.round(unit.post_defrost_recovery_seconds / 60).toString());
+      setMaxRoomC(unit.maximum_expected_room_temperature_c?.toString() ?? "");
+      setRecoveryTargetC(unit.recovery_target_temperature_c?.toString() ?? "");
+      setMaxRecoveryMin(Math.round(unit.maximum_recovery_duration_seconds / 60).toString());
     } else {
       setName("");
       setShortName("");
@@ -90,6 +104,12 @@ export function UnitEditor({
       setRecoveryDelay("5");
       setAssignments({});
       setAppliedProfile({ key: null, name: null });
+      setDefrostEnabled(false);
+      setMaxDefrostMin("30");
+      setPostRecoveryMin("30");
+      setMaxRoomC("");
+      setRecoveryTargetC("");
+      setMaxRecoveryMin("60");
     }
     setProfileId("");
     setError(null);
@@ -145,6 +165,12 @@ export function UnitEditor({
       recovery_delay_seconds: Math.round((parseDecimal(recoveryDelay) ?? 0) * 60),
       applied_profile_key: appliedProfile.key,
       applied_profile_name: appliedProfile.name,
+      defrost_evaluation_enabled: defrostEnabled,
+      maximum_expected_defrost_duration_seconds: Math.round((parseDecimal(maxDefrostMin) ?? 30) * 60),
+      post_defrost_recovery_seconds: Math.round((parseDecimal(postRecoveryMin) ?? 30) * 60),
+      maximum_expected_room_temperature_c: parseDecimal(maxRoomC),
+      recovery_target_temperature_c: parseDecimal(recoveryTargetC),
+      maximum_recovery_duration_seconds: Math.round((parseDecimal(maxRecoveryMin) ?? 60) * 60),
       assignments: ENTITY_ROLES.filter((r) => assignments[r]).map((r) => ({
         role: r,
         entity_id: assignments[r]!,
@@ -257,6 +283,40 @@ export function UnitEditor({
               <Input value={recoveryDelay} onChange={(e) => setRecoveryDelay(e.target.value)} inputMode="numeric" />
             </Field>
           </div>
+        </div>
+
+        <div>
+          <label className="flex items-center gap-2 text-sm font-semibold">
+            <input
+              type="checkbox"
+              checked={defrostEnabled}
+              onChange={(e) => setDefrostEnabled(e.target.checked)}
+              className="h-4 w-4 rounded border-input"
+            />
+            {t("storage-units:editor.defrostSection")}
+          </label>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t("storage-units:editor.defrostHint")}
+          </p>
+          {defrostEnabled && (
+            <div className="mt-2 grid gap-4 sm:grid-cols-3">
+              <Field label={t("storage-units:editor.maxRoomTemp")}>
+                <Input value={maxRoomC} onChange={(e) => setMaxRoomC(e.target.value)} inputMode="decimal" />
+              </Field>
+              <Field label={t("storage-units:editor.recoveryTarget")}>
+                <Input value={recoveryTargetC} onChange={(e) => setRecoveryTargetC(e.target.value)} inputMode="decimal" />
+              </Field>
+              <Field label={t("storage-units:editor.maxDefrost")}>
+                <Input value={maxDefrostMin} onChange={(e) => setMaxDefrostMin(e.target.value)} inputMode="numeric" />
+              </Field>
+              <Field label={t("storage-units:editor.maxRecovery")}>
+                <Input value={maxRecoveryMin} onChange={(e) => setMaxRecoveryMin(e.target.value)} inputMode="numeric" />
+              </Field>
+              <Field label={t("storage-units:editor.postRecovery")}>
+                <Input value={postRecoveryMin} onChange={(e) => setPostRecoveryMin(e.target.value)} inputMode="numeric" />
+              </Field>
+            </div>
+          )}
         </div>
 
         <div>

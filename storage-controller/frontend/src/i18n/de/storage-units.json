@@ -47,6 +47,15 @@
     "violationDelay": "Verletzungs-Verzög. (min)",
     "recoveryDelay": "Erholungs-Verzög. (min)",
     "entityAssignment": "Entity-Zuordnung",
-    "fromProfile": "aus Preset"
+    "fromProfile": "aus Preset",
+    "optional": "Optional",
+    "defrostSection": "Abtau-bewusste Bewertung",
+    "defrostEnabled": "Abtau-bewusste Bewertung aktivieren",
+    "defrostHint": "Temperaturspitzen mit dem zugewiesenen Abtauzustand korrelieren. Erfordert ein Abtau-Entity. Keine pauschale Ausnahme — Spitzen außerhalb des Rahmens lösen weiterhin Vorfälle aus.",
+    "maxDefrost": "Max. Abtaudauer (min)",
+    "postRecovery": "Erholungsfenster nach Abtauung (min)",
+    "maxRoomTemp": "Max. erwartete Raumtemp. °C",
+    "recoveryTarget": "Erholungsziel °C",
+    "maxRecovery": "Max. Erholungsdauer (min)"
   }
 }

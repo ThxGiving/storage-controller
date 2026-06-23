@@ -19,7 +19,9 @@ from ..db import get_db
 from ..ha.manager import STATUS_CONNECTED, HAConnectionManager
 from ..models import (
     NUMERIC_ROLES,
+    OPEN_DEFROST_STATUSES,
     OPEN_INCIDENT_STATES,
+    DefrostCycle,
     EntityRole,
     Incident,
     Quality,
@@ -28,6 +30,7 @@ from ..models import (
 )
 from ..normalization import normalize_bool, normalize_numeric
 from ..schemas import (
+    DashboardDefrost,
     DashboardIncident,
     DashboardResponse,
     DashboardRoleValue,
@@ -82,6 +85,22 @@ def _role_value(role: str, entity, invert: bool) -> DashboardRoleValue:
         raw=res_b.raw_state,
         unit=entity.unit_of_measurement,
         bool_value=res_b.normalized_bool,
+    )
+
+
+def _defrost_of(cycle: DefrostCycle | None, unit: StorageUnit) -> DashboardDefrost | None:
+    if cycle is None:
+        return None
+    return DashboardDefrost(
+        id=cycle.id,
+        status=cycle.status,
+        started_at=_as_utc(cycle.started_at),
+        recovery_started_at=_as_utc(cycle.recovery_started_at),
+        peak_room_temperature_c=cycle.peak_room_temperature_c,
+        peak_evaporator_temperature_c=cycle.peak_evaporator_temperature_c,
+        max_expected_duration_seconds=unit.maximum_expected_defrost_duration_seconds,
+        max_recovery_seconds=unit.maximum_recovery_duration_seconds,
+        recovery_target_c=unit.recovery_target_temperature_c,
     )
 
 
@@ -178,6 +197,18 @@ async def dashboard(
                 )
             )
 
+    # Open defrost cycles (active/recovering) per unit.
+    open_cycles = (
+        await db.scalars(
+            select(DefrostCycle)
+            .where(DefrostCycle.status.in_([s.value for s in OPEN_DEFROST_STATUSES]))
+            .order_by(DefrostCycle.started_at.desc())
+        )
+    ).all()
+    cycle_by_unit: dict[int, DefrostCycle] = {}
+    for cyc in open_cycles:
+        cycle_by_unit.setdefault(cyc.storage_unit_id, cyc)  # newest first
+
     summary = DashboardSummary(
         total=len(units_db),
         open_incidents=open_count,
@@ -259,6 +290,7 @@ async def dashboard(
                 roles=roles,
                 spark=await _spark(db, unit.id),
                 active_incidents=incidents_by_unit.get(unit.id, []),
+                defrost=_defrost_of(cycle_by_unit.get(unit.id), unit),
             )
         )
 

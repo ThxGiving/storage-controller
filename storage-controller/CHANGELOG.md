@@ -2,6 +2,42 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.1.8 — Unreleased
+
+### Added — Phase 4: incident engine
+
+- Incident detection with a `pending → active → recovering → closed` state
+  machine and configurable violation/recovery/offline delays: `temperature_high`,
+  `temperature_low`, `sensor_unavailable`, `sensor_stale`, `sensor_invalid`,
+  `home_assistant_disconnected`. Extreme values tracked; a single threshold
+  crossing never repeats; restarts continue an incident rather than duplicate it.
+- Incidents API (list / detail with timeline / acknowledge + document cause,
+  corrective action, note) and audit events. New **Incidents** page with a
+  documentation form and lifecycle timeline; active incidents shown on dashboard
+  cards and aggregated in the header.
+
+### Added — Phase 4: defrost-aware evaluation
+
+- Defrost cycles persisted as operational events (`defrost_cycles`, migration
+  0004) with start/end, room/evaporator snapshots & peaks, recovery phase, status
+  and classification (`expected_defrost`, `expected_defrost_excursion`,
+  `abnormal_defrost`, `recovery_timeout`). Per-unit defrost settings (editable in
+  the unit editor).
+- Temperature peaks inside a *validated* defrost envelope are classified as
+  expected excursions and do not raise critical temperature incidents — but
+  measurements are never deleted or suppressed, `defrost = on` is never a blanket
+  exemption, and a genuine incident (pre-existing, beyond envelope, or failed
+  recovery) still fires and can coexist with `abnormal_defrost`. `recovery_timeout`
+  incident when recovery exceeds the configured maximum. Without a defrost entity,
+  normal temperature logic applies (clearly stated in the UI).
+- Dashboard defrost status pill with recovery progress; detail chart shows defrost
+  and recovery as distinct shaded bands plus visible data gaps.
+
+### Fixed
+
+- Editing a storage unit reconciles assignments in place (no UNIQUE violation;
+  recorded samples preserved). Negative lower limits save correctly.
+
 ## 0.1.7 — Unreleased
 
 ### Fixed

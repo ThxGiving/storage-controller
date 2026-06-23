@@ -1,0 +1,65 @@
+{
+  "title": "Incidents",
+  "subtitle": "Temperature deviations and technical conditions.",
+  "filter": { "all": "All", "open": "Open", "closed": "Closed" },
+  "empty": "No incidents in this view.",
+  "types": {
+    "temperature_high": "Temperature too high",
+    "temperature_low": "Temperature too low",
+    "sensor_unavailable": "Sensor unavailable",
+    "sensor_stale": "No recent data",
+    "sensor_invalid": "Invalid value",
+    "home_assistant_disconnected": "Home Assistant disconnected",
+    "abnormal_defrost": "Abnormal defrost",
+    "recovery_timeout": "Recovery timeout"
+  },
+  "states": {
+    "pending_violation": "Pending",
+    "active_violation": "Active",
+    "recovering": "Recovering",
+    "closed": "Closed"
+  },
+  "col": {
+    "type": "Type",
+    "unit": "Unit",
+    "started": "Started",
+    "duration": "Duration",
+    "extreme": "Peak",
+    "status": "Status",
+    "documentation": "Documentation"
+  },
+  "badge": { "defrostOverlap": "during defrost", "unacknowledged": "to document" },
+  "detail": {
+    "back": "Back to incidents",
+    "opened": "Opened",
+    "confirmed": "Confirmed",
+    "recovering": "Recovering since",
+    "closed": "Closed",
+    "duration": "Duration",
+    "limit": "Limit",
+    "extreme": "Peak value",
+    "timeline": "Timeline",
+    "documentation": "Documentation",
+    "acknowledge": "Acknowledge",
+    "acknowledged": "Acknowledged by {{user}}",
+    "cause": "Cause",
+    "causePlaceholder": "What caused this deviation?",
+    "correctiveAction": "Corrective action",
+    "correctiveActionPlaceholder": "What was done?",
+    "note": "Note",
+    "save": "Save documentation",
+    "saving": "Saving…",
+    "ongoing": "ongoing"
+  },
+  "defrost": {
+    "active": "Defrost active",
+    "recovering": "Recovering after defrost",
+    "elapsed": "Elapsed",
+    "maxDuration": "Max. duration",
+    "target": "Recovery target",
+    "maxRecovery": "Max. recovery",
+    "peakRoom": "Peak room",
+    "noSensorTitle": "Defrost sensor not configured",
+    "noSensorHint": "Temperature peaks are evaluated using the normal monitoring rules and are not automatically attributed to defrost."
+  }
+}

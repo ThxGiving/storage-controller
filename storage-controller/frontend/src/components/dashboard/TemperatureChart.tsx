@@ -1,13 +1,14 @@
 import { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
 import { useTranslation } from "react-i18next";
-import type { HistoryPoint } from "@/lib/types";
+import type { DefrostCycle, HistoryPoint } from "@/lib/types";
 
 interface Props {
   points: HistoryPoint[];
   lower?: number | null;
   upper?: number | null;
   setpoint?: number | null;
+  defrostCycles?: DefrostCycle[];
   height?: number;
 }
 
@@ -23,11 +24,36 @@ function isDark() {
  * unavailable/missing periods are visibly empty rather than interpolated.
  * Threshold and setpoint lines use print-safe colors.
  */
-export function TemperatureChart({ points, lower, upper, setpoint, height = 340 }: Props) {
+export function TemperatureChart({
+  points,
+  lower,
+  upper,
+  setpoint,
+  defrostCycles = [],
+  height = 340,
+}: Props) {
   const { t, i18n } = useTranslation("dashboard");
 
   const option = useMemo(() => {
     const dark = isDark();
+    // Defrost (subtle band) and recovery (different subtle band) periods.
+    const markAreas: Array<Array<Record<string, unknown>>> = [];
+    for (const c of defrostCycles) {
+      const start = new Date(c.started_at).getTime();
+      const end = c.ended_at ? new Date(c.ended_at).getTime() : Date.now();
+      markAreas.push([
+        { xAxis: start, itemStyle: { color: "#38bdf820" } },
+        { xAxis: end },
+      ]);
+      if (c.recovery_started_at) {
+        const rs = new Date(c.recovery_started_at).getTime();
+        const re = c.recovered_at ? new Date(c.recovered_at).getTime() : Date.now();
+        markAreas.push([
+          { xAxis: rs, itemStyle: { color: "#a78bfa20" } },
+          { xAxis: re },
+        ]);
+      }
+    }
     const axis = dark ? "#94a3b8" : "#475569";
     const grid = dark ? "#1e293b" : "#e2e8f0";
     const data = points.map((p) => [new Date(p.t).getTime(), p.v]);
@@ -103,10 +129,13 @@ export function TemperatureChart({ points, lower, upper, setpoint, height = 340 
           markLine: marks.length
             ? { silent: true, symbol: "none", data: marks }
             : undefined,
+          markArea: markAreas.length
+            ? { silent: true, data: markAreas as never }
+            : undefined,
         },
       ],
     };
-  }, [points, lower, upper, setpoint, i18n.language, t]);
+  }, [points, lower, upper, setpoint, defrostCycles, i18n.language, t]);
 
   return (
     <ReactECharts

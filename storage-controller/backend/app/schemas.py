@@ -102,6 +102,19 @@ class StorageUnitBase(BaseModel):
     applied_profile_key: str | None = None
     applied_profile_name: str | None = None
 
+    # Defrost-aware evaluation (Phase 4)
+    defrost_evaluation_enabled: bool = False
+    maximum_expected_defrost_duration_seconds: int = Field(default=1800, ge=0)
+    pre_defrost_correlation_seconds: int = Field(default=300, ge=0)
+    post_defrost_recovery_seconds: int = Field(default=1800, ge=0)
+    maximum_expected_room_temperature_c: float | None = None
+    maximum_expected_evaporator_temperature_c: float | None = None
+    recovery_target_temperature_c: float | None = None
+    maximum_recovery_duration_seconds: int = Field(default=3600, ge=0)
+    expected_defrost_excursions_visible_in_incident_list: bool = False
+    abnormal_defrost_creates_incident: bool = True
+    manual_review_required_after_abnormal_defrost: bool = False
+
     @field_validator("name")
     @classmethod
     def _strip_name(cls, v: str) -> str:
@@ -137,6 +150,17 @@ class StorageUnitUpdate(BaseModel):
     report_enabled: bool | None = None
     applied_profile_key: str | None = None
     applied_profile_name: str | None = None
+    defrost_evaluation_enabled: bool | None = None
+    maximum_expected_defrost_duration_seconds: int | None = Field(default=None, ge=0)
+    pre_defrost_correlation_seconds: int | None = Field(default=None, ge=0)
+    post_defrost_recovery_seconds: int | None = Field(default=None, ge=0)
+    maximum_expected_room_temperature_c: float | None = None
+    maximum_expected_evaporator_temperature_c: float | None = None
+    recovery_target_temperature_c: float | None = None
+    maximum_recovery_duration_seconds: int | None = Field(default=None, ge=0)
+    expected_defrost_excursions_visible_in_incident_list: bool | None = None
+    abnormal_defrost_creates_incident: bool | None = None
+    manual_review_required_after_abnormal_defrost: bool | None = None
     assignments: list[EntityAssignmentIn] | None = None
 
 
@@ -334,6 +358,38 @@ class DashboardIncident(BaseModel):
     documented: bool = False
 
 
+class DashboardDefrost(BaseModel):
+    """Current open defrost cycle (active or recovering) for a unit."""
+
+    id: int
+    status: str  # active | recovering
+    started_at: datetime
+    recovery_started_at: datetime | None = None
+    peak_room_temperature_c: float | None = None
+    peak_evaporator_temperature_c: float | None = None
+    max_expected_duration_seconds: int
+    max_recovery_seconds: int
+    recovery_target_c: float | None = None
+
+
+class DefrostCycleOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    storage_unit_id: int
+    started_at: datetime
+    ended_at: datetime | None = None
+    recovery_started_at: datetime | None = None
+    recovered_at: datetime | None = None
+    initial_room_temperature_c: float | None = None
+    peak_room_temperature_c: float | None = None
+    initial_evaporator_temperature_c: float | None = None
+    peak_evaporator_temperature_c: float | None = None
+    status: str
+    classification: str | None = None
+    triggering_rule: str | None = None
+
+
 class DashboardUnit(BaseModel):
     id: int
     name: str
@@ -353,6 +409,7 @@ class DashboardUnit(BaseModel):
     roles: list[DashboardRoleValue] = Field(default_factory=list)
     spark: list[DashboardSpark] = Field(default_factory=list)
     active_incidents: list[DashboardIncident] = Field(default_factory=list)
+    defrost: DashboardDefrost | None = None
 
 
 class DashboardSummary(BaseModel):

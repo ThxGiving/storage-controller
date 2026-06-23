@@ -8,6 +8,9 @@ import { TemperatureRangeGauge } from "./TemperatureRangeGauge";
 import { TemperatureSparkline } from "./TemperatureSparkline";
 import { OperationalStateStrip } from "./OperationalStateStrip";
 import { DataQualityIndicator } from "./DataQualityIndicator";
+import { DefrostStatusPill } from "./DefrostStatusPill";
+import { IncidentBadge } from "@/components/incidents/IncidentBadge";
+import { formatDuration } from "@/lib/utils";
 
 const STRIP_ROLES: EntityRole[] = [
   "evaporator_temperature",
@@ -101,6 +104,23 @@ export function StorageUnitStatusCard({
           </span>
         )}
       </div>
+
+      {/* defrost (operational, not a critical warning) */}
+      {unit.defrost && <DefrostStatusPill defrost={unit.defrost} />}
+
+      {/* active incidents */}
+      {unit.active_incidents.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {unit.active_incidents.slice(0, 3).map((inc) => (
+            <span key={inc.id} className="inline-flex items-center gap-1">
+              <IncidentBadge type={inc.type} state={inc.state} />
+              <span className="text-[11px] tabular-nums text-muted-foreground">
+                {formatDuration(inc.opened_at)}
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* operational strip */}
       <OperationalStateStrip roles={stripRoles} />
