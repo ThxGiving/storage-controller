@@ -1,0 +1,50 @@
+{
+  "title": "Abtau-Lernen",
+  "subtitle": "Betriebliche Abtaueigenschaften werden aus beobachteten Zyklen gelernt. Sicherheits-Temperaturgrenzen werden nie gelernt oder verändert.",
+  "state": {
+    "disabled": "Abtau-bewusste Bewertung ist aus",
+    "noEntity": "Keine Abtau-Entität zugewiesen",
+    "observing": "Abtauprofil wird gelernt",
+    "suggestionReady": "Vorschlag zur Prüfung bereit",
+    "approved": "Gelerntes Profil aktiv"
+  },
+  "observingHint": "Vollständige Zyklen werden gesammelt. Bis ein Profil bestätigt ist, bleiben Überschreitungen während des Abtauens normale Ereignisse (als möglicherweise abtaubezogen markiert) und werden nie automatisch unterdrückt.",
+  "suggestionHint": "Genügend vollständige Zyklen beobachtet. Prüfe die vorgeschlagenen Werte und übernimm sie, damit die Auswertung Abtau-Überschreitungen innerhalb der Hüllkurve als erwartet behandelt.",
+  "approvedHint": "Bestätigte Werte dienen der Einordnung erwarteter Abtau-Überschreitungen. Sie ändern niemals die Sicherheits-Temperaturgrenzen.",
+  "validCycles": "Gültige Zyklen",
+  "minCycles": "von {{min}} nötig",
+  "confidence": "Konfidenz",
+  "confidenceLevel": {
+    "insufficient": "Unzureichend",
+    "preliminary": "Vorläufig",
+    "high": "Hoch"
+  },
+  "metrics": {
+    "typicalDuration": "Typische Dauer",
+    "maxDuration": "Max. Dauer",
+    "typicalRoomPeak": "Typische Raumspitze",
+    "maxRoomPeak": "Max. Raumspitze",
+    "typicalEvapPeak": "Typische Verdampferspitze",
+    "maxEvapPeak": "Max. Verdampferspitze",
+    "typicalRecovery": "Typische Erholung",
+    "maxRecovery": "Max. Erholung",
+    "interval": "Typischer Abstand",
+    "variation": "Streuung",
+    "safetyMargin": "Sicherheitszuschlag"
+  },
+  "outliers": "Ausreißer ausgeschlossen: {{list}}",
+  "drift": "Abweichung erkannt",
+  "driftHint": "Aktuelle Zyklen weichen vom bestätigten Profil ab ({{detail}}). Erwäge Zurücksetzen und Neulernen. Es wurde nichts automatisch geändert.",
+  "actions": {
+    "approve": "Vorschlag übernehmen",
+    "reset": "Lernphase zurücksetzen",
+    "recompute": "Neu berechnen",
+    "running": "Arbeitet…"
+  },
+  "resetConfirm": "Gelerntes Profil und Vorschlag verwerfen und erneut beobachten?",
+  "safetyNote": "Gelernte Werte sind rein betrieblich — keine rechtlichen oder HACCP-zertifizierten Grenzen.",
+  "recentCycles": "Letzte Zyklen",
+  "units": {
+    "minutes": "min"
+  }
+}

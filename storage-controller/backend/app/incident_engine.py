@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import selectinload
 
 from .incident_logic import Decision, EvalResult, decide
+from .learning_service import get_active_model, recompute_learning
 from .models import (
     OPEN_DEFROST_STATUSES,
     OPEN_INCIDENT_STATES,
@@ -41,18 +42,56 @@ log = logging.getLogger("incident_engine")
 DISCONNECT_GRACE_SECONDS = 60
 
 
+# Conservative built-in bounds for gross-failure detection BEFORE a learned model
+# is approved. These detect a stuck defrost / failed recovery but are NEVER used
+# to suppress or reclassify an excursion as safe.
+FALLBACK_MAX_DEFROST_SECONDS = 2700  # 45 min
+FALLBACK_MAX_RECOVERY_SECONDS = 5400  # 90 min
+
+
+@dataclass
+class LearnedEnvelope:
+    """Approved, learned operational envelope (gates excursion suppression)."""
+
+    max_room_peak_c: float | None = None
+    max_evaporator_peak_c: float | None = None
+    max_defrost_seconds: int | None = None
+    max_recovery_seconds: int | None = None
+
+
 @dataclass
 class DefrostSettings:
     enabled: bool = False
-    max_defrost_seconds: int = 1800
-    pre_correlation_seconds: int = 300
-    post_recovery_seconds: int = 1800
-    max_room_c: float | None = None
-    max_evaporator_c: float | None = None
+    # Recovery is "complete" when the room returns to its normal upper safety
+    # limit — a configured safety limit, never a learned value.
     recovery_target_c: float | None = None
-    max_recovery_seconds: int = 3600
-    excursions_visible: bool = False
     abnormal_creates_incident: bool = True
+    # Present only when a learned model has been explicitly approved.
+    learned: LearnedEnvelope | None = None
+
+    @property
+    def has_model(self) -> bool:
+        return self.learned is not None
+
+    @property
+    def max_defrost_seconds(self) -> int:
+        if self.learned and self.learned.max_defrost_seconds:
+            return self.learned.max_defrost_seconds
+        return FALLBACK_MAX_DEFROST_SECONDS
+
+    @property
+    def max_recovery_seconds(self) -> int:
+        if self.learned and self.learned.max_recovery_seconds:
+            return self.learned.max_recovery_seconds
+        return FALLBACK_MAX_RECOVERY_SECONDS
+
+    @property
+    def max_room_c(self) -> float | None:
+        return self.learned.max_room_peak_c if self.learned else None
+
+    @property
+    def max_evaporator_c(self) -> float | None:
+        return self.learned.max_evaporator_peak_c if self.learned else None
 
 
 @dataclass
@@ -246,17 +285,22 @@ class IncidentEngine:
                     if e_res.quality.value == Quality.valid.value:
                         evaporator_c = e_res.normalized_value_c
 
+            learned: LearnedEnvelope | None = None
+            if unit.defrost_evaluation_enabled and defrost is not None:
+                model = await get_active_model(session, unit.id)
+                if model is not None:
+                    learned = LearnedEnvelope(
+                        max_room_peak_c=model.max_room_peak_c,
+                        max_evaporator_peak_c=model.max_evaporator_peak_c,
+                        max_defrost_seconds=model.max_defrost_seconds,
+                        max_recovery_seconds=model.max_recovery_seconds,
+                    )
+
             defrost_settings = DefrostSettings(
                 enabled=unit.defrost_evaluation_enabled and defrost is not None,
-                max_defrost_seconds=unit.maximum_expected_defrost_duration_seconds,
-                pre_correlation_seconds=unit.pre_defrost_correlation_seconds,
-                post_recovery_seconds=unit.post_defrost_recovery_seconds,
-                max_room_c=unit.maximum_expected_room_temperature_c,
-                max_evaporator_c=unit.maximum_expected_evaporator_temperature_c,
-                recovery_target_c=unit.recovery_target_temperature_c,
-                max_recovery_seconds=unit.maximum_recovery_duration_seconds,
-                excursions_visible=unit.expected_defrost_excursions_visible_in_incident_list,
+                recovery_target_c=unit.upper_limit_c,
                 abnormal_creates_incident=unit.abnormal_defrost_creates_incident,
+                learned=learned,
             )
 
             readings.append(
@@ -315,14 +359,19 @@ class IncidentEngine:
             ):
                 continue
 
+            # An excursion that falls inside a defrost window but is NOT suppressed
+            # is marked "potentially defrost-related" (defrost_overlap) — it stays
+            # a real incident; it is never auto-closed or downgraded.
+            related = bool(r.defrost_on) or ctx.in_window
+
             existing = open_by_type.get(cond.type.value)
             if existing is not None:
                 _update_extreme(existing, cond, r.now)
-                if r.defrost_on:
+                if related:
                     existing.defrost_overlap = True
                 self._apply(session, existing, cond, r.now)
             elif cond.result == EvalResult.ACTIVE:
-                self._open(session, r.storage_unit_id, cond, r.now, defrost_on=r.defrost_on)
+                self._open(session, r.storage_unit_id, cond, r.now, defrost_on=related)
 
     async def _evaluate_defrost(
         self, session: AsyncSession, r: UnitReading, open_by_type: dict[str, Incident]
@@ -426,6 +475,11 @@ class IncidentEngine:
                 if cycle.classification is None:
                     cycle.classification = DefrostClassification.expected_defrost.value
                 in_window = False
+                # A fresh complete cycle is new learning evidence — refresh the
+                # suggestion and drift status (never auto-approves anything).
+                unit = await session.get(StorageUnit, r.storage_unit_id)
+                if unit is not None:
+                    await recompute_learning(session, unit, now)
             elif (now - rec_started).total_seconds() > ds.max_recovery_seconds:
                 cycle.status = DefrostStatus.abnormal.value
                 cycle.classification = DefrostClassification.recovery_timeout.value
@@ -435,17 +489,22 @@ class IncidentEngine:
                     "recovery_timeout", value=r.normalized_c if valid_room else None,
                 )
 
-        # Suppression: a NEW high excursion fully inside the validated envelope.
+        # Suppression: a NEW high excursion may be reclassified as an expected
+        # defrost excursion ONLY when an APPROVED learned model exists and the
+        # excursion stays fully inside its learned envelope and duration. Without
+        # an approved model nothing is suppressed — the excursion remains a real
+        # incident (flagged potentially-defrost-related upstream).
         suppress = False
         if (
-            in_window
+            ds.has_model
+            and in_window
             and valid_room
             and r.upper is not None
             and r.normalized_c > r.upper
             and cycle.status in (DefrostStatus.active.value, DefrostStatus.recovering.value)
         ):
             pre_existing = open_by_type.get(IncidentType.temperature_high.value) is not None
-            within_envelope = ds.max_room_c is None or r.normalized_c <= ds.max_room_c
+            within_envelope = ds.max_room_c is not None and r.normalized_c <= ds.max_room_c
             within_duration = (now - started).total_seconds() <= ds.max_defrost_seconds
             if not pre_existing and within_envelope and within_duration:
                 suppress = True

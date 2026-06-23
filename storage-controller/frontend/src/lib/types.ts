@@ -137,12 +137,7 @@ export interface StorageUnit {
   applied_profile_key: string | null;
   applied_profile_name: string | null;
   defrost_evaluation_enabled: boolean;
-  maximum_expected_defrost_duration_seconds: number;
-  post_defrost_recovery_seconds: number;
-  maximum_expected_room_temperature_c: number | null;
-  maximum_expected_evaporator_temperature_c: number | null;
-  recovery_target_temperature_c: number | null;
-  maximum_recovery_duration_seconds: number;
+  defrost_learning_min_cycles: number;
   created_at: string;
   updated_at: string;
   assignments: EntityAssignment[];
@@ -175,13 +170,70 @@ export interface StorageUnitInput {
   applied_profile_key?: string | null;
   applied_profile_name?: string | null;
   defrost_evaluation_enabled?: boolean;
-  maximum_expected_defrost_duration_seconds?: number;
-  post_defrost_recovery_seconds?: number;
-  maximum_expected_room_temperature_c?: number | null;
-  maximum_expected_evaporator_temperature_c?: number | null;
-  recovery_target_temperature_c?: number | null;
-  maximum_recovery_duration_seconds?: number;
   assignments: AssignmentInput[];
+}
+
+// --- Phase 4.6: defrost learning --------------------------------------------
+
+export interface LearnedDefrostModel {
+  id: number;
+  version: number;
+  status: string;
+  confidence: "insufficient" | "preliminary" | "high";
+  confidence_score: number;
+  valid_cycle_count: number;
+  window_start: string | null;
+  window_end: string | null;
+  typical_defrost_seconds: number | null;
+  max_defrost_seconds: number | null;
+  typical_recovery_seconds: number | null;
+  max_recovery_seconds: number | null;
+  typical_room_peak_c: number | null;
+  max_room_peak_c: number | null;
+  typical_evaporator_peak_c: number | null;
+  max_evaporator_peak_c: number | null;
+  typical_interval_seconds: number | null;
+  room_peak_variation_c: number | null;
+  duration_variation_seconds: number | null;
+  safety_margin_c: number;
+  drift_warning: boolean;
+  drift_detail: string | null;
+  generated_at: string | null;
+  approved_at: string | null;
+  approved_by: string | null;
+}
+
+export type DefrostLearningState =
+  | "disabled"
+  | "no_entity"
+  | "observing"
+  | "suggestion_ready"
+  | "approved";
+
+export interface DefrostLearningStatus {
+  storage_unit_id: number;
+  enabled: boolean;
+  has_defrost_entity: boolean;
+  state: DefrostLearningState;
+  valid_cycle_count: number;
+  min_cycles: number;
+  confidence: "insufficient" | "preliminary" | "high";
+  confidence_score: number;
+  outlier_count: number;
+  outliers: string[];
+  drift_warning: boolean;
+  drift_detail: string | null;
+  suggestion: LearnedDefrostModel | null;
+  approved: LearnedDefrostModel | null;
+  recent_cycles: DefrostCycle[];
+}
+
+export interface DefrostLearningApprove {
+  max_room_peak_c?: number | null;
+  max_evaporator_peak_c?: number | null;
+  max_defrost_seconds?: number | null;
+  max_recovery_seconds?: number | null;
+  safety_margin_c?: number | null;
 }
 
 // --- Phase 3: history + dashboard -------------------------------------------

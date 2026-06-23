@@ -2,6 +2,36 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.1.10 — Unreleased
+
+### Added — Phase 4.6: defrost learning + single-toggle UX
+
+- **Optional defrost learning.** The app observes complete, valid defrost cycles
+  and learns operational characteristics — typical/maximum duration, room and
+  evaporator peaks, recovery time, frequency and normal variation — using robust
+  statistics (median, p95, MAD, IQR outlier exclusion + a conservative safety
+  margin). A single outlier can never become a learned bound. Safety temperature
+  limits are **never** learned or changed (migration 0006, `defrost_learned_models`).
+- **Explicit approval required.** A suggestion is advisory until a human approves
+  it (optionally editing the bounds). Only an **approved** model lets the engine
+  reclassify in-envelope defrost excursions as expected. Approving, resetting and
+  drift are audited. Confidence: insufficient `<10`, preliminary `10–19`, high `≥20`.
+- **Safer gating.** With defrost-aware evaluation on but no approved model,
+  excursions during defrost stay real incidents flagged *potentially
+  defrost-related* — never auto-suppressed, closed or downgraded. `defrost = on`
+  is never a blanket exemption. Recovery now completes against the unit's normal
+  upper safety limit (not a hand-entered target); gross stuck-defrost / failed-
+  recovery still raise incidents via conservative built-in bounds before learning.
+- **Drift detection.** Once a model is approved, new cycles are compared against
+  it; material drift raises a warning and suggests retraining, but never changes
+  behaviour silently.
+- **Single-toggle UX.** The unit editor now exposes only one control —
+  *Defrost-aware evaluation* — available only when a defrost entity is assigned.
+  The five manual defrost fields are gone. The learned profile, confidence, valid
+  cycles, typical/max metrics, drift warnings and approve/reset live in an
+  advanced panel in the unit detail view. New `defrost` translation namespace
+  (en/de). Learned values are clearly marked operational-only, never legal/HACCP.
+
 ## 0.1.9 — Unreleased
 
 ### Added — Phase 4.5: bounded retention, aggregation, storage & timezone

@@ -6,24 +6,36 @@ import pytest
 from sqlalchemy import select
 
 from app import db as db_module
-from app.incident_engine import DefrostSettings, IncidentEngine, UnitReading
+from app.incident_engine import (
+    DefrostSettings,
+    IncidentEngine,
+    LearnedEnvelope,
+    UnitReading,
+)
 from app.models import DefrostCycle, Incident, IncidentType
 
 T0 = datetime(2026, 6, 23, 10, 0, 0, tzinfo=timezone.utc)
 
 
-def _ds(**over) -> DefrostSettings:
+def _env(**over) -> LearnedEnvelope:
+    base = dict(
+        max_room_peak_c=12.0,
+        max_evaporator_peak_c=20.0,
+        max_defrost_seconds=1800,
+        max_recovery_seconds=3600,
+    )
+    base.update(over)
+    return LearnedEnvelope(**base)
+
+
+def _ds(*, learned: bool = True, **over) -> DefrostSettings:
+    # ``learned`` mirrors an APPROVED model existing — only then may excursions be
+    # suppressed. Recovery target equals the unit's upper safety limit.
     base = dict(
         enabled=True,
-        max_defrost_seconds=1800,
-        pre_correlation_seconds=300,
-        post_recovery_seconds=1800,
-        max_room_c=12.0,
-        max_evaporator_c=20.0,
         recovery_target_c=8.0,
-        max_recovery_seconds=3600,
-        excursions_visible=False,
         abnormal_creates_incident=True,
+        learned=_env() if learned else None,
     )
     base.update(over)
     return DefrostSettings(**base)
@@ -94,6 +106,25 @@ async def test_normal_defrost_with_expected_excursion_no_temperature_incident(ap
     assert cycles[0].status == "completed"
     assert cycles[0].classification == "expected_defrost_excursion"
     assert cycles[0].peak_room_temperature_c == 10.0
+
+
+@pytest.mark.asyncio
+async def test_excursion_not_suppressed_without_approved_model(app_client):
+    """Toggle on but NO approved learned model -> excursion stays a real incident,
+    flagged potentially-defrost-related (never auto-suppressed)."""
+    unit = await _make_unit(app_client)
+    uid = unit["id"]
+    eng = _engine(app_client)
+    no_model = _ds(learned=False)
+    await _feed(eng, [
+        _r(uid, T0, value=6.0, defrost_on=True, ds=no_model),
+        _r(uid, T0 + timedelta(minutes=5), value=10.0, defrost_on=True, ds=no_model),  # >8
+    ])
+    highs = [i for i in await _incidents(uid) if i.type == IncidentType.temperature_high.value]
+    assert len(highs) == 1  # excursion is a real incident, not suppressed
+    assert highs[0].defrost_overlap is True  # marked potentially-defrost-related
+    cycles = await _cycles(uid)
+    assert cycles[0].classification != "expected_defrost_excursion"
 
 
 @pytest.mark.asyncio

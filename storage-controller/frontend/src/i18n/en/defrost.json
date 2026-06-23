@@ -1,0 +1,50 @@
+{
+  "title": "Defrost learning",
+  "subtitle": "Operational defrost characteristics are learned from observed cycles. Safety temperature limits are never learned or changed.",
+  "state": {
+    "disabled": "Defrost-aware evaluation is off",
+    "noEntity": "No defrost entity assigned",
+    "observing": "Learning defrost profile",
+    "suggestionReady": "Suggestion ready for review",
+    "approved": "Learned profile active"
+  },
+  "observingHint": "Collecting complete cycles. Until a profile is approved, excursions during defrost stay normal incidents (flagged potentially defrost-related) and are never auto-suppressed.",
+  "suggestionHint": "Enough complete cycles observed. Review the suggested values and approve them to let the engine treat in-envelope defrost excursions as expected.",
+  "approvedHint": "Approved values are used to reclassify expected defrost excursions. They never change storage-temperature safety limits.",
+  "validCycles": "Valid cycles",
+  "minCycles": "of {{min}} needed",
+  "confidence": "Confidence",
+  "confidenceLevel": {
+    "insufficient": "Insufficient",
+    "preliminary": "Preliminary",
+    "high": "High"
+  },
+  "metrics": {
+    "typicalDuration": "Typical duration",
+    "maxDuration": "Max duration",
+    "typicalRoomPeak": "Typical room peak",
+    "maxRoomPeak": "Max room peak",
+    "typicalEvapPeak": "Typical evaporator peak",
+    "maxEvapPeak": "Max evaporator peak",
+    "typicalRecovery": "Typical recovery",
+    "maxRecovery": "Max recovery",
+    "interval": "Typical interval",
+    "variation": "Variation",
+    "safetyMargin": "Safety margin"
+  },
+  "outliers": "Outliers excluded: {{list}}",
+  "drift": "Drift detected",
+  "driftHint": "Recent cycles differ from the approved profile ({{detail}}). Consider resetting and retraining. Nothing was changed automatically.",
+  "actions": {
+    "approve": "Approve suggestion",
+    "reset": "Reset learning",
+    "recompute": "Recompute",
+    "running": "Working…"
+  },
+  "resetConfirm": "Discard the learned profile and any suggestion and re-enter observation?",
+  "safetyNote": "Learned values are operational only — never legal or HACCP-certified limits.",
+  "recentCycles": "Recent cycles",
+  "units": {
+    "minutes": "min"
+  }
+}

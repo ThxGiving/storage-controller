@@ -18,6 +18,7 @@ import {
   TimeRangeSegmentedControl,
   type TimeRange,
 } from "@/components/dashboard/TimeRangeSegmentedControl";
+import { DefrostLearningPanel } from "@/features/units/DefrostLearningPanel";
 
 const STRIP_ROLES: EntityRole[] = [
   "evaporator_temperature",
@@ -164,6 +165,8 @@ export function UnitDetail({
           </CardContent>
         </Card>
       </div>
+
+      {hasDefrostSensor && <DefrostLearningPanel unitId={unit.id} />}
     </div>
   );
 }

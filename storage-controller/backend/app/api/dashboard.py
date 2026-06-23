@@ -17,11 +17,14 @@ from sqlalchemy.orm import selectinload
 
 from ..db import get_db
 from ..ha.manager import STATUS_CONNECTED, HAConnectionManager
+from ..incident_engine import FALLBACK_MAX_DEFROST_SECONDS, FALLBACK_MAX_RECOVERY_SECONDS
+from ..learning_service import get_active_model
 from ..models import (
     NUMERIC_ROLES,
     OPEN_DEFROST_STATUSES,
     OPEN_INCIDENT_STATES,
     DefrostCycle,
+    DefrostLearnedModel,
     EntityRole,
     Incident,
     Quality,
@@ -90,9 +93,23 @@ def _role_value(role: str, entity, invert: bool) -> DashboardRoleValue:
     )
 
 
-def _defrost_of(cycle: DefrostCycle | None, unit: StorageUnit) -> DashboardDefrost | None:
+def _defrost_of(
+    cycle: DefrostCycle | None,
+    unit: StorageUnit,
+    model: DefrostLearnedModel | None = None,
+) -> DashboardDefrost | None:
     if cycle is None:
         return None
+    max_defrost = (
+        model.max_defrost_seconds
+        if model and model.max_defrost_seconds
+        else FALLBACK_MAX_DEFROST_SECONDS
+    )
+    max_recovery = (
+        model.max_recovery_seconds
+        if model and model.max_recovery_seconds
+        else FALLBACK_MAX_RECOVERY_SECONDS
+    )
     return DashboardDefrost(
         id=cycle.id,
         status=cycle.status,
@@ -100,9 +117,10 @@ def _defrost_of(cycle: DefrostCycle | None, unit: StorageUnit) -> DashboardDefro
         recovery_started_at=_as_utc(cycle.recovery_started_at),
         peak_room_temperature_c=cycle.peak_room_temperature_c,
         peak_evaporator_temperature_c=cycle.peak_evaporator_temperature_c,
-        max_expected_duration_seconds=unit.maximum_expected_defrost_duration_seconds,
-        max_recovery_seconds=unit.maximum_recovery_duration_seconds,
-        recovery_target_c=unit.recovery_target_temperature_c,
+        max_expected_duration_seconds=max_defrost,
+        max_recovery_seconds=max_recovery,
+        # Recovery completes when the room returns to its normal upper safety limit.
+        recovery_target_c=unit.upper_limit_c,
     )
 
 
@@ -210,6 +228,11 @@ async def dashboard(
     cycle_by_unit: dict[int, DefrostCycle] = {}
     for cyc in open_cycles:
         cycle_by_unit.setdefault(cyc.storage_unit_id, cyc)  # newest first
+    model_by_unit: dict[int, DefrostLearnedModel] = {}
+    for unit_id in cycle_by_unit:
+        model = await get_active_model(db, unit_id)
+        if model is not None:
+            model_by_unit[unit_id] = model
 
     summary = DashboardSummary(
         total=len(units_db),
@@ -292,7 +315,9 @@ async def dashboard(
                 roles=roles,
                 spark=await _spark(db, unit.id),
                 active_incidents=incidents_by_unit.get(unit.id, []),
-                defrost=_defrost_of(cycle_by_unit.get(unit.id), unit),
+                defrost=_defrost_of(
+                    cycle_by_unit.get(unit.id), unit, model_by_unit.get(unit.id)
+                ),
             )
         )
 

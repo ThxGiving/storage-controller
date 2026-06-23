@@ -51,11 +51,7 @@
     "optional": "Optional",
     "defrostSection": "Defrost-aware evaluation",
     "defrostEnabled": "Enable defrost-aware evaluation",
-    "defrostHint": "Correlate temperature peaks with the mapped defrost state. Requires a defrost entity. Never a blanket exemption — peaks outside the envelope still raise incidents.",
-    "maxDefrost": "Max. defrost duration (min)",
-    "postRecovery": "Post-defrost recovery window (min)",
-    "maxRoomTemp": "Max. expected room temp. °C",
-    "recoveryTarget": "Recovery target °C",
-    "maxRecovery": "Max. recovery duration (min)"
+    "defrostHint": "The app observes defrost cycles automatically and learns the typical envelope. Until a learned profile is approved, defrost excursions stay normal incidents — never a blanket exemption. Manage the learned profile in the unit's detail view.",
+    "defrostNoEntity": "Assign a defrost entity to enable defrost-aware evaluation. Without it, normal temperature logic applies."
   }
 }

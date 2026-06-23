@@ -6,6 +6,8 @@ import type {
   ConnectionStatus,
   DashboardResponse,
   DefrostCycle,
+  DefrostLearningApprove,
+  DefrostLearningStatus,
   HAEntity,
   HistoryResponse,
   Incident,
@@ -126,6 +128,18 @@ export const api = {
 
   getDefrostCycles: (id: number, range = "24h") =>
     request<DefrostCycle[]>(`api/storage-units/${id}/defrost-cycles?range=${range}`),
+
+  getDefrostLearning: (id: number) =>
+    request<DefrostLearningStatus>(`api/storage-units/${id}/defrost/learning`),
+  approveDefrostLearning: (id: number, input: DefrostLearningApprove = {}) =>
+    request<DefrostLearningStatus>(`api/storage-units/${id}/defrost/learning/approve`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  resetDefrostLearning: (id: number) =>
+    request<DefrostLearningStatus>(`api/storage-units/${id}/defrost/learning/reset`, {
+      method: "POST",
+    }),
 
   listIncidents: (params?: { state?: "all" | "open" | "closed"; storage_unit_id?: number }) => {
     const q = new URLSearchParams();

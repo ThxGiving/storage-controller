@@ -20,6 +20,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from . import __version__
 from .api import (
     dashboard,
+    defrost,
     health,
     history,
     home_assistant,
@@ -191,6 +192,7 @@ def create_app() -> FastAPI:
     app.include_router(settings_api.router)
     app.include_router(dashboard.router)
     app.include_router(incidents.router)
+    app.include_router(defrost.router)
     app.include_router(maintenance_api.router)
 
     _mount_frontend(app)

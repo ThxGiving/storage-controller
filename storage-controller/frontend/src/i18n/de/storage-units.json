@@ -51,11 +51,7 @@
     "optional": "Optional",
     "defrostSection": "Abtau-bewusste Bewertung",
     "defrostEnabled": "Abtau-bewusste Bewertung aktivieren",
-    "defrostHint": "Temperaturspitzen mit dem zugewiesenen Abtauzustand korrelieren. Erfordert ein Abtau-Entity. Keine pauschale Ausnahme — Spitzen außerhalb des Rahmens lösen weiterhin Vorfälle aus.",
-    "maxDefrost": "Max. Abtaudauer (min)",
-    "postRecovery": "Erholungsfenster nach Abtauung (min)",
-    "maxRoomTemp": "Max. erwartete Raumtemp. °C",
-    "recoveryTarget": "Erholungsziel °C",
-    "maxRecovery": "Max. Erholungsdauer (min)"
+    "defrostHint": "Die App beobachtet Abtauzyklen automatisch und lernt die typische Hüllkurve. Bis ein gelerntes Profil bestätigt ist, bleiben Abtau-Überschreitungen normale Ereignisse — keine pauschale Ausnahme. Das gelernte Profil wird in der Detailansicht der Einheit verwaltet.",
+    "defrostNoEntity": "Weise eine Abtau-Entität zu, um die abtau-bewusste Bewertung zu aktivieren. Ohne sie gilt die normale Temperaturlogik."
   }
 }

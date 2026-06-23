@@ -102,6 +102,25 @@ class DefrostClassification(str, enum.Enum):
 # Defrost cycle statuses that are still ongoing.
 OPEN_DEFROST_STATUSES = {DefrostStatus.active, DefrostStatus.recovering}
 
+# Cycle outcomes that count as a complete, trustworthy observation for learning.
+LEARNABLE_DEFROST_CLASSIFICATIONS = {
+    DefrostClassification.expected_defrost,
+    DefrostClassification.expected_defrost_excursion,
+}
+
+
+class DefrostModelStatus(str, enum.Enum):
+    suggested = "suggested"
+    approved = "approved"
+    superseded = "superseded"
+    rejected = "rejected"
+
+
+class DefrostConfidence(str, enum.Enum):
+    insufficient = "insufficient"
+    preliminary = "preliminary"
+    high = "high"
+
 
 class IncidentState(str, enum.Enum):
     pending_violation = "pending_violation"
@@ -213,6 +232,11 @@ class StorageUnit(Base):
     )
     manual_review_required_after_abnormal_defrost: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
+    )
+    # Defrost learning (Phase 4.6). Minimum complete cycles before a learned
+    # operational profile may be suggested for approval.
+    defrost_learning_min_cycles: Mapped[int] = mapped_column(
+        Integer, default=10, nullable=False
     )
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
@@ -484,6 +508,73 @@ class DefrostCycle(Base):
     classification: Mapped[str | None] = mapped_column(String(40), nullable=True)
     triggering_rule: Mapped[str | None] = mapped_column(String(120), nullable=True)
 
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+
+class DefrostLearnedModel(Base):
+    """A learned operational profile for a unit's defrost behaviour.
+
+    Operational characteristics (typical/maximum durations, peak temperatures,
+    recovery time, frequency) are LEARNED from observed complete cycles. Safety
+    temperature limits are NEVER learned or changed here. A ``suggested`` model
+    must be explicitly approved before the incident engine may use it to suppress
+    or reclassify excursions; an ``approved`` model is the active envelope.
+    """
+
+    __tablename__ = "defrost_learned_models"
+    __table_args__ = (
+        Index("ix_defrost_models_unit_status", "storage_unit_id", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    storage_unit_id: Mapped[int] = mapped_column(
+        ForeignKey("storage_units.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(20), default=DefrostModelStatus.suggested.value, nullable=False
+    )
+    confidence: Mapped[str] = mapped_column(
+        String(20), default=DefrostConfidence.insufficient.value, nullable=False
+    )
+    confidence_score: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    valid_cycle_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    window_start: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    window_end: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    # Robust statistics (median for typical, p95 for maximum).
+    typical_defrost_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    max_defrost_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    typical_recovery_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    max_recovery_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    typical_room_peak_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    max_room_peak_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    typical_evaporator_peak_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    max_evaporator_peak_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    typical_interval_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    room_peak_variation_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    duration_variation_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    safety_margin_c: Mapped[float] = mapped_column(Float, default=2.0, nullable=False)
+
+    drift_warning: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    drift_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    generated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow
+    )
+    approved_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    approved_by: Mapped[str | None] = mapped_column(String(200), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow

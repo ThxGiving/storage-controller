@@ -486,3 +486,69 @@ class AssignmentCurrentValue(BaseModel):
     unit_of_measurement: str | None = None
     friendly_name: str | None = None
     warning: str | None = None
+
+
+# --------------------------------------------------------------------------- #
+# Defrost learning (Phase 4.6)
+# --------------------------------------------------------------------------- #
+
+
+class LearnedModelOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    version: int
+    status: str
+    confidence: str
+    confidence_score: float
+    valid_cycle_count: int
+    window_start: datetime | None = None
+    window_end: datetime | None = None
+    typical_defrost_seconds: int | None = None
+    max_defrost_seconds: int | None = None
+    typical_recovery_seconds: int | None = None
+    max_recovery_seconds: int | None = None
+    typical_room_peak_c: float | None = None
+    max_room_peak_c: float | None = None
+    typical_evaporator_peak_c: float | None = None
+    max_evaporator_peak_c: float | None = None
+    typical_interval_seconds: int | None = None
+    room_peak_variation_c: float | None = None
+    duration_variation_seconds: int | None = None
+    safety_margin_c: float = 2.0
+    drift_warning: bool = False
+    drift_detail: str | None = None
+    generated_at: datetime | None = None
+    approved_at: datetime | None = None
+    approved_by: str | None = None
+
+
+class DefrostLearningStatus(BaseModel):
+    """Diagnostic view of a unit's defrost learning state."""
+
+    storage_unit_id: int
+    enabled: bool
+    has_defrost_entity: bool
+    # disabled | no_entity | observing | suggestion_ready | approved
+    state: str
+    valid_cycle_count: int = 0
+    min_cycles: int = 10
+    confidence: str = "insufficient"
+    confidence_score: float = 0.0
+    outlier_count: int = 0
+    outliers: list[str] = Field(default_factory=list)
+    drift_warning: bool = False
+    drift_detail: str | None = None
+    suggestion: LearnedModelOut | None = None
+    approved: LearnedModelOut | None = None
+    recent_cycles: list[DefrostCycleOut] = Field(default_factory=list)
+
+
+class DefrostLearningApprove(BaseModel):
+    """Optional human edits applied when approving a suggestion."""
+
+    max_room_peak_c: float | None = None
+    max_evaporator_peak_c: float | None = None
+    max_defrost_seconds: int | None = Field(default=None, ge=0)
+    max_recovery_seconds: int | None = Field(default=None, ge=0)
+    safety_margin_c: float | None = Field(default=None, ge=0)
