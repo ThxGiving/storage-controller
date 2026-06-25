@@ -92,7 +92,6 @@ td.o, b.o { color: #ea580c; font-weight: 600; } td.g { color: #16a34a; }
 /* ---------- detail grid ---------- */
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6pt; margin-bottom: 7pt; }
 .card { border: 0.5pt solid #e5e7eb; border-radius: 4px; overflow: hidden; break-inside: avoid; }
-.card.wide { grid-column: span 2; }
 .accent { height: 2.6px; width: 100%; }
 .card-head { display: flex; justify-content: space-between; align-items: center; padding: 5pt 8pt 3pt; }
 .ctitle { font-weight: 700; font-size: 9pt; }
