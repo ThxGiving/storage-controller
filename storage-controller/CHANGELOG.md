@@ -2,6 +2,27 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.4.1 — 2026-06-25
+
+### Fixed
+
+- **Report detail charts: equal visual weight across all unit cards.** The last
+  unit card (when the unit count is odd) spans the full grid width. Its mini SVG
+  was previously generated at the same intrinsic width as the narrow cards, so
+  CSS `width:100%/height:auto` scaled it ~2×, making strokes appear twice as
+  thick, the min–max envelope twice as wide, and the chart itself twice as tall
+  as the other units. The wide-card SVG is now generated at 2× the intrinsic
+  width, keeping the CSS scale factor — and therefore all visual properties —
+  identical across all three cards.
+- **Report y-axis domain: minimum range raised from 2 °C to 4 °C (centered).**
+  Units with tight safety-limit bands (e.g. a freezer with a 3 °C window) were
+  shown on a very compressed y-axis, making normal hysteresis oscillations look
+  dramatic. The minimum span is now 4 °C, centered around the data midpoint.
+- **ESPHome gateway (Dixell Waveshare):** reduce CPU to 80 MHz; disable WiFi
+  power-save mode (sporadic disconnects); tighten setpoint number ranges to
+  0.1–10 °C; trigger a heartbeat tick immediately after HA reconnect to avoid
+  up to ~6 min data gaps for stable temperatures.
+
 ## 0.4.0 — Unreleased
 
 ### Added — Phase 6: report scheduling + email delivery
