@@ -2,6 +2,27 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.4.2 — 2026-06-25
+
+### Fixed
+
+- **Report charts: P1/P99 y-axis domain.** A single sensor outlier (e.g. a 45 °C
+  spike in a 0–8 °C fridge) no longer compresses the normal operating range to
+  the bottom of the chart. The domain is now derived from the 1st–99th percentile
+  of the average line; truly isolated spikes are clamped and shown as small ▲
+  outlier markers with their value at the chart boundary.
+- **Report charts: interim (current-month) reports no longer show future time as
+  a missing-data gap.** The chart x-axis is now clipped to the report generation
+  timestamp, so the right edge always ends at "now" rather than at month end.
+- **Report charts: band simplification to prevent barcode effect.** Adjacent
+  defrost, gap, or deviation bands that are closer together than their kind-specific
+  merge threshold are combined into a single wider band. Monthly freezer charts
+  with many short defrost cycles no longer render as a dense stripe pattern.
+- **Report charts: restrained visual style.** The missing-data hatch is now a
+  subtle warm-gray diagonal (`#c8c4a0` at 35 % opacity on a near-white base)
+  rather than the bright yellow used in earlier releases. The min–max envelope
+  opacity is reduced to 0.13. Gap boundary lines match the hatch colour.
+
 ## 0.4.1 — 2026-06-25
 
 ### Fixed

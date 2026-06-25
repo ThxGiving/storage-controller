@@ -129,6 +129,14 @@ def _sparse_note(chart, x0, x1, locale: str, tz: str, L) -> str | None:
 def render_html(model: ReportModel, *, logo_path: Path | None = None) -> str:
     L = labels(model.locale)
     x0, x1 = _epoch(model.period_start_utc), _epoch(model.period_end_utc)
+    # For interim (current-month) reports the period end is in the future.
+    # Clip the chart right edge to the generation timestamp so future time is
+    # not rendered as missing data.  The full period start/end remain in the
+    # report model and header; only the SVG x-axis is trimmed.
+    gen_epoch = _epoch(model.generated_at)
+    if gen_epoch and x1 and gen_epoch < x1:
+        x1 = gen_epoch
+
     overview_svgs = [
         render_chart_svg(
             c, model.timezone, upper_label=L["upper_limit"], lower_label=L["lower_limit"],
