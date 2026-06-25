@@ -123,6 +123,12 @@ _LABELS: dict[str, dict[str, str]] = {
             "support of HACCP documentation. It does not replace operational checks, "
             "measurements or legal requirements."
         ),
+        "interim_label": "Interim Report",
+        "interim_note": (
+            "This report covers data through {dt} only. "
+            "The calendar month is not yet complete — this is not a final compliance record."
+        ),
+        "incidents_showing": "Showing {shown} of {total} incidents",
     },
     "de": {
         "report_title_default": "HACCP-Temperaturbericht",
@@ -231,6 +237,12 @@ _LABELS: dict[str, dict[str, str]] = {
             "Unterstützung der HACCP-Dokumentation. Er ersetzt keine betrieblichen Kontrollen, "
             "Messungen oder gesetzlichen Anforderungen."
         ),
+        "interim_label": "Zwischenbericht",
+        "interim_note": (
+            "Dieser Bericht enthält Daten bis {dt}. "
+            "Der Kalendermonat ist noch nicht abgeschlossen — kein abschließendes Konformitätsdokument."
+        ),
+        "incidents_showing": "Es werden {shown} von {total} Vorfällen angezeigt",
     },
 }
 

@@ -278,6 +278,73 @@ def _violation_ranges(
     return out
 
 
+_CONSOLIDATION_WINDOW = 1800.0  # 30 min — adjacent same-type incidents within this gap are merged
+
+
+def _consolidate_incidents(incidents: list[IncidentSummary]) -> list[IncidentSummary]:
+    """Merge same-type incidents separated by less than _CONSOLIDATION_WINDOW seconds.
+
+    Prevents individual hysteresis crossings or brief recovery-and-re-violation events
+    from inflating incident counts.  The report data model is never modified; only the
+    presentation list is consolidated.
+    """
+    if len(incidents) <= 1:
+        return list(incidents)
+
+    _priority = {
+        "closed_auto": 0, "closed_manual": 0,
+        "recovering": 1, "pending_violation": 2, "active_violation": 3,
+    }
+
+    def _worst_state(a: str, b: str) -> str:
+        return a if _priority.get(a, 0) >= _priority.get(b, 0) else b
+
+    def _worse_extreme(a: float | None, b: float | None, t: str) -> float | None:
+        if a is None:
+            return b
+        if b is None:
+            return a
+        return max(a, b) if "above" in t else min(a, b)
+
+    merged: list[IncidentSummary] = [incidents[0]]
+    for inc in incidents[1:]:
+        prev = merged[-1]
+        if inc.type != prev.type:
+            merged.append(inc)
+            continue
+        try:
+            if prev.closed_at:
+                gap = (
+                    datetime.fromisoformat(inc.opened_at)
+                    - datetime.fromisoformat(prev.closed_at)
+                ).total_seconds()
+            else:
+                gap = 0.0  # previous still open → absorb
+        except (ValueError, TypeError):
+            merged.append(inc)
+            continue
+        if gap < 0 or gap <= _CONSOLIDATION_WINDOW:
+            merged[-1] = IncidentSummary(
+                id=prev.id,
+                type=prev.type,
+                state=_worst_state(prev.state, inc.state),
+                opened_at=prev.opened_at,
+                closed_at=inc.closed_at,
+                duration_seconds=prev.duration_seconds + inc.duration_seconds,
+                extreme_value_c=_worse_extreme(prev.extreme_value_c, inc.extreme_value_c, prev.type),
+                limit_value_c=prev.limit_value_c or inc.limit_value_c,
+                defrost_overlap=prev.defrost_overlap or inc.defrost_overlap,
+                acknowledged=prev.acknowledged and inc.acknowledged,
+                documented=prev.documented or inc.documented,
+                cause=prev.cause or inc.cause,
+                corrective_action=prev.corrective_action or inc.corrective_action,
+                note=prev.note or inc.note,
+            )
+        else:
+            merged.append(inc)
+    return merged
+
+
 async def incident_summaries(
     session: AsyncSession, *, storage_unit_id: int, start_utc: datetime, end_utc: datetime
 ) -> list[IncidentSummary]:
@@ -318,7 +385,7 @@ async def incident_summaries(
                 note=inc.note,
             )
         )
-    return out
+    return _consolidate_incidents(out)
 
 
 async def defrost_summary(

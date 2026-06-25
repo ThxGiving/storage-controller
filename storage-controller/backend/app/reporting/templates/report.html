@@ -40,10 +40,11 @@
     </div>
     {% endif %}
     <div class="head-title">
-      <h1>{{ m.branding.report_title }}</h1>
+      <h1>{{ m.branding.report_title }}{% if m.is_interim %} <span class="badge b-orange" style="font-size:0.65em;vertical-align:middle">{{ L.interim_label }}</span>{% endif %}</h1>
       <div class="month">{{ m.period_label }}</div>
       <div class="hmeta">
         <div><span>{{ L.report_period }}:</span> {{ m.period_range_label }} ({{ m.timezone }})</div>
+        {% if m.is_interim %}<div class="interim-note">⚠ {{ L.interim_note.replace('{dt}', m.generated_at | dt) }}</div>{% endif %}
         <div><span>{{ L.created_at }}:</span> {{ m.generated_at | dt }} · {{ m.timezone_label }}</div>
         <div><span>{{ L.report_id }}:</span> {{ m.uuid }}</div>
       </div>
@@ -162,6 +163,7 @@
 
   <!-- VORFÄLLE -->
   {% if m.incidents_flat %}
+  {% set inc_total = m.incidents_flat | length %}
   <section class="box">
     <div class="box-head">{{ L.incidents_title }}</div>
     <table class="inc">
@@ -185,6 +187,9 @@
         {% endfor %}
       </tbody>
     </table>
+    {% if inc_total > 6 %}
+    <p class="trunc-note">{{ L.incidents_showing.replace('{shown}', '6').replace('{total}', inc_total | string) }}</p>
+    {% endif %}
   </section>
   {% endif %}
 

@@ -21,8 +21,8 @@ _BAND_FILL = {
     "defrost": "#bfdbfe",
 }
 _BAND_OPACITY = {
-    "deviation": 0.38,
-    "defrost": 0.40,
+    "deviation": 0.28,
+    "defrost": 0.25,
 }
 _UPPER = "#dc2626"
 _LOWER = "#2563eb"
@@ -32,9 +32,9 @@ _LOWER = "#2563eb"
 # the barcode effect that appears on dense monthly charts (e.g. many short
 # defrost cycles or frequent brief gaps).
 _MERGE_GAP: dict[str, float] = {
-    "defrost": 7200.0,   # 2 h — handles up to ~12 cycles/day without barcode
-    "gap": 3600.0,       # 1 h — short data outages close together
-    "deviation": 1800.0, # 30 min — preserve violation shape more faithfully
+    "defrost": 14400.0,  # 4 h — merges frequent cycles (≤4/day) into readable blocks
+    "gap": 7200.0,       # 2 h — absorbs short back-to-back outages
+    "deviation": 3600.0, # 1 h — still fine-grained but suppresses single-bucket noise
 }
 
 # A very faint warm-gray hatch for missing-data regions — visually secondary,
@@ -165,6 +165,14 @@ def _simplify_bands(
     return out
 
 
+def _fmt_outlier(v: float, locale: str) -> str:
+    """Format an outlier temperature value with locale-correct decimal and °C unit."""
+    s = f"{v:.1f}"
+    if locale == "de":
+        s = s.replace(".", ",")
+    return f"{s} °C"
+
+
 def render_chart_svg(
     chart: OverviewChart,
     tz: str,
@@ -177,6 +185,7 @@ def render_chart_svg(
     x_start: float | None = None,
     x_end: float | None = None,
     note: str | None = None,
+    locale: str = "en",
 ) -> str:
     series = [s for s in chart.series if s.points]
     pad_l, pad_r, pad_t, pad_b = 26, 6, 12, 14
@@ -325,31 +334,33 @@ def render_chart_svg(
             )
 
         # Outlier markers: small triangles at the plot boundary when P1/P99
-        # clipping excluded envelope extremes.  The true values are always
-        # preserved in the report metrics table.
+        # clipping excluded envelope extremes.  True values are preserved in the
+        # report metrics table.  Markers are stacked both horizontally (x_off per
+        # series) and vertically (oy offset per series) to prevent label overlap.
         all_hi = [hi for seg in segments for _x, _a, _lo, hi in seg if hi is not None]
         all_lo = [lo for seg in segments for _x, _a, lo, _hi in seg if lo is not None]
-        # Stack markers for multiple series: offset by series index * 14px.
-        x_off = pad_l + pw - 8 - s_idx * 14
+        x_off = pad_l + pw - 8 - s_idx * 18  # horizontal stagger by series
         if all_hi and max(all_hi) > y1:
-            oy = plot_top + 6
+            oy = plot_top + 6 + s_idx * 11   # vertical stagger by series
             p.append(
                 f'<polygon points="{x_off:.1f},{oy - 4:.1f} {x_off - 3:.1f},{oy + 2:.1f} '
-                f'{x_off + 3:.1f},{oy + 2:.1f}" fill="{s.color}" fill-opacity="0.75"/>'
+                f'{x_off + 3:.1f},{oy + 2:.1f}" fill="{s.color}" fill-opacity="0.8"/>'
             )
+            label = _fmt_outlier(max(all_hi), locale)
             p.append(
-                f'<text x="{x_off - 5:.1f}" y="{oy - 5:.1f}" font-size="5" '
-                f'text-anchor="end" fill="{s.color}">{max(all_hi):.1f}°</text>'
+                f'<text x="{x_off - 5:.1f}" y="{oy - 5:.1f}" font-size="5.5" '
+                f'text-anchor="end" fill="{s.color}">{_esc(label)}</text>'
             )
         if all_lo and min(all_lo) < y0:
-            oy = plot_bot - 6
+            oy = plot_bot - 6 - s_idx * 11   # vertical stagger by series
             p.append(
                 f'<polygon points="{x_off:.1f},{oy + 4:.1f} {x_off - 3:.1f},{oy - 2:.1f} '
-                f'{x_off + 3:.1f},{oy - 2:.1f}" fill="{s.color}" fill-opacity="0.75"/>'
+                f'{x_off + 3:.1f},{oy - 2:.1f}" fill="{s.color}" fill-opacity="0.8"/>'
             )
+            label = _fmt_outlier(min(all_lo), locale)
             p.append(
-                f'<text x="{x_off - 5:.1f}" y="{oy + 9:.1f}" font-size="5" '
-                f'text-anchor="end" fill="{s.color}">{min(all_lo):.1f}°</text>'
+                f'<text x="{x_off - 5:.1f}" y="{oy + 10:.1f}" font-size="5.5" '
+                f'text-anchor="end" fill="{s.color}">{_esc(label)}</text>'
             )
 
     # Sparse-data annotation (kept subtle, inside the plot)
@@ -392,6 +403,7 @@ def render_mini_svg(
     plot_h: int = 80,
     x_start: float | None = None,
     x_end: float | None = None,
+    locale: str = "en",
 ) -> str:
     chart = OverviewChart(
         group_key="mini",
@@ -403,5 +415,5 @@ def render_mini_svg(
     )
     return render_chart_svg(
         chart, tz, width=width, plot_h=plot_h, legend=False,
-        x_start=x_start, x_end=x_end,
+        x_start=x_start, x_end=x_end, locale=locale,
     )

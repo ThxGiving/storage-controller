@@ -7,7 +7,6 @@ import {
   Settings,
   TriangleAlert,
   FileText,
-  CalendarClock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +15,6 @@ export type TabKey =
   | "units"
   | "incidents"
   | "reports"
-  | "schedules"
   | "entities"
   | "settings";
 
@@ -25,7 +23,6 @@ const NAV: { key: TabKey; i18nKey: string; Icon: typeof LayoutDashboard }[] = [
   { key: "units", i18nKey: "units", Icon: Boxes },
   { key: "incidents", i18nKey: "incidents", Icon: TriangleAlert },
   { key: "reports", i18nKey: "reports", Icon: FileText },
-  { key: "schedules", i18nKey: "schedules", Icon: CalendarClock },
   { key: "entities", i18nKey: "entities", Icon: List },
   { key: "settings", i18nKey: "settings", Icon: Settings },
 ];

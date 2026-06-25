@@ -168,7 +168,9 @@ class ReportModel(BaseModel):
     period_month: int
     period_label: str
     period_start_utc: str
-    period_end_utc: str
+    period_end_utc: str   # always the calendar-month end (first moment of next month)
+    effective_end_utc: str = ""  # actual data coverage end: = period_end_utc for final, = generated_at for interim
+    is_interim: bool = False  # True when generated before the calendar month is complete
     detail_level: str
 
     period_range_label: str = ""  # e.g. "01.05.2026 00:00 – 31.05.2026 23:59"

@@ -2,6 +2,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Languages, Palette, Clock, Gauge, Database, HardDrive, RefreshCw } from "lucide-react";
+import { SmtpSettingsCard } from "./Schedules";
 import { api } from "@/lib/api";
 import type { AppSettings } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,6 +56,9 @@ export function SettingsPage() {
         <h1 className="text-xl font-semibold">{t("settings:title")}</h1>
         <p className="text-sm text-muted-foreground">{t("settings:subtitle")}</p>
       </div>
+
+      {/* Email / SMTP */}
+      <SmtpSettingsCard />
 
       {/* Language */}
       <Section icon={<Languages className="h-5 w-5" />} title={t("settings:language")} hint={t("settings:languageHint")}>

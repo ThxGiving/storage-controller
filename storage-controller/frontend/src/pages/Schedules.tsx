@@ -36,14 +36,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const SELECT = "h-9 rounded-md border border-input bg-background px-2 text-sm";
 
 export function SchedulesPage() {
-  const { t } = useTranslation(["schedules", "common"]);
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h1 className="text-xl font-semibold">{t("schedules:title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("schedules:subtitle")}</p>
-      </div>
-      <SmtpSettingsCard />
       <ScheduleSection />
     </div>
   );
@@ -53,7 +47,7 @@ export function SchedulesPage() {
 // SMTP settings
 // --------------------------------------------------------------------------- //
 
-function SmtpSettingsCard() {
+export function SmtpSettingsCard() {
   const { t } = useTranslation(["schedules", "common"]);
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["email-settings"], queryFn: api.getEmailSettings });

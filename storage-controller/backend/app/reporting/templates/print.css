@@ -130,3 +130,5 @@ table.inc td.ft { color: #374151; }
 .b-gray { background: #eef0f2; color: #4b5563; }
 .bdg-ic { width: 7px; height: 7px; vertical-align: middle; }
 .badge-cell { text-align: center; }
+.interim-note { font-size: 6.5pt; color: #c2410c; margin-top: 1.5pt; }
+.trunc-note { font-size: 6.5pt; color: #6b7280; margin: 3pt 0 0; font-style: italic; }

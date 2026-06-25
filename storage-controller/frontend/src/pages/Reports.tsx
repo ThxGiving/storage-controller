@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText, FileDown, Trash2, Eye, Sparkles, Image as ImageIcon } from "lucide-react";
+import { FileText, FileDown, Trash2, Eye, Sparkles, Image as ImageIcon, CalendarClock } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import type { Report, ReportBranding, ReportCreate, ReportDetailLevel } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,11 +9,48 @@ import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
+import { SchedulesPage } from "./Schedules";
 
 const DETAILS: ReportDetailLevel[] = ["compact", "standard", "detailed"];
 const now = new Date();
 
+type ReportsTab = "reports" | "schedules";
+
 export function ReportsPage() {
+  const { t } = useTranslation(["reports", "schedules", "common"]);
+  const [activeTab, setActiveTab] = React.useState<ReportsTab>("reports");
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div>
+        <h1 className="text-xl font-semibold">{t("reports:title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("reports:subtitle")}</p>
+      </div>
+      <div className="flex gap-1 border-b border-border">
+        {(["reports", "schedules"] as ReportsTab[]).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              activeTab === tab
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {tab === "reports" && <FileText className="h-4 w-4" />}
+            {tab === "schedules" && <CalendarClock className="h-4 w-4" />}
+            {tab === "reports" && t("reports:title")}
+            {tab === "schedules" && t("schedules:list.title")}
+          </button>
+        ))}
+      </div>
+      {activeTab === "reports" && <ReportsContent />}
+      {activeTab === "schedules" && <SchedulesPage />}
+    </div>
+  );
+}
+
+function ReportsContent() {
   const { t, i18n } = useTranslation(["reports", "common"]);
   const qc = useQueryClient();
 
@@ -75,11 +112,6 @@ export function ReportsPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h1 className="text-xl font-semibold">{t("reports:title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("reports:subtitle")}</p>
-      </div>
-
       {/* Config */}
       <Card>
         <CardHeader className="flex-row items-center gap-3">

@@ -101,6 +101,11 @@ async def build_report_model(
     tz_name = timezone or await get_timezone_name(session)
     tz = resolve_timezone(tz_name, now)
     start_utc, end_utc = month_range_utc(year, month, tz_name)
+    # Interim report: requested month is not yet complete at generation time.
+    # All data computations use data_end_utc (≤ now) so future time never
+    # inflates the period, reduces coverage, or appears as a data gap.
+    is_interim = now < end_utc
+    data_end_utc = now if is_interim else end_utc
     collector = await get_collector_settings(session)
     heartbeat = collector.heartbeat_interval_seconds
 
@@ -125,22 +130,22 @@ async def build_report_model(
             session,
             storage_unit_id=uid,
             start_utc=start_utc,
-            end_utc=end_utc,
+            end_utc=data_end_utc,
             lower=unit.lower_limit_c,
             upper=unit.upper_limit_c,
             heartbeat_seconds=heartbeat,
             bucket_seconds=_MONTH_BUCKET_SECONDS,
         )
         incidents = await incident_summaries(
-            session, storage_unit_id=uid, start_utc=start_utc, end_utc=end_utc
+            session, storage_unit_id=uid, start_utc=start_utc, end_utc=data_end_utc
         )
         approved = await get_active_model(session, uid)
         defrost = await defrost_summary(
-            session, storage_unit_id=uid, start_utc=start_utc, end_utc=end_utc,
+            session, storage_unit_id=uid, start_utc=start_utc, end_utc=data_end_utc,
             has_approved_model=approved is not None,
         )
         d_ranges = await defrost_ranges(
-            session, storage_unit_id=uid, start_utc=start_utc, end_utc=end_utc
+            session, storage_unit_id=uid, start_utc=start_utc, end_utc=data_end_utc
         )
 
         total_inc = sum(i.duration_seconds for i in incidents)
@@ -257,11 +262,16 @@ async def build_report_model(
     dq_ok = not incomplete
     dq_note = L["dq_ok"] if dq_ok else L["dq_incomplete"]
 
-    # Period range label: 01.05.2026 00:00 – 31.05.2026 23:59 (last minute of month)
+    # Period range label.
+    # Final report:  01.05.2026, 00:00 – 31.05.2026, 23:59  (last minute of month)
+    # Interim report: 01.06.2026, 00:00 – 25.06.2026, 14:23  (generation timestamp)
     zone = ZoneInfo(tz_name) if _safe_zone(tz_name) else ZoneInfo("UTC")
     s_local = start_utc.astimezone(zone)
-    e_local = (end_utc - timedelta(minutes=1)).astimezone(zone)
     dfmt = "%d.%m.%Y, %H:%M" if locale == "de" else "%Y-%m-%d %H:%M"
+    if is_interim:
+        e_local = data_end_utc.astimezone(zone)
+    else:
+        e_local = (end_utc - timedelta(minutes=1)).astimezone(zone)
     range_label = f"{s_local.strftime(dfmt)} – {e_local.strftime(dfmt)}"
 
     return ReportModel(
@@ -276,6 +286,8 @@ async def build_report_model(
         period_label=f"{month_name(month, locale)} {year}",
         period_start_utc=start_utc.isoformat(),
         period_end_utc=end_utc.isoformat(),
+        effective_end_utc=data_end_utc.isoformat(),
+        is_interim=is_interim,
         period_range_label=range_label,
         detail_level=detail_level,
         branding=brand_snapshot,
