@@ -1,9 +1,6 @@
 substitutions:
-  board_chip: "ESP32-S3"
-  board_name: "WS RS485-CAN"
   name: dixell-gateway
   friendly_name: "Dixell Waveshare"
-  temp_scale: "0.1"        # meist 0.1°C; ggf. auf 1 ändern
 
 esphome:
   name: ${name}
@@ -26,13 +23,17 @@ esphome:
 esp32:
   board: esp32-s3-devkitc-1
   flash_size: 16MB
-  cpu_frequency: 240MHz
+  cpu_frequency: 80MHz
   framework:
     type: esp-idf
 
 # Enable logging
 logger:
   baud_rate: 0 # frees the 3rd UART and avoids some bugs like "WK2168 with canbus" or "BLE client with RS485 modbus"
+  # Uncomment the next two lines temporarily to diagnose Modbus communication gaps:
+  # level: DEBUG
+  # logs:
+  #   modbus_controller: DEBUG
 
 # Enable Home Assistant API
 api:
@@ -46,6 +47,7 @@ ota:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  power_save_mode: none  # ESP32 WiFi modem sleep causes sporadic disconnects
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
@@ -87,7 +89,6 @@ captive_portal:
 i2c:
   scl: GPIO38
   sda: GPIO39
-  scan: true
 
 time:
   - platform: pcf85063
@@ -375,8 +376,8 @@ number:
     address: 768
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: -40
-    max_value: 40
+    min_value: 0.1
+    max_value: 10
     step: 0.1
     multiply: 10
     device_id: storage1
@@ -405,8 +406,8 @@ number:
     address: 768
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: -40
-    max_value: 40
+    min_value: 0.1
+    max_value: 10
     step: 0.1
     multiply: 10
     device_id: storage2
@@ -435,8 +436,8 @@ number:
     address: 768
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: -40
-    max_value: 40
+    min_value: 0.1
+    max_value: 10
     step: 0.1
     multiply: 10
     device_id: storage3

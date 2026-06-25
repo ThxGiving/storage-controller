@@ -268,6 +268,12 @@ class HAConnectionManager:
                     await self._collector.reconcile(states)
                 except Exception as exc:  # noqa: BLE001
                     log.warning("collector: reconcile error: %s", type(exc).__name__)
+                # Immediately fill any heartbeat gap that accumulated during the
+                # disconnect — avoids up to ~6 min gaps for stable temperatures.
+                try:
+                    await self._collector.heartbeat_tick(self.get_entity)
+                except Exception as exc:  # noqa: BLE001
+                    log.warning("collector: post-reconnect heartbeat error: %s", type(exc).__name__)
 
             while not self._stop.is_set():
                 msg = await conn.receive()
