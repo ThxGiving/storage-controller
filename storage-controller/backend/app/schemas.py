@@ -865,6 +865,7 @@ class SmtpTestResult(BaseModel):
 
 class EmailTestRequest(BaseModel):
     recipient: str = Field(min_length=3)
+    locale: str = "en"
 
 
 class ScheduleIn(BaseModel):

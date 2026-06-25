@@ -11,16 +11,16 @@ import asyncio
 import json
 import logging
 from datetime import UTC, datetime
-from email.message import EmailMessage
-from email.utils import formataddr
 
 from fastapi import APIRouter, Depends, Request
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db import get_db
 from ..errors import AppError
 from ..mailer import SmtpError, normalize_recipients, send_message, test_connection, valid_email
-from ..models import AuditEvent, SmtpSettings
+from ..models import AuditEvent, ReportBrandingSettings, SmtpSettings
+from ..report_email import compose_test_email
 from ..schemas import EmailTestRequest, SmtpSettingsIn, SmtpSettingsOut, SmtpTestResult
 from ..smtp_store import get_or_create, to_config
 
@@ -153,14 +153,16 @@ async def send_test_email(
     cfg = to_config(row)
     rcpts = normalize_recipients([payload.recipient])
 
-    msg = EmailMessage()
-    msg["Subject"] = "Storage Controller — SMTP test"
-    if cfg.sender_email:
-        msg["From"] = formataddr((cfg.sender_name or "Storage Controller", cfg.sender_email))
-    msg["To"] = payload.recipient
-    msg.set_content(
-        "This is a test message from Storage Controller. "
-        "If you received it, outbound email is configured correctly."
+    branding = await db.scalar(select(ReportBrandingSettings).where(ReportBrandingSettings.id == 1))
+    locale = getattr(payload, "locale", None) or "en"
+
+    msg = compose_test_email(
+        cfg,
+        payload.recipient,
+        org_name=branding.organization_name if branding else None,
+        site_name=branding.site_name if branding else (row.site_name or None),
+        logo_filename=branding.logo_filename if branding else None,
+        locale=locale,
     )
 
     result = SmtpTestResult(ok=True, message="Test email sent.")
@@ -175,7 +177,7 @@ async def send_test_email(
         AuditEvent(
             component="email", action="smtp_test_email", user=_user(request),
             object_type="smtp_settings", object_id="1",
-            detail="ok" if result.ok else f"failed:{result.category}",  # not the recipient
+            detail="ok" if result.ok else f"failed:{result.category}",
         )
     )
     await db.commit()
