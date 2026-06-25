@@ -70,14 +70,16 @@ body {
 .vbody .ic { margin: 0; }
 
 /* ---------- comparison table ---------- */
-table.cmp { width: 100%; border-collapse: collapse; }
-table.cmp th, table.cmp td { padding: 3.6pt 5pt; text-align: right; border-bottom: 0.5pt solid #eef0f2; }
-table.cmp th { font-size: 6.4pt; text-transform: uppercase; letter-spacing: .3px; color: #9ca3af; font-weight: 600; }
+table.cmp { width: 100%; max-width: 100%; border-collapse: collapse; table-layout: fixed; }
+table.cmp th, table.cmp td { padding: 2.8pt 3.5pt; text-align: right; border-bottom: 0.5pt solid #eef0f2; overflow: hidden; }
+table.cmp th { font-size: 5.8pt; text-transform: uppercase; letter-spacing: .2px; color: #9ca3af; font-weight: 600; white-space: nowrap; }
+table.cmp td { font-size: 7.5pt; }
 table.cmp th.l, table.cmp td.l { text-align: left; }
 table.cmp td.nw { white-space: nowrap; }
-.udot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4pt; vertical-align: middle; }
+table.cmp td.wrap { overflow-wrap: anywhere; }
+.udot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 3pt; vertical-align: middle; }
 .uname { font-weight: 700; }
-.utype { color: #9ca3af; font-size: 6.6pt; display: block; padding-left: 10pt; }
+.utype { color: #9ca3af; font-size: 6.3pt; display: block; padding-left: 9pt; }
 td.o, b.o { color: #ea580c; font-weight: 600; } td.g { color: #16a34a; }
 
 /* ---------- charts ---------- */
@@ -131,3 +133,17 @@ table.inc td.ft { color: #374151; }
 .badge-cell { text-align: center; }
 .interim-note { font-size: 6.5pt; color: #c2410c; margin-top: 1.5pt; }
 .trunc-note { font-size: 6.5pt; color: #6b7280; margin: 3pt 0 0; font-style: italic; }
+
+/* ---------- screen preview (ignored by WeasyPrint) ---------- */
+@media screen {
+  body { background: #e5e7eb; padding: 16px; margin: 0; }
+  .page {
+    width: 210mm;
+    max-width: calc(100vw - 32px);
+    margin: 0 auto 20px;
+    background: white;
+    padding: 9mm;
+    box-shadow: 0 2px 10px rgba(0,0,0,.14);
+    overflow: hidden;
+  }
+}
