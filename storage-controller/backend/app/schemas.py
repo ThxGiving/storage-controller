@@ -805,3 +805,139 @@ class HistoryImportOut(BaseModel):
     chunks_total: int = 0
     created_at: datetime
     finished_at: datetime | None = None
+
+
+# --------------------------------------------------------------------------- #
+# Phase 6 — SMTP settings, schedules, runs, deliveries
+# --------------------------------------------------------------------------- #
+
+
+class SmtpSettingsOut(BaseModel):
+    host: str | None = None
+    port: int = 587
+    security_mode: str = "starttls"
+    auth_enabled: bool = True
+    username: str | None = None
+    password_configured: bool = False  # never the value itself
+    sender_name: str | None = None
+    sender_email: str | None = None
+    reply_to: str | None = None
+    connection_timeout_seconds: int = 30
+    verify_certificates: bool = True
+    allow_insecure_plain: bool = False
+    default_to: list[str] = Field(default_factory=list)
+    default_cc: list[str] = Field(default_factory=list)
+    default_bcc: list[str] = Field(default_factory=list)
+    max_attachment_bytes: int = 20 * 1024 * 1024
+    site_name: str | None = None
+    last_test_at: datetime | None = None
+    last_test_ok: bool | None = None
+    last_test_error: str | None = None
+
+
+class SmtpSettingsIn(BaseModel):
+    host: str | None = None
+    port: int = Field(default=587, ge=1, le=65535)
+    security_mode: str = "starttls"
+    auth_enabled: bool = True
+    username: str | None = None
+    # Omitted/empty preserves the stored secret; use clear_password to remove it.
+    password: str | None = None
+    clear_password: bool = False
+    sender_name: str | None = None
+    sender_email: str | None = None
+    reply_to: str | None = None
+    connection_timeout_seconds: int = Field(default=30, ge=1, le=300)
+    verify_certificates: bool = True
+    allow_insecure_plain: bool = False
+    default_to: list[str] = Field(default_factory=list)
+    default_cc: list[str] = Field(default_factory=list)
+    default_bcc: list[str] = Field(default_factory=list)
+    max_attachment_bytes: int = Field(default=20 * 1024 * 1024, ge=1024, le=104857600)
+    site_name: str | None = None
+
+
+class SmtpTestResult(BaseModel):
+    ok: bool
+    category: str | None = None
+    message: str | None = None  # sanitized
+
+
+class EmailTestRequest(BaseModel):
+    recipient: str = Field(min_length=3)
+
+
+class ScheduleIn(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    enabled: bool = True
+    report_type: str = "monthly"
+    period_rule: str = "previous_month"
+    storage_unit_ids: list[int] = Field(default_factory=list)
+    locale: str = "de"
+    timezone: str = "Europe/Berlin"
+    detail_level: str = "standard"
+    recipients_to: list[str] = Field(default_factory=list)
+    recipients_cc: list[str] = Field(default_factory=list)
+    recipients_bcc: list[str] = Field(default_factory=list)
+    attachment_formats: list[str] = Field(default_factory=lambda: ["pdf"])
+    run_day: int = Field(default=1, ge=1, le=28)
+    run_time: str = "06:00"
+    catch_up_mode: str = "one"
+
+
+class ScheduleOut(BaseModel):
+    id: int
+    name: str
+    enabled: bool
+    report_type: str
+    period_rule: str
+    storage_unit_ids: list[int]
+    locale: str
+    timezone: str
+    detail_level: str
+    recipients_to: list[str]
+    recipients_cc: list[str]
+    recipients_bcc: list[str]
+    recipient_count: int
+    attachment_formats: list[str]
+    run_day: int
+    run_time: str
+    catch_up_mode: str
+    next_run_utc: datetime | None = None
+    last_run_utc: datetime | None = None
+    last_result: str | None = None
+    run_now_period: str | None = None  # which period "Run now" would generate
+
+
+class EmailDeliveryOut(BaseModel):
+    id: int
+    state: str
+    attempt_count: int
+    next_attempt_utc: datetime | None = None
+    last_error_category: str | None = None
+    last_error: str | None = None
+    recipients_masked: list[str] = Field(default_factory=list)
+    recipient_count: int = 0
+    per_recipient: dict[str, str] | None = None
+    size_bytes: int | None = None
+    is_manual_resend: bool = False
+    sent_at: datetime | None = None
+
+
+class ScheduleRunOut(BaseModel):
+    id: int
+    schedule_id: int
+    period_year: int
+    period_month: int
+    period_label: str
+    scheduled_for_utc: datetime
+    state: str
+    trigger: str
+    report_id: int | None = None
+    report_uuid: str | None = None
+    report_status: str | None = None
+    generation_error: str | None = None
+    attempt_count: int
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    delivery: EmailDeliveryOut | None = None

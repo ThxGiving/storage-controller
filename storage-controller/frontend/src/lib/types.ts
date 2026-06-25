@@ -671,3 +671,129 @@ export interface HistoryImportJob {
   created_at: string;
   finished_at: string | null;
 }
+
+// --- Phase 6: schedules + email -------------------------------------------- //
+
+export interface SmtpSettings {
+  host: string | null;
+  port: number;
+  security_mode: "starttls" | "implicit_tls" | "plain";
+  auth_enabled: boolean;
+  username: string | null;
+  password_configured: boolean;
+  sender_name: string | null;
+  sender_email: string | null;
+  reply_to: string | null;
+  connection_timeout_seconds: number;
+  verify_certificates: boolean;
+  allow_insecure_plain: boolean;
+  default_to: string[];
+  default_cc: string[];
+  default_bcc: string[];
+  max_attachment_bytes: number;
+  site_name: string | null;
+  last_test_at: string | null;
+  last_test_ok: boolean | null;
+  last_test_error: string | null;
+}
+
+export interface SmtpSettingsInput {
+  host?: string | null;
+  port: number;
+  security_mode: string;
+  auth_enabled: boolean;
+  username?: string | null;
+  password?: string;
+  clear_password?: boolean;
+  sender_name?: string | null;
+  sender_email?: string | null;
+  reply_to?: string | null;
+  connection_timeout_seconds: number;
+  verify_certificates: boolean;
+  allow_insecure_plain: boolean;
+  default_to: string[];
+  default_cc: string[];
+  default_bcc: string[];
+  max_attachment_bytes: number;
+  site_name?: string | null;
+}
+
+export interface SmtpTestResult {
+  ok: boolean;
+  category: string | null;
+  message: string | null;
+}
+
+export interface Schedule {
+  id: number;
+  name: string;
+  enabled: boolean;
+  report_type: string;
+  period_rule: string;
+  storage_unit_ids: number[];
+  locale: string;
+  timezone: string;
+  detail_level: string;
+  recipients_to: string[];
+  recipients_cc: string[];
+  recipients_bcc: string[];
+  recipient_count: number;
+  attachment_formats: string[];
+  run_day: number;
+  run_time: string;
+  catch_up_mode: string;
+  next_run_utc: string | null;
+  last_run_utc: string | null;
+  last_result: string | null;
+  run_now_period: string | null;
+}
+
+export interface ScheduleInput {
+  name: string;
+  enabled: boolean;
+  storage_unit_ids: number[];
+  locale: string;
+  timezone: string;
+  detail_level: string;
+  recipients_to: string[];
+  recipients_cc: string[];
+  recipients_bcc: string[];
+  attachment_formats: string[];
+  run_day: number;
+  run_time: string;
+  catch_up_mode: string;
+}
+
+export interface EmailDelivery {
+  id: number;
+  state: string;
+  attempt_count: number;
+  next_attempt_utc: string | null;
+  last_error_category: string | null;
+  last_error: string | null;
+  recipients_masked: string[];
+  recipient_count: number;
+  per_recipient: Record<string, string> | null;
+  size_bytes: number | null;
+  is_manual_resend: boolean;
+  sent_at: string | null;
+}
+
+export interface ScheduleRun {
+  id: number;
+  schedule_id: number;
+  period_year: number;
+  period_month: number;
+  period_label: string;
+  scheduled_for_utc: string;
+  state: string;
+  trigger: string;
+  report_id: number | null;
+  report_uuid: string | null;
+  report_status: string | null;
+  generation_error: string | null;
+  attempt_count: number;
+  started_at: string | null;
+  finished_at: string | null;
+  delivery: EmailDelivery | null;
+}

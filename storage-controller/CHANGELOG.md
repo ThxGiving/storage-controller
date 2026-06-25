@@ -2,6 +2,54 @@
 
 All notable changes to the Storage Controller App are documented here.
 
+## 0.4.0 — Unreleased
+
+### Added — Phase 6: report scheduling + email delivery
+
+- **Report schedules** (monthly first): name, enabled, selected units, locale,
+  timezone, detail level, recipients (To/CC/BCC), attachment formats, run day/time,
+  catch-up mode, next/last run + last result. The reporting period is the **previous
+  complete calendar month** computed from **timezone-aware calendar boundaries**
+  (DST-correct), never by subtracting days.
+- **Persistent, restart-safe scheduler**: one execution per (schedule, period)
+  guaranteed by a DB unique constraint; execution lock with stale-lock recovery;
+  idempotent generation reusing the immutable report artifacts; bounded catch-up of
+  one missed period after downtime; visible `next_run`. Explicit run states:
+  pending / generating / generated / sending / completed / partially_failed /
+  failed / skipped / cancelled. Generation and delivery success are tracked
+  separately — **a generated report is preserved even when delivery fails**.
+- **SMTP configuration**: host, port, security mode (STARTTLS / implicit TLS /
+  plain-insecure-opt-in), auth, sender/reply-to, timeout, certificate verification,
+  default recipients, max attachment size, site name. The mode is never inferred
+  from the port; certificate verification is on by default. **Test connection** and
+  **send test email** are separate actions returning sanitized results.
+- **SMTP password handling**: stored app-private in `/data`; never returned through
+  the API, logged, or placed in diagnostics. A blank password on edit preserves the
+  stored secret; clearing it is an explicit action.
+- **Multipart email** (plain + HTML, UTF-8, localized DE/EN subject + body) with
+  PDF (default) and optional CSV/JSON attachments taken from the exact finalized
+  report; attachment existence + a configurable total size limit are validated
+  (oversize → delivery failed with a clear reason, report kept downloadable).
+- **Recipients**: syntax validation, whitespace normalization, header-injection
+  prevention, de-duplication across To/CC/BCC, masked in history/diagnostics.
+- **Bounded delivery retries** (immediate / +5 min / +30 min / +2 h, then failed),
+  classified failures (connection / TLS / auth / recipient rejected / too large /
+  temporary / permanent / attachment missing / generation / internal); permanent
+  errors don't retry. **Idempotent** on a delivery key (schedule + report + period +
+  recipient set + attachment set); a retry continues the same record; manual resend
+  is an explicit, audited action.
+- **Audit + history** for schedule/SMTP changes, runs, deliveries, tests, resend,
+  cancel — never storing passwords or raw auth responses.
+- **UI**: a new **Schedules & Email** page (SMTP settings with hidden-password
+  behaviour + test actions, schedule list, schedule editor, execution history with
+  masked recipients and per-run send/resend/cancel). Full English + German.
+- Migration **0011** (`smtp_settings`, `report_schedules`, `schedule_runs`,
+  `email_deliveries`). 231 backend tests (incl. a local fake SMTP server) + 52
+  frontend tests.
+
+> Real-SMTP delivery and a forced-failure run still require verification on the
+> live instance — see the Phase 6 checklist in `docs/current-status.md`.
+
 ## 0.3.3 — Unreleased
 
 ### Fixed — state-change semantics (no more false gaps / dashed bridges)

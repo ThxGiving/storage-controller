@@ -800,3 +800,195 @@ class AuditEvent(Base):
     object_type: Mapped[str | None] = mapped_column(String(60), nullable=True)
     object_id: Mapped[str | None] = mapped_column(String(120), nullable=True)
     detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+# --------------------------------------------------------------------------- #
+# Phase 6 — report scheduling and email delivery
+# --------------------------------------------------------------------------- #
+
+
+class SmtpSecurityMode(str, enum.Enum):
+    starttls = "starttls"  # plain connect, upgrade to TLS (typically 587)
+    implicit_tls = "implicit_tls"  # TLS from the start (typically 465)
+    plain = "plain"  # unencrypted — opt-in only, trusted local relays
+
+
+class ScheduleRunState(str, enum.Enum):
+    pending = "pending"
+    generating = "generating"
+    generated = "generated"
+    sending = "sending"
+    completed = "completed"
+    partially_failed = "partially_failed"
+    failed = "failed"
+    skipped = "skipped"
+    cancelled = "cancelled"
+
+
+class DeliveryState(str, enum.Enum):
+    pending = "pending"
+    sending = "sending"
+    completed = "completed"
+    partially_failed = "partially_failed"
+    failed = "failed"
+    cancelled = "cancelled"
+
+
+class DeliveryFailureCategory(str, enum.Enum):
+    connection = "connection"
+    tls = "tls"
+    authentication = "authentication"
+    recipient_rejected = "recipient_rejected"
+    message_too_large = "message_too_large"
+    temporary = "temporary_smtp"
+    permanent = "permanent_smtp"
+    attachment_missing = "attachment_missing"
+    report_generation = "report_generation"
+    internal = "internal"
+
+
+class SmtpSettings(Base):
+    """Single-row outbound SMTP configuration. The password is app-private: it is
+    never returned by the API, logged, or placed in diagnostics."""
+
+    __tablename__ = "smtp_settings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    host: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    port: Mapped[int] = mapped_column(Integer, default=587, nullable=False)
+    security_mode: Mapped[str] = mapped_column(
+        String(20), default=SmtpSecurityMode.starttls.value, nullable=False
+    )
+    auth_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    username: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Secret; never serialised back out. Empty string distinct from NULL=unset.
+    password_secret: Mapped[str | None] = mapped_column(Text, nullable=True)
+    sender_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    sender_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    reply_to: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    connection_timeout_seconds: Mapped[int] = mapped_column(Integer, default=30, nullable=False)
+    verify_certificates: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    allow_insecure_plain: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    default_to_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    default_cc_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    default_bcc_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    max_attachment_bytes: Mapped[int] = mapped_column(
+        Integer, default=20 * 1024 * 1024, nullable=False
+    )
+    site_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    last_test_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_test_ok: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    last_test_error: Mapped[str | None] = mapped_column(Text, nullable=True)  # sanitized
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ReportSchedule(Base):
+    """An automated schedule that generates an existing report type and emails it."""
+
+    __tablename__ = "report_schedules"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    report_type: Mapped[str] = mapped_column(String(20), default="monthly", nullable=False)
+    period_rule: Mapped[str] = mapped_column(
+        String(30), default="previous_month", nullable=False
+    )
+    storage_unit_ids_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    locale: Mapped[str] = mapped_column(String(10), default="de", nullable=False)
+    timezone: Mapped[str] = mapped_column(String(64), default="Europe/Berlin", nullable=False)
+    detail_level: Mapped[str] = mapped_column(String(20), default="standard", nullable=False)
+    recipients_to_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    recipients_cc_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    recipients_bcc_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    attachment_formats_json: Mapped[str] = mapped_column(
+        Text, nullable=False, default='["pdf"]'
+    )
+    run_day: Mapped[int] = mapped_column(Integer, default=1, nullable=False)  # 1 = 1st of month
+    run_time: Mapped[str] = mapped_column(String(5), default="06:00", nullable=False)  # HH:MM
+    catch_up_mode: Mapped[str] = mapped_column(
+        String(10), default="one", nullable=False
+    )  # one | none
+    next_run_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_run_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_result: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    created_by: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ScheduleRun(Base):
+    """A persistent execution record for one (schedule, reporting period). The
+    UNIQUE(schedule, period) constraint guarantees no duplicate run per period."""
+
+    __tablename__ = "schedule_runs"
+    __table_args__ = (
+        UniqueConstraint(
+            "schedule_id", "period_year", "period_month", name="uq_schedule_run_period"
+        ),
+        Index("ix_schedule_runs_schedule", "schedule_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    schedule_id: Mapped[int] = mapped_column(
+        ForeignKey("report_schedules.id", ondelete="CASCADE"), nullable=False
+    )
+    period_year: Mapped[int] = mapped_column(Integer, nullable=False)
+    period_month: Mapped[int] = mapped_column(Integer, nullable=False)
+    scheduled_for_utc: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    state: Mapped[str] = mapped_column(
+        String(20), default=ScheduleRunState.pending.value, nullable=False
+    )
+    trigger: Mapped[str] = mapped_column(String(20), default="scheduled", nullable=False)
+    report_id: Mapped[int | None] = mapped_column(
+        ForeignKey("reports.id", ondelete="SET NULL"), nullable=True
+    )
+    report_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    generation_error: Mapped[str | None] = mapped_column(Text, nullable=True)  # sanitized
+    attempt_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    # Execution lock (single-process; stale locks recovered after a timeout).
+    locked_by: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    locked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class EmailDelivery(Base):
+    """A logical email delivery for a schedule run, idempotent on ``delivery_key``
+    (schedule + report + period + recipient set + attachment set). Retries continue
+    the same record; a manual resend is an explicit new, audited delivery."""
+
+    __tablename__ = "email_deliveries"
+    __table_args__ = (
+        UniqueConstraint("delivery_key", name="uq_email_delivery_key"),
+        Index("ix_email_deliveries_run", "schedule_run_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    delivery_key: Mapped[str] = mapped_column(String(80), nullable=False)
+    schedule_run_id: Mapped[int | None] = mapped_column(
+        ForeignKey("schedule_runs.id", ondelete="CASCADE"), nullable=True
+    )
+    report_id: Mapped[int | None] = mapped_column(
+        ForeignKey("reports.id", ondelete="SET NULL"), nullable=True
+    )
+    recipients_to_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    recipients_cc_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    recipients_bcc_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    attachment_set_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    size_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    state: Mapped[str] = mapped_column(
+        String(20), default=DeliveryState.pending.value, nullable=False
+    )
+    attempt_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    next_attempt_utc: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_error_category: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)  # sanitized
+    per_recipient_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_manual_resend: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

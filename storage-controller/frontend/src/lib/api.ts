@@ -28,6 +28,12 @@ import type {
   ReportPreview,
   StorageUnit,
   StorageUnitInput,
+  SmtpSettings,
+  SmtpSettingsInput,
+  SmtpTestResult,
+  Schedule,
+  ScheduleInput,
+  ScheduleRun,
 } from "./types";
 
 export interface SamplesParams {
@@ -239,4 +245,38 @@ export const api = {
     form.append("file", file);
     return request<ReportBranding>("api/report-branding/logo", { method: "POST", body: form });
   },
+
+  // --- Phase 6: SMTP + schedules ---
+  getEmailSettings: () => request<SmtpSettings>("api/settings/email"),
+  updateEmailSettings: (input: SmtpSettingsInput) =>
+    request<SmtpSettings>("api/settings/email", { method: "PUT", body: JSON.stringify(input) }),
+  testSmtpConnection: () =>
+    request<SmtpTestResult>("api/settings/email/test-connection", { method: "POST" }),
+  sendTestEmail: (recipient: string) =>
+    request<SmtpTestResult>("api/settings/email/test-email", {
+      method: "POST",
+      body: JSON.stringify({ recipient }),
+    }),
+
+  listSchedules: () => request<Schedule[]>("api/schedules"),
+  createSchedule: (input: ScheduleInput) =>
+    request<Schedule>("api/schedules", { method: "POST", body: JSON.stringify(input) }),
+  updateSchedule: (id: number, input: ScheduleInput) =>
+    request<Schedule>(`api/schedules/${id}`, { method: "PUT", body: JSON.stringify(input) }),
+  deleteSchedule: (id: number) =>
+    request<void>(`api/schedules/${id}`, { method: "DELETE" }),
+  enableSchedule: (id: number) =>
+    request<Schedule>(`api/schedules/${id}/enable`, { method: "POST" }),
+  disableSchedule: (id: number) =>
+    request<Schedule>(`api/schedules/${id}/disable`, { method: "POST" }),
+  runScheduleNow: (id: number, send: boolean) =>
+    request<ScheduleRun>(`api/schedules/${id}/run-now?send=${send}`, { method: "POST" }),
+  listScheduleRuns: (id: number) =>
+    request<ScheduleRun[]>(`api/schedules/${id}/runs`),
+  sendExistingReport: (runId: number) =>
+    request<ScheduleRun>(`api/schedules/runs/${runId}/send`, { method: "POST" }),
+  resendDelivery: (runId: number) =>
+    request<ScheduleRun>(`api/schedules/runs/${runId}/resend`, { method: "POST" }),
+  cancelRun: (runId: number) =>
+    request<ScheduleRun>(`api/schedules/runs/${runId}/cancel`, { method: "POST" }),
 };

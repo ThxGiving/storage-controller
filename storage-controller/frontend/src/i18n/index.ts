@@ -23,6 +23,7 @@ import enDefrost from "./en/defrost.json";
 import enDiagnostics from "./en/diagnostics.json";
 import enReports from "./en/reports.json";
 import enHistory from "./en/history.json";
+import enSchedules from "./en/schedules.json";
 
 import deCommon from "./de/common.json";
 import deNavigation from "./de/navigation.json";
@@ -38,6 +39,7 @@ import deDefrost from "./de/defrost.json";
 import deDiagnostics from "./de/diagnostics.json";
 import deReports from "./de/reports.json";
 import deHistory from "./de/history.json";
+import deSchedules from "./de/schedules.json";
 
 export const NAMESPACES = [
   "common",
@@ -54,6 +56,7 @@ export const NAMESPACES = [
   "diagnostics",
   "reports",
   "history",
+  "schedules",
 ] as const;
 
 export const resources = {
@@ -72,6 +75,7 @@ export const resources = {
     diagnostics: enDiagnostics,
     reports: enReports,
     history: enHistory,
+    schedules: enSchedules,
   },
   de: {
     common: deCommon,
@@ -88,6 +92,7 @@ export const resources = {
     diagnostics: deDiagnostics,
     reports: deReports,
     history: deHistory,
+    schedules: deSchedules,
   },
 } as const;
 

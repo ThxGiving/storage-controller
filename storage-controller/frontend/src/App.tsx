@@ -11,6 +11,7 @@ import { EntityBrowser } from "@/features/entities/EntityBrowser";
 import { UnitsPage } from "@/features/units/UnitsPage";
 import { IncidentsPage } from "@/pages/Incidents";
 import { ReportsPage } from "@/pages/Reports";
+import { SchedulesPage } from "@/pages/Schedules";
 import { SettingsPage } from "@/pages/Settings";
 
 export default function App() {
@@ -46,6 +47,7 @@ export default function App() {
           {tab === "units" && <UnitsPage />}
           {tab === "incidents" && <IncidentsPage />}
           {tab === "reports" && <ReportsPage />}
+          {tab === "schedules" && <SchedulesPage />}
           {tab === "entities" && <EntityBrowser />}
           {tab === "settings" && <SettingsPage />}
         </main>

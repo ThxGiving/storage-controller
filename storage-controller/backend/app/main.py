@@ -32,12 +32,14 @@ from .api import (
 from .api import (
     diagnostics as diagnostics_api,
 )
+from .api import email_settings as email_settings_api
 from .api import history_import as history_import_api
 from .api import (
     maintenance as maintenance_api,
 )
 from .api import report_branding as report_branding_api
 from .api import reports as reports_api
+from .api import schedules as schedules_api
 from .api import settings as settings_api
 from .collector import Collector
 from .config import get_settings
@@ -49,6 +51,7 @@ from .ha.manager import HAConnectionManager
 from .incident_engine import IncidentEngine
 from .logging_config import configure_logging
 from .maintenance import MaintenanceRunner
+from .scheduler import SchedulerRunner
 from .seed import run_startup_seed
 
 log = logging.getLogger("api")
@@ -143,18 +146,47 @@ async def lifespan(app: FastAPI):
         _maintenance_loop(maintenance, collector, maint_stop), name="maintenance"
     )
 
+    # Report scheduler (Phase 6): persistent, restart-safe; catches up one missed
+    # run on startup and ticks every minute.
+    scheduler = SchedulerRunner(get_session_factory())
+    app.state.scheduler = scheduler
+    sched_stop = asyncio.Event()
+    sched_task = asyncio.create_task(_scheduler_loop(scheduler, sched_stop), name="scheduler")
+
     try:
         yield
     finally:
         maint_stop.set()
-        maint_task.cancel()
-        try:
-            await maint_task
-        except (asyncio.CancelledError, Exception):  # noqa: BLE001
-            pass
+        sched_stop.set()
+        for task in (maint_task, sched_task):
+            task.cancel()
+            try:
+                await task
+            except (asyncio.CancelledError, Exception):  # noqa: BLE001
+                pass
         await manager.stop()
         await dispose_engine()
         log.info("Storage Controller stopped")
+
+
+async def _scheduler_loop(scheduler: SchedulerRunner, stop: asyncio.Event) -> None:
+    """Tick the report scheduler every minute (and once at startup for catch-up)."""
+    try:
+        await scheduler.tick()
+    except Exception as exc:  # noqa: BLE001
+        log.warning("scheduler: startup tick error: %s", type(exc).__name__)
+    while not stop.is_set():
+        try:
+            await asyncio.wait_for(stop.wait(), timeout=60)
+            break
+        except TimeoutError:
+            pass
+        try:
+            await scheduler.tick()
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            log.warning("scheduler: loop error: %s", type(exc).__name__)
 
 
 async def _maintenance_loop(
@@ -211,6 +243,8 @@ def create_app() -> FastAPI:
     app.include_router(report_branding_api.router)
     app.include_router(history_import_api.router)
     app.include_router(maintenance_api.router)
+    app.include_router(email_settings_api.router)
+    app.include_router(schedules_api.router)
 
     _mount_frontend(app)
     return app

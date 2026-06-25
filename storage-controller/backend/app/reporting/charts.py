@@ -28,13 +28,15 @@ _UPPER = "#dc2626"
 _LOWER = "#2563eb"
 
 # A pale, low-contrast diagonal hatch for missing-data regions. One diagonal per
-# tile (no patternTransform) keeps it robust under WeasyPrint's SVG renderer.
-_GAP_PATTERN = (
-    '<defs><pattern id="scGap" width="7" height="7" patternUnits="userSpaceOnUse">'
-    '<rect width="7" height="7" fill="#fefce8"/>'
-    '<path d="M0,7 L7,0" stroke="#fde047" stroke-width="0.7" stroke-opacity="0.55"/>'
-    "</pattern></defs>"
-)
+# tile (no patternTransform) keeps it robust under WeasyPrint's SVG renderer. The
+# pattern id is made unique per chart so multiple charts on a page don't collide.
+def _gap_pattern(gid: str) -> str:
+    return (
+        f'<defs><pattern id="{gid}" width="7" height="7" patternUnits="userSpaceOnUse">'
+        '<rect width="7" height="7" fill="#fefce8"/>'
+        '<path d="M0,7 L7,0" stroke="#fde047" stroke-width="0.7" stroke-opacity="0.55"/>'
+        "</pattern></defs>"
+    )
 
 
 def _zone(tz: str) -> ZoneInfo:
@@ -112,10 +114,11 @@ def render_chart_svg(
     def sy(v: float) -> float:
         return plot_top + (y1 - v) / yr * plot_h
 
+    gid = f"scGap{abs(hash((id(chart), x0, y0))) % 1000000:06d}"
     p: list[str] = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
         f'viewBox="0 0 {width} {height}" font-family="DejaVu Sans, Helvetica, sans-serif">',
-        _GAP_PATTERN,
+        _gap_pattern(gid),
         f'<rect width="{width}" height="{height}" fill="#ffffff"/>',
         # white plot background so data — not shading — dominates
         f'<rect x="{pad_l}" y="{plot_top}" width="{pw}" height="{plot_h}" fill="#ffffff"/>',
@@ -133,7 +136,7 @@ def render_chart_svg(
         if b.kind == "gap":
             p.append(
                 f'<rect x="{bx0:.1f}" y="{plot_top}" width="{bx1 - bx0:.1f}" '
-                f'height="{plot_h}" fill="url(#scGap)"/>'
+                f'height="{plot_h}" fill="url(#{gid})"/>'
             )
             for bx in (bx0, bx1):
                 p.append(
