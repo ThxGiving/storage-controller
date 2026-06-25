@@ -60,9 +60,12 @@ def _bounds(series: list[ChartSeries], lo: float | None, hi: float | None):
     if not vals:
         return 0.0, 10.0
     vmin, vmax = min(vals), max(vals)
-    if vmax - vmin < 2.0:
-        vmin -= 1.0
-        vmax += 1.0
+    # Enforce a 4 °C minimum span, centered, so tight-limit units (e.g. a freezer
+    # with a 3 °C limit band) don't visually exaggerate normal hysteresis cycles.
+    if vmax - vmin < 4.0:
+        mid = (vmin + vmax) / 2
+        vmin = mid - 2.0
+        vmax = mid + 2.0
     pad = (vmax - vmin) * 0.14
     return vmin - pad, vmax + pad
 

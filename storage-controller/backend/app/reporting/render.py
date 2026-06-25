@@ -137,10 +137,20 @@ def render_html(model: ReportModel, *, logo_path: Path | None = None) -> str:
         )
         for c in model.overview_charts
     ]
-    mini_svgs = {
-        u.id: render_mini_svg(u.chart, model.timezone, x_start=x0, x_end=x1)
-        for u in model.units if u.chart
-    }
+    _n = len(model.units)
+    mini_svgs: dict[int, str] = {}
+    for _i, u in enumerate(model.units):
+        if u.chart:
+            # Wide card (last unit when count is odd) spans 2 grid columns, so its
+            # container is ~2× wider. Rendering at 2× SVG width keeps the aspect
+            # ratio consistent — strokes, envelope area, and chart height all appear
+            # identical to the narrow cards when CSS scales width:100% height:auto.
+            _wide = (_i == _n - 1) and (_n % 2 == 1)
+            mini_svgs[u.id] = render_mini_svg(
+                u.chart, model.timezone,
+                width=640 if _wide else 320,
+                x_start=x0, x_end=x1,
+            )
     from .. import __version__
 
     template = _env(model.locale).get_template("report.html")
