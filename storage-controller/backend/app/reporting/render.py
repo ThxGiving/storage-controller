@@ -106,6 +106,7 @@ def _env(locale: str, tz: str = "UTC") -> Environment:
     env.filters["dt"] = lambda v: _fmt_dt(v, locale)
     env.filters["dtlocal"] = lambda v: _fmt_dt_local(v, locale, tz)
     env.filters["cov"] = lambda v, below=False: _fmt_cov(v, below, locale)
+    env.filters["val"] = lambda v: v if v else "—"  # value or em dash
     return env
 
 

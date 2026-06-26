@@ -2,6 +2,34 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.4.20 — 2026-06-26
+
+### Fixed — Stage 1 layout and pagination defects
+
+**Detailed incident table**
+- `break-inside: avoid` on every `<tbody tr>` in `.inc` — rows no longer split
+  across page boundaries; orphaned timestamp cells eliminated
+- `display: table-header-group` on `<thead>` — column headers repeat on every
+  continuation page
+- Table renamed from "INCIDENTS (SUMMARY)" to "INCIDENT DETAILS" / "VORFÄLLE —
+  DETAILS" to reflect that all rows are shown
+
+**Compact single-page composition**
+- Compact now uses a single `<section class="page">` instead of two sections;
+  content flows naturally with WeasyPrint pagination instead of a forced
+  page break after the charts — for typical installations the report fits on
+  one page; overflow carries naturally to page 2
+- Comment field restored in approval area (all three levels now have the same
+  four approval fields: Reviewed by / Date / Signature / Comment)
+
+**Consistent empty-value rendering**
+- Added `val` Jinja2 filter: renders `None` and empty strings as em dash (`—`)
+  rather than blank cells; applied to cause, corrective action and notes columns
+
+**Architecture**
+- Page-1 content extracted to a Jinja2 macro (`page_one_body`) shared by all
+  three detail levels; avoids structural duplication in the template
+
 ## 0.4.19 — 2026-06-26
 
 ### Added — Stage 1: Genuine detail-level compositions

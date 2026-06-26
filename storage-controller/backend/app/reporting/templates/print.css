@@ -139,10 +139,12 @@ table.metrics th { text-align: center; }
 
 /* ---------- incidents ---------- */
 table.inc { width: 100%; border-collapse: collapse; }
+table.inc thead { display: table-header-group; }
 table.inc th, table.inc td { padding: 2.4pt 5pt; text-align: center; border-bottom: 0.5pt solid #eef0f2; font-size: 7pt; }
 table.inc th { font-size: 6.2pt; text-transform: uppercase; color: #9ca3af; font-weight: 600; }
 table.inc th.l, table.inc td.l { text-align: left; }
 table.inc td.ft { color: #374151; }
+table.inc tbody tr { break-inside: avoid; }
 
 /* ---------- panels ---------- */
 .panels { display: flex; gap: 7pt; }
