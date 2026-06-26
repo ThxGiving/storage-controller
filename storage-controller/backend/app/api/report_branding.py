@@ -11,7 +11,6 @@ from __future__ import annotations
 import io
 import json
 import logging
-import re
 import uuid as uuidlib
 
 from fastapi import APIRouter, Depends, Request, UploadFile
@@ -34,56 +33,34 @@ _ALLOWED = {"image/png": ".png", "image/jpeg": ".jpg", "image/svg+xml": ".svg"}
 _LOGO_MIME = {".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml"}
 
 
-def _fix_svg(data: bytes) -> bytes:
-    """Move <defs> to immediately after the opening <svg> tag.
+def _normalize_logo(data: bytes, suffix: str) -> tuple[bytes, str]:
+    """Normalise the uploaded logo for reliable PDF rendering; return (data, suffix).
 
-    WeasyPrint's SVG renderer does not resolve forward references: if a <path>
-    references url(#gradient) before the gradient is defined in <defs>, the fill
-    is silently dropped and the shape appears transparent/white.  Browsers buffer
-    the whole document before rendering so they resolve these references fine —
-    WeasyPrint does not.  Moving <defs> to the top makes the file render
-    correctly in both environments.
-    """
-    try:
-        text = data.decode("utf-8")
-        defs_match = re.search(r"<defs\b[^>]*>.*?</defs>", text, re.DOTALL | re.IGNORECASE)
-        if not defs_match:
-            return data
-        defs_block = defs_match.group(0)
-        # Only move if defs are NOT already at the very start of the document body
-        svg_open = re.search(r"<svg\b[^>]*>", text, re.DOTALL)
-        if not svg_open:
-            return data
-        if defs_match.start() == svg_open.end():
-            return data  # already in the right place
-        text_no_defs = text[: defs_match.start()] + text[defs_match.end() :]
-        svg_end = svg_open.end()
-        fixed = text_no_defs[:svg_end] + defs_block + text_no_defs[svg_end:]
-        return fixed.encode("utf-8")
-    except Exception:
-        return data
+    SVG → PNG: WeasyPrint's built-in SVG renderer has known limitations
+    (forward-reference gradients, complex filters, …).  Converting to PNG via
+    cairosvg — which uses the same Cairo library as WeasyPrint — produces a
+    pixel-perfect raster that renders identically in every PDF renderer.
 
-
-def _normalize_logo(data: bytes, suffix: str) -> bytes:
-    """Normalise PNG/JPEG to sRGB; fix SVG forward-reference issues.
-
-    PNG/JPEG: WeasyPrint's Cairo backend ignores embedded ICC profiles and
-    treats all pixel values as if they were already sRGB.  If a PNG was saved
-    with an Adobe-RGB or Display-P3 profile the colours appear washed out or
-    shifted in the generated PDF.  Applying the profile through Pillow before
-    storing the file ensures the pixel values *are* sRGB so Cairo renders them
-    correctly.
-
-    SVG: move <defs> to the top so WeasyPrint can resolve gradient/pattern
-    references without forward-reference lookups (see _fix_svg).
+    PNG/JPEG: If the file carries an embedded ICC colour profile WeasyPrint's
+    Cairo backend ignores it and treats all pixel values as plain sRGB, which
+    makes wide-gamut colours (Display-P3, Adobe-RGB) appear washed out.  Pillow
+    applies the profile transform and re-saves without the profile so the stored
+    pixel values *are* sRGB.
     """
     if suffix == ".svg":
-        return _fix_svg(data)
+        try:
+            import cairosvg  # type: ignore[import-untyped]
+
+            png_bytes = cairosvg.svg2png(bytestring=data, scale=2)
+            return png_bytes, ".png"
+        except Exception:
+            log.warning("SVG→PNG conversion failed, storing SVG as-is", exc_info=True)
+            return data, suffix
+
     try:
         from PIL import Image, ImageCms
 
         img = Image.open(io.BytesIO(data))
-        # Ensure a mode ImageCms can work with before profile conversion.
         if img.mode in ("P", "PA"):
             img = img.convert("RGBA")
         icc = img.info.get("icc_profile")
@@ -103,11 +80,11 @@ def _normalize_logo(data: bytes, suffix: str) -> bytes:
         fmt = "JPEG" if suffix == ".jpg" else "PNG"
         if fmt == "JPEG" and img.mode in ("RGBA", "LA"):
             img = img.convert("RGB")
-        img.save(out, format=fmt)  # saved without icc_profile — intentional
-        return out.getvalue()
+        img.save(out, format=fmt)
+        return out.getvalue(), suffix
     except Exception:
-        log.warning("logo ICC normalisation failed, storing original", exc_info=True)
-        return data
+        log.warning("logo colour normalisation failed, storing original", exc_info=True)
+        return data, suffix
 
 
 def _require_admin(request: Request) -> str:
@@ -197,7 +174,7 @@ async def upload_logo(
     if not data:
         raise AppError("invalid_logo_type", status_code=422)
 
-    data = _normalize_logo(data, suffix)
+    data, suffix = _normalize_logo(data, suffix)
 
     root = uploads_root()
     root.mkdir(parents=True, exist_ok=True)
