@@ -2,6 +2,31 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.4.16 — 2026-06-26
+
+### Changed
+
+- **Report summary — count semantics**: small italic sub-labels added under
+  *confirmed deviations* and *open incidents* metrics (e.g. "auto-detected,
+  documented" / "pending review or action") to clarify the difference.
+- **Contact field now labelled**: "Contact: \<name\>" instead of plain name,
+  omitted entirely when no contact is configured.
+- **Comparison table column widths**: *Incidents* column widened from 6 % to
+  8 %, *Status* reduced by 2 %; a thin left border added between *Data
+  coverage* and *Incidents* so the two column headers are always separated.
+- **Chart band opacity** slightly reduced (deviation 0.28 → 0.22, defrost
+  0.25 → 0.20) to reduce visual noise from dense event markers.
+- **SMTP test email — polished verification card**: replaced the grey-italic
+  action placeholder with a *Connection verification* checklist (SMTP
+  connected, TLS successful, authentication successful, message accepted for
+  delivery) using green checkmarks.
+- **SMTP test email — no HACCP disclaimer**: footer now shows a test-specific
+  notice; production HACCP language removed from test email entirely.
+- **SMTP test email — hostname/port split** into separate table rows to prevent
+  email clients from auto-linking "host:port" as a hyperlink.
+- **SMTP test email — full address in header**: the complete site address
+  (not just the site name) is now shown in the email header when configured.
+
 ## 0.4.15 — 2026-06-26
 
 ### Fixed

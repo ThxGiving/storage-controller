@@ -29,6 +29,9 @@
         {% if site_name %}
         <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:{{ bac.secondary_fg }};line-height:1.3">{{ site_name }}</div>
         {% endif %}
+        {% for line in address_lines %}
+        <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:{{ bac.secondary_fg }};line-height:1.3">{{ line }}</div>
+        {% endfor %}
         {% if not org_name and not site_name %}
         <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:{{ bac.secondary_fg }}">Refrigeration Logbook</div>
         {% endif %}
@@ -42,7 +45,7 @@
   </td></tr>
 
   <!-- ====== SUCCESS CARD ====== -->
-  <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:24px 24px 16px;border-left:4px solid #16a34a">
+  <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:24px 24px 16px">
     <!-- Success badge -->
     <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px">
     <tr>
@@ -58,7 +61,11 @@
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr>
       <td width="40%" valign="top" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:#9ca3af;padding:3px 8px 3px 0">{{ L.host_label }}</td>
-      <td valign="top" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:#111827;font-weight:600;padding:3px 0">{{ smtp_host }}:{{ smtp_port }}</td>
+      <td valign="top" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:#111827;font-weight:600;padding:3px 0">{{ smtp_host }}</td>
+    </tr>
+    <tr>
+      <td valign="top" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:#9ca3af;padding:3px 8px 3px 0">{{ L.port_label }}</td>
+      <td valign="top" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:#111827;font-weight:600;padding:3px 0">{{ smtp_port }}</td>
     </tr>
     <tr>
       <td valign="top" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:#9ca3af;padding:3px 8px 3px 0">{{ L.security_label }}</td>
@@ -81,14 +88,32 @@
     <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#6b7280;margin-top:16px;line-height:1.5">{{ L.test_notice }}</div>
   </td></tr>
 
-  <!-- ====== ACTION BLOCK PLACEHOLDER ====== -->
-  <tr><td bgcolor="#f9fafb" style="background-color:#f9fafb;padding:16px 24px;border-top:1px solid #e5e7eb;border-left:4px solid #d1d5db">
-    <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#9ca3af;font-style:italic;line-height:1.5">{{ L.action_placeholder }}</div>
+  <!-- ====== VERIFICATION CHECKLIST ====== -->
+  <tr><td bgcolor="#f9fafb" style="background-color:#f9fafb;padding:16px 24px;border-top:1px solid #e5e7eb">
+    <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">{{ L.checks_title }}</div>
+    <table cellpadding="0" cellspacing="0" border="0">
+      <tr><td style="padding:3px 0">
+        <span style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;color:#16a34a;margin-right:8px">&#10003;</span>
+        <span style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#374151">{{ L.check_connected }}</span>
+      </td></tr>
+      <tr><td style="padding:3px 0">
+        <span style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;color:#16a34a;margin-right:8px">&#10003;</span>
+        <span style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#374151">{{ L.check_tls }}</span>
+      </td></tr>
+      <tr><td style="padding:3px 0">
+        <span style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;color:#16a34a;margin-right:8px">&#10003;</span>
+        <span style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#374151">{{ L.check_auth }}</span>
+      </td></tr>
+      <tr><td style="padding:3px 0">
+        <span style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;color:#16a34a;margin-right:8px">&#10003;</span>
+        <span style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#374151">{{ L.check_accepted }}</span>
+      </td></tr>
+    </table>
   </td></tr>
 
   <!-- ====== FOOTER ====== -->
   <tr><td bgcolor="#f9fafb" style="background-color:#f9fafb;border-radius:0 0 8px 8px;padding:20px 24px;border-top:1px solid #e5e7eb">
-    <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:#6b7280;line-height:1.6">{{ L.disclaimer }}</div>
+    <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:#6b7280;line-height:1.6">{{ L.footer_notice }}</div>
     <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:10px;color:#9ca3af;margin-top:8px;line-height:1.5">
       {{ L.automated_notice }}{% if org_name %} · {{ org_name }}{% endif %}{% if site_name and site_name != org_name %} · {{ site_name }}{% endif %} · Refrigeration Logbook v{{ version }}
     </div>

@@ -39,7 +39,7 @@
         <div class="addr">{{ m.branding.site_name }}</div>
         {% endif %}
         {% if m.branding.address %}{% for _line in m.branding.address.split('\n') %}{% if _line.strip() %}<div class="addr">{{ _line.strip() }}</div>{% endif %}{% endfor %}{% endif %}
-        {% if m.branding.contact %}<div class="addr">{{ m.branding.contact }}</div>{% endif %}
+        {% if m.branding.contact %}<div class="addr">{{ L.contact_label }}: {{ m.branding.contact }}</div>{% endif %}
       </div>
     </div>
     {% endif %}
@@ -73,11 +73,13 @@
         {{ ic_triangle("#ea580c") }}
         <div class="num {% if m.summary.confirmed_deviations %}o{% endif %}">{{ m.summary.confirmed_deviations }}</div>
         <div class="lbl">{{ L.confirmed_deviations }}</div>
+        <div class="lbl-note">{{ L.confirmed_deviations_note }}</div>
       </div>
       <div class="metric">
         {{ ic_xcircle("#dc2626") }}
         <div class="num {% if m.summary.open_incidents %}r{% endif %}">{{ m.summary.open_incidents }}</div>
         <div class="lbl">{{ L.open_incidents }}</div>
+        <div class="lbl-note">{{ L.open_incidents_note }}</div>
       </div>
       <div class="verdict">
         <div class="vhead">{{ L.assessment }}</div>
@@ -101,8 +103,8 @@
         <col style="width:7%"> <!-- max -->
         <col style="width:12%"><!-- outside range — needs room for two-line header -->
         <col style="width:11%"><!-- coverage — needs room for two-line header -->
-        <col style="width:6%"> <!-- incidents -->
-        <col style="width:16%"><!-- status -->
+        <col style="width:8%"> <!-- incidents -->
+        <col style="width:14%"><!-- status -->
       </colgroup>
       <thead>
         <tr>

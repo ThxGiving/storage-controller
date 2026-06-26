@@ -202,14 +202,14 @@ def test_test_email_html_de_renders():
     html = _build_test_html(_test_ctx("de"))
     assert "Test-E-Mail erfolgreich" in html
     assert "SMTP-Konfiguration" in html
-    assert "In echten Berichts-E-Mails" in html
+    assert "Verbindungsprüfung" in html
 
 
 def test_test_email_html_en_renders():
     html = _build_test_html(_test_ctx("en"))
     assert "Test email successful" in html
     assert "SMTP configuration" in html
-    assert "In real report emails" in html
+    assert "Connection verification" in html
 
 
 def test_test_email_html_smtp_details_present():
@@ -289,11 +289,12 @@ def test_compose_test_email_plain_contains_smtp_info():
     assert "STARTTLS" in plain
 
 
-def test_compose_test_email_plain_contains_action_placeholder():
+def test_compose_test_email_plain_contains_checks():
     cfg = _cfg()
     msg = compose_test_email(cfg, "r@example.de", locale="de")
     plain = _parts(msg)["text/plain"]
-    assert "In echten Berichts-E-Mails" in plain
+    assert "Verbindungsprüfung" in plain
+    assert "Authentifizierung erfolgreich" in plain
 
 
 def test_compose_test_email_de_utf8_umlauts():

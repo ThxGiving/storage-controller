@@ -131,18 +131,19 @@ _L_TEST = {
         ),
         "smtp_label": "SMTP-Konfiguration",
         "host_label": "Server",
+        "port_label": "Port",
         "security_label": "Sicherheit",
         "sender_label": "Absender",
         "recipient_label": "Empfänger",
         "sent_at_label": "Gesendet",
-        "action_placeholder": (
-            "In echten Berichts-E-Mails erscheint hier der Hinweis zum Prüfen, "
-            "Ausdrucken, Unterschreiben und Abheften."
-        ),
-        "disclaimer": (
-            "Dieser automatisch erstellte Bericht unterstützt die HACCP-Dokumentation "
-            "und ersetzt keine betrieblichen Kontrollen, Messungen oder gesetzlichen "
-            "Anforderungen."
+        "checks_title": "Verbindungsprüfung",
+        "check_connected": "SMTP-Verbindung hergestellt",
+        "check_tls": "TLS-Verhandlung erfolgreich",
+        "check_auth": "Authentifizierung erfolgreich",
+        "check_accepted": "Nachricht zur Zustellung angenommen",
+        "footer_notice": (
+            "Diese automatische Test-E-Mail bestätigt, dass Refrigeration Logbook "
+            "E-Mails über den konfigurierten SMTP-Server versenden kann."
         ),
         "automated_notice": "Test-Nachricht",
     },
@@ -155,17 +156,19 @@ _L_TEST = {
         ),
         "smtp_label": "SMTP configuration",
         "host_label": "Server",
+        "port_label": "Port",
         "security_label": "Security",
         "sender_label": "Sender",
         "recipient_label": "Recipient",
         "sent_at_label": "Sent",
-        "action_placeholder": (
-            "In real report emails, this section will contain the instructions "
-            "to review, print, sign, and file the report."
-        ),
-        "disclaimer": (
-            "This automatically generated report supports HACCP documentation and does not "
-            "replace operational checks, measurements, or legal requirements."
+        "checks_title": "Connection verification",
+        "check_connected": "SMTP connection established",
+        "check_tls": "TLS negotiation successful",
+        "check_auth": "Authentication successful",
+        "check_accepted": "Message accepted for delivery",
+        "footer_notice": (
+            "This automated test email confirms that Refrigeration Logbook "
+            "can successfully send email using the configured SMTP server."
         ),
         "automated_notice": "Test message",
     },
@@ -293,22 +296,30 @@ def _build_report_plain(ctx: dict, L: dict) -> str:
 
 
 def _build_test_plain(ctx: dict, L: dict) -> str:
+    checks = [
+        L["check_connected"],
+        L["check_tls"],
+        L["check_auth"],
+        L["check_accepted"],
+    ]
     return "\n".join([
         ctx["subject"],
         "",
         L["success_message"],
         "",
-        f"{L['host_label']}: {ctx['smtp_host']}:{ctx['smtp_port']}",
+        f"{L['host_label']}: {ctx['smtp_host']}",
+        f"{L['port_label']}: {ctx['smtp_port']}",
         f"{L['security_label']}: {ctx['smtp_security']}",
         f"{L['sender_label']}: {ctx['sender_email']}",
         f"{L['recipient_label']}: {ctx['recipient_email']}",
         f"{L['sent_at_label']}: {ctx['sent_at']}",
         "",
+        f"{L['checks_title']}:",
+        *[f"  ✓ {c}" for c in checks],
+        "",
         L["test_notice"],
         "",
-        f"[{L['action_placeholder']}]",
-        "",
-        L["disclaimer"],
+        L["footer_notice"],
     ])
 
 
@@ -435,6 +446,7 @@ def compose_test_email(
     *,
     org_name: str | None = None,
     site_name: str | None = None,
+    address: str | None = None,
     logo_filename: str | None = None,
     accent_color: str | None = None,
     locale: str = "en",
@@ -464,6 +476,7 @@ def compose_test_email(
         "logo_data_url": _logo_data_url(logo_filename),
         "org_name": org_name or "",
         "site_name": site_name or "",
+        "address_lines": [ln.strip() for ln in (address or "").split("\n") if ln.strip()],
         "sent_at": now_str,
         "smtp_host": getattr(cfg, "host", "") or "",
         "smtp_port": getattr(cfg, "port", 587),

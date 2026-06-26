@@ -21,8 +21,8 @@ _BAND_FILL = {
     "defrost": "#bfdbfe",
 }
 _BAND_OPACITY = {
-    "deviation": 0.28,
-    "defrost": 0.25,
+    "deviation": 0.22,
+    "defrost": 0.20,
 }
 _UPPER = "#dc2626"
 _LOWER = "#2563eb"

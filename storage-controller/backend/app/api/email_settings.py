@@ -161,6 +161,7 @@ async def send_test_email(
         payload.recipient,
         org_name=branding.organization_name if branding else None,
         site_name=branding.site_name if branding else (row.site_name or None),
+        address=branding.address if branding else None,
         logo_filename=branding.logo_filename if branding else None,
         accent_color=branding.accent if branding else None,
         locale=locale,
