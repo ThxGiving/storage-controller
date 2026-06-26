@@ -49,8 +49,7 @@ body {
    (no object-fit) prevents the Cairo resampling path that desaturates colours. */
 .logo { display: block; max-height: 44pt; max-width: 100pt; width: auto; height: auto; flex-shrink: 0; }
 .org-block { min-width: 0; }
-/* Single-line truncation prevents ugly mid-name breaks. */
-.org { font-weight: 700; font-size: 10pt; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.org { font-weight: 700; font-size: 10pt; color: #111827; overflow-wrap: anywhere; }
 .addr { color: #6b7280; font-size: 7.2pt; line-height: 1.45; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .head-title { text-align: right; }
 .head-center { justify-content: center; }

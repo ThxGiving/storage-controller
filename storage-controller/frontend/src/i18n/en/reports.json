@@ -47,6 +47,7 @@
     "organization": "Organization",
     "site": "Site",
     "address": "Address",
+    "addressPlaceholder": "Street and number\nPostal code and city",
     "contact": "Contact",
     "reportTitle": "Report title",
     "subtitle": "Subtitle",

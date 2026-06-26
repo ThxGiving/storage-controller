@@ -368,10 +368,19 @@ function BrandingCard() {
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label={t("reports:branding.organization")}><Input value={form.organization_name ?? ""} onChange={(e) => set("organization_name", e.target.value)} /></Field>
           <Field label={t("reports:branding.site")}><Input value={form.site_name ?? ""} onChange={(e) => set("site_name", e.target.value)} /></Field>
-          <Field label={t("reports:branding.reportTitle")}><Input value={form.report_title ?? ""} onChange={(e) => set("report_title", e.target.value)} /></Field>
-          <Field label={t("reports:branding.subtitle")}><Input value={form.subtitle ?? ""} onChange={(e) => set("subtitle", e.target.value)} /></Field>
+          <Field label={t("reports:branding.address")} className="sm:col-span-2">
+            <textarea
+              value={form.address ?? ""}
+              onChange={(e) => set("address", e.target.value)}
+              rows={2}
+              placeholder={t("reports:branding.addressPlaceholder")}
+              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+            />
+          </Field>
           <Field label={t("reports:branding.contact")}><Input value={form.contact ?? ""} onChange={(e) => set("contact", e.target.value)} /></Field>
+          <Field label={t("reports:branding.reportTitle")}><Input value={form.report_title ?? ""} onChange={(e) => set("report_title", e.target.value)} /></Field>
           <Field label={t("reports:branding.signatures")}><Input value={sigs} onChange={(e) => setSigs(e.target.value)} /></Field>
+          <Field label={t("reports:branding.subtitle")}><Input value={form.subtitle ?? ""} onChange={(e) => set("subtitle", e.target.value)} /></Field>
           <Field label={t("reports:branding.disclaimer")}><Input value={form.disclaimer ?? ""} onChange={(e) => set("disclaimer", e.target.value)} /></Field>
           <Field label={t("reports:branding.footer")}><Input value={form.footer_text ?? ""} onChange={(e) => set("footer_text", e.target.value)} /></Field>
         </div>
@@ -446,9 +455,9 @@ function BrandingCard() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className={`flex flex-col gap-1.5${className ? ` ${className}` : ""}`}>
       <Label>{label}</Label>
       {children}
     </div>
