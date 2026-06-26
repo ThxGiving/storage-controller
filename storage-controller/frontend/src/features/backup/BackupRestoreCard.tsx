@@ -47,7 +47,7 @@ function BackupRow({
           <Archive className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           <span className="truncate font-mono text-xs">{job.filename}</span>
           {job.is_safety_backup && (
-            <Badge variant="outline" className="text-[10px]">
+            <Badge tone="neutral" className="text-[10px]">
               {t("safetyBackup")}
             </Badge>
           )}
@@ -302,7 +302,7 @@ export function BackupRestoreCard() {
                     </p>
                     <Button
                       size="sm"
-                      variant="destructive"
+                      variant="danger"
                       className="gap-1.5"
                       disabled={restoreMut.isPending}
                       onClick={handleRestore}
