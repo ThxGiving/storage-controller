@@ -405,13 +405,34 @@ async def execute_restore(archive_bytes: bytes) -> dict[str, Any]:
         )
     )
 
-    # Schedule a SIGTERM after 500 ms so the HTTP response is flushed first.
-    async def _delayed_sigterm() -> None:
+    # Schedule a restart after 500 ms so the HTTP response is flushed first.
+    # In a Home Assistant add-on, use the Supervisor API so the supervisor
+    # restarts the add-on (SIGTERM alone causes a clean shutdown without restart).
+    # Fall back to SIGTERM when running outside HA (no SUPERVISOR_TOKEN).
+    async def _delayed_restart() -> None:
         await asyncio.sleep(0.5)
-        log.info("restore: sending SIGTERM for restart")
-        os.kill(os.getpid(), signal.SIGTERM)
+        supervisor_token = os.environ.get("SUPERVISOR_TOKEN")
+        if supervisor_token:
+            import urllib.request
 
-    asyncio.create_task(_delayed_sigterm())
+            log.info("restore: requesting restart via HA Supervisor API")
+            req = urllib.request.Request(
+                "http://supervisor/addons/self/restart",
+                method="POST",
+                headers={"Authorization": f"Bearer {supervisor_token}"},
+            )
+            try:
+                urllib.request.urlopen(req, timeout=10)
+            except Exception as exc:
+                log.warning(
+                    "restore: supervisor restart request failed (%s), falling back to SIGTERM", exc
+                )
+                os.kill(os.getpid(), signal.SIGTERM)
+        else:
+            log.info("restore: no SUPERVISOR_TOKEN, sending SIGTERM for restart")
+            os.kill(os.getpid(), signal.SIGTERM)
+
+    asyncio.create_task(_delayed_restart())
 
     return {
         "status": "restore_pending",
