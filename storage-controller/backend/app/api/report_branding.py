@@ -8,6 +8,7 @@ user-controlled paths, no external URLs.
 
 from __future__ import annotations
 
+import io
 import json
 import logging
 import uuid as uuidlib
@@ -29,6 +30,47 @@ router = APIRouter(prefix="/api/report-branding", tags=["reports"])
 
 _MAX_LOGO_BYTES = 2 * 1024 * 1024
 _ALLOWED = {"image/png": ".png", "image/jpeg": ".jpg", "image/svg+xml": ".svg"}
+
+
+def _normalize_logo(data: bytes, suffix: str) -> bytes:
+    """Convert PNG/JPEG to sRGB without an embedded ICC profile.
+
+    WeasyPrint's Cairo backend ignores embedded ICC profiles and treats all
+    pixel values as if they were already sRGB.  If a PNG was saved with an
+    Adobe-RGB or Display-P3 profile the colours appear washed out or
+    shifted in the generated PDF.  Applying the profile through Pillow
+    before storing the file ensures the pixel values *are* sRGB so Cairo
+    renders them correctly.  SVG files are vector and unaffected.
+    """
+    if suffix == ".svg":
+        return data
+    try:
+        from PIL import Image, ImageCms
+
+        img = Image.open(io.BytesIO(data))
+        # Ensure a mode ImageCms can work with before profile conversion.
+        if img.mode in ("P", "PA"):
+            img = img.convert("RGBA")
+        icc = img.info.get("icc_profile")
+        if icc:
+            try:
+                src = ImageCms.ImageCmsProfile(io.BytesIO(icc))
+                dst = ImageCms.createProfile("sRGB")
+                out_mode = "RGBA" if img.mode in ("RGBA", "LA") else "RGB"
+                img = ImageCms.profileToProfile(img, src, dst, renderingIntent=0, outputMode=out_mode)
+            except Exception:
+                img = img.convert("RGBA" if "A" in img.mode else "RGB")
+        elif img.mode not in ("RGB", "RGBA", "L", "LA"):
+            img = img.convert("RGBA" if "A" in img.mode else "RGB")
+        out = io.BytesIO()
+        fmt = "JPEG" if suffix == ".jpg" else "PNG"
+        if fmt == "JPEG" and img.mode in ("RGBA", "LA"):
+            img = img.convert("RGB")
+        img.save(out, format=fmt)  # saved without icc_profile — intentional
+        return out.getvalue()
+    except Exception:
+        log.warning("logo ICC normalisation failed, storing original", exc_info=True)
+        return data
 
 
 def _require_admin(request: Request) -> str:
@@ -117,6 +159,8 @@ async def upload_logo(
         raise AppError("logo_too_large", status_code=422)
     if not data:
         raise AppError("invalid_logo_type", status_code=422)
+
+    data = _normalize_logo(data, suffix)
 
     root = uploads_root()
     root.mkdir(parents=True, exist_ok=True)
