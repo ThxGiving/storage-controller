@@ -4,15 +4,37 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Refrigeration Logbook</title>
-    <!-- Follow Home Assistant / OS light-dark unless the user picked one. Runs
-         before paint to avoid a theme flash. -->
+    <!-- Follow HA / OS light-dark preference unless the user picked one.
+         Runs before paint to avoid a flash. HA dark mode is read from the
+         parent window (same-origin ingress); falls back to prefers-color-scheme. -->
     <script>
       (function () {
         try {
           var pref = localStorage.getItem("sc-theme");
-          var dark = pref
-            ? pref === "dark"
-            : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var dark;
+          if (pref) {
+            dark = pref === "dark";
+          } else {
+            // Try HA parent first: hass.themes.darkMode is the authoritative flag.
+            var haDark = null;
+            try {
+              if (window.parent !== window) {
+                var ha = window.parent.document.querySelector("home-assistant");
+                if (ha && ha.hass && ha.hass.themes && ha.hass.themes.darkMode != null) {
+                  haDark = ha.hass.themes.darkMode;
+                } else if (ha && ha.hass && ha.hass.selectedTheme && ha.hass.selectedTheme.dark != null) {
+                  haDark = ha.hass.selectedTheme.dark;
+                }
+                // Fallback: check color-scheme CSS property HA sets on <html>
+                if (haDark == null) {
+                  var cs = window.parent.document.documentElement.style.colorScheme;
+                  if (cs === "dark") haDark = true;
+                  else if (cs === "light") haDark = false;
+                }
+              }
+            } catch (e) { /* cross-origin or HA not yet ready */ }
+            dark = haDark != null ? haDark : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          }
           document.documentElement.classList.toggle("dark", !!dark);
         } catch (e) {
           /* default to light */
