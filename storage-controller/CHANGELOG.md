@@ -2,6 +2,122 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.4.15 — 2026-06-26
+
+### Fixed
+
+- **Version numbers in config.yaml / __init__.py were not advancing correctly**
+  between releases 0.4.12–0.4.14; HA Supervisor therefore saw no update.
+  Corrected; all 0.4.12–0.4.14 changes are now included in this build.
+
+## 0.4.14 — 2026-06-26
+
+### Changed
+
+- **SVG logos are converted to PNG on upload** using cairosvg (same Cairo
+  library as WeasyPrint). This eliminates a whole class of SVG rendering
+  quirks in the PDF: forward-referenced gradients, unsupported filters, and
+  renderer differences between browsers and WeasyPrint. The original SVG file
+  is unchanged on the user's device; only the server-side copy is rasterised.
+  `cairosvg>=2.7` added as a dependency.
+
+## 0.4.13 — 2026-06-26
+
+### Fixed
+
+- **SVG logo gradients rendering white/transparent in PDF.** WeasyPrint does
+  not resolve forward references in SVG: a `<path fill="url(#gradient)">` that
+  appears before the `<linearGradient>` in `<defs>` causes the fill to be
+  silently dropped. Many design tools (Affinity Designer, Illustrator) place
+  `<defs>` at the end of the document. The upload endpoint now moves `<defs>`
+  to immediately after the opening `<svg>` tag, making the reference resolvable.
+  (Superseded by the full SVG→PNG conversion in 0.4.14.)
+
+## 0.4.12 — 2026-06-26
+
+### Fixed
+
+- **Dark mode not following Home Assistant theme.** The app was reading
+  `prefers-color-scheme` (OS setting) but HA has its own dark-mode switch
+  independent of the OS. The initial theme script and `ThemeToggle` now read
+  `ha.hass.themes.darkMode` from the parent window (same-origin ingress),
+  fall back to the `color-scheme` CSS property, and finally fall back to the
+  OS media query. A `MutationObserver` on the parent `<html>` element reacts
+  to HA theme changes at runtime without a page reload.
+
+## 0.4.11 — 2026-06-26
+
+### Added
+
+- **Logo upload UI redesign.** The branding form now shows a thumbnail preview
+  of the current logo, a styled "Logo hochladen" button (hidden native file
+  input), and a delete button (trash icon) to remove the logo without replacing
+  it. Upload errors are shown inline.
+- **DELETE /api/report-branding/logo** endpoint to remove a stored logo and
+  its audit record.
+
+## 0.4.10 — 2026-06-26
+
+### Fixed
+
+- **Report header layout.** Changed from `display:flex` with `space-between`
+  to `display:grid` with fixed 44 %/56 % columns. The flex layout let the title
+  column grow to an unpredictable width because font metrics differ between
+  browser preview and WeasyPrint (DejaVu Sans), making the preview an
+  inaccurate representation of the PDF. Grid ensures both sides always claim
+  the same proportion.
+- **Title font size reduced** (h1 14 pt → 12 pt, month 10 pt → 9.5 pt) so the
+  header hierarchy matches the A4 content.
+- **Logo max-width capped at 56 pt**; org-block uses `flex:1` so the company
+  name always gets the remaining space. `word-break:break-word` allows
+  multi-line wrapping for long names without per-character splitting.
+
+## 0.4.9 — 2026-06-26
+
+### Added
+
+- **Address field** added to the branding form. The field was present in the
+  backend model and rendered in reports but was never exposed in the UI.
+  Multi-line textarea; rendered one address line per `\n` in the report header.
+
+### Fixed
+
+- **Company name truncated to single character in PDF header.** `overflow-wrap:
+  anywhere` was set on `.org` which caused per-character line breaks when the
+  logo consumed most of the brand-block width. Changed to `word-break:
+  break-word` with proper `flex:1` on the text column so the name wraps cleanly
+  at word boundaries.
+
+## 0.4.8 — 2026-06-26
+
+### Fixed
+
+- **Timestamp inconsistency in reports.** `generated_at`, the interim-report
+  data-cutoff note, and incident `opened_at` were displayed in UTC even though
+  the period range label used the configured IANA timezone. Added
+  `_fmt_dt_local()` with a `dtlocal` Jinja filter that converts timezone-aware
+  UTC ISO strings to the report's timezone before formatting.
+- **Interim-report badge** moved from inside `<h1>` (crowded the title) to
+  alongside the month label.
+- **Section headers** changed from solid accent background to neutral `#f8f9fa`
+  with a 2 pt accent top border; keeps branding without overwhelming content.
+- **Comparison table headers** now wrap (`white-space:nowrap` removed) with
+  `vertical-align:bottom` so two-word headers ("Outside range", "Data
+  coverage") render fully instead of being clipped.
+- **Three-unit card layout** — the lone third card is now centred at 50 % width
+  instead of left-aligned across the full grid row.
+
+## 0.4.7 — 2026-06-26
+
+### Fixed
+
+- **Logo color fidelity in PDF.** PNG logos with embedded ICC profiles
+  (Display-P3, Adobe-RGB) appeared washed out because WeasyPrint's Cairo
+  backend ignores ICC metadata and treats all pixel values as plain sRGB.
+  The upload endpoint now uses Pillow `ImageCms.profileToProfile` to convert
+  the pixel values to sRGB and saves the file without an embedded profile, so
+  Cairo renders the correct colors.
+
 ## 0.4.6 — 2026-06-26
 
 ### Fixed
