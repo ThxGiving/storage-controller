@@ -144,21 +144,30 @@
     </table>
   </section>
 
-  <!-- TEMPERATURVERLAUF -->
-  <section class="box">
+  <!-- TEMPERATURVERLAUF — frag allows the section to span pages; each .chart stays intact -->
+  <section class="box frag">
     <div class="box-head">{{ L.charts_title }}</div>
     <div class="box-body charts">
       {% for svg in overview_svgs %}
       <figure class="chart">
         <figcaption>{{ m.overview_charts[loop.index0].label }}</figcaption>
         {{ svg | safe }}
+        {% if loop.last %}
+        <div class="bandleg">
+          <span><i class="bd dev"></i>{{ L.band_deviation }}</span>
+          <span><i class="bd gap"></i>{{ L.band_gap }}</span>
+          <span><i class="bd def"></i>{{ L.band_defrost }}</span>
+        </div>
+        {% endif %}
       </figure>
       {% endfor %}
+      {% if not overview_svgs %}
       <div class="bandleg">
         <span><i class="bd dev"></i>{{ L.band_deviation }}</span>
         <span><i class="bd gap"></i>{{ L.band_gap }}</span>
         <span><i class="bd def"></i>{{ L.band_defrost }}</span>
       </div>
+      {% endif %}
     </div>
   </section>
 {% endmacro %}

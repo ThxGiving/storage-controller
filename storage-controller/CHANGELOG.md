@@ -2,6 +2,39 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.4.24 — 2026-06-26
+
+### Changed — Stage 2: dynamic pagination for large installations
+
+Reports now paginate correctly for all unit counts (tested matrix: 1/3/4/5/8/10/15
+units × compact/standard/detailed).
+
+**`print.css` changes**
+
+- `break-inside: avoid` added to `.chart` — each chart figure (caption + SVG) stays
+  on the same page; the charts section itself is now allowed to span pages
+- `break-after: avoid` added to `.box-head` — section headings are never stranded
+  at the bottom of a page without any of the content they label
+- `break-after: avoid` added to `.section-title` — the "DETAILANSICHT" heading
+  stays with the first unit card even when cards start on a new page
+- `table.cmp thead { display: table-header-group }` — column headers repeat when
+  the comparison table spans pages (8+ units)
+- `table.cmp tbody tr { break-inside: avoid }` — comparison table rows never split
+
+**`report.html` changes**
+
+- Charts section changed from `.box` to `.box frag` — allows the section to span
+  pages instead of being pushed as one unsplittable block
+- Band legend `<div class="bandleg">` moved inside the last chart figure — keeps
+  the legend with the final chart regardless of where the page break falls
+
+### Added — Scale tests
+
+`tests/test_report_pagination_scale.py` covers the full 3×7 matrix (21 combinations):
+render completes, chart figures are present, charts section carries `.box.frag`,
+band legend is inside the last figure, comparison table has `<thead>`, unit card
+counts match, compact produces no unit cards.
+
 ## 0.4.23 — 2026-06-26
 
 ### Fixed — Incident lifecycle state vs review state

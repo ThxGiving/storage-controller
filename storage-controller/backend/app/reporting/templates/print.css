@@ -76,9 +76,13 @@ body {
   border-radius: 4px 4px 0 0;
   padding: 3.5pt 7pt; font-size: 7pt; font-weight: 700; letter-spacing: .4px;
   color: #374151;
+  /* Prevent the heading from being orphaned at page bottom when box spans pages. */
+  break-after: avoid;
 }
 .box-body { padding: 8pt 9pt; }
-.section-title { font-size: 8pt; font-weight: 700; letter-spacing: .4px; color: #374151; margin: 3pt 0 6pt; }
+/* Prevent the section label from being stranded at the bottom of a page
+   without any of the cards/content that follow it. */
+.section-title { font-size: 8pt; font-weight: 700; letter-spacing: .4px; color: #374151; margin: 3pt 0 6pt; break-after: avoid; }
 
 /* ---------- summary ---------- */
 .summary { display: flex; align-items: stretch; }
@@ -107,6 +111,9 @@ table.cmp td { font-size: 7.5pt; }
 table.cmp th.l, table.cmp td.l { text-align: left; }
 table.cmp td.nw { white-space: nowrap; }
 table.cmp td.wrap { overflow-wrap: anywhere; }
+/* Repeat column headers when the comparison table spans pages (8+ units). */
+table.cmp thead { display: table-header-group; }
+table.cmp tbody tr { break-inside: avoid; }
 /* Visual gap between Data coverage and Incidents columns */
 table.cmp th:nth-child(8), table.cmp td:nth-child(8) {
   border-left: 0.7pt solid #e5e7eb; padding-left: 5pt;
@@ -118,6 +125,8 @@ td.o, b.o { color: #ea580c; font-weight: 600; } td.g { color: #16a34a; }
 
 /* ---------- charts ---------- */
 .charts .chart { margin-bottom: 3pt; }
+/* Keep each chart (caption + SVG) on the same page; the charts box itself is .frag. */
+.chart { break-inside: avoid; }
 .chart figcaption { font-size: 7pt; font-weight: 600; color: #4b5563; margin: 1pt 0; }
 .chart svg { width: 100%; height: auto; }
 .bandleg { display: flex; gap: 14pt; font-size: 6.4pt; color: #6b7280; margin-top: 2pt;
