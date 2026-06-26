@@ -44,12 +44,12 @@
     </div>
     {% endif %}
     <div class="head-title">
-      <h1>{{ m.branding.report_title }}{% if m.is_interim %} <span class="badge b-orange" style="font-size:0.65em;vertical-align:middle">{{ L.interim_label }}</span>{% endif %}</h1>
-      <div class="month">{{ m.period_label }}</div>
+      <h1>{{ m.branding.report_title }}</h1>
+      <div class="month">{{ m.period_label }}{% if m.is_interim %} <span class="badge b-orange interim-badge-inline">{{ L.interim_label }}</span>{% endif %}</div>
       <div class="hmeta">
         <div><span>{{ L.report_period }}:</span> {{ m.period_range_label }} ({{ m.timezone }})</div>
-        {% if m.is_interim %}<div class="interim-note">⚠ {{ L.interim_note.replace('{dt}', m.generated_at | dt) }}</div>{% endif %}
-        <div><span>{{ L.created_at }}:</span> {{ m.generated_at | dt }} · {{ m.timezone_label }}</div>
+        {% if m.is_interim %}<div class="interim-note">⚠ {{ L.interim_note.replace('{dt}', m.generated_at | dtlocal) }}</div>{% endif %}
+        <div><span>{{ L.created_at }}:</span> {{ m.generated_at | dtlocal }} · {{ m.timezone_label }}</div>
         <div><span>{{ L.report_id }}:</span> {{ m.uuid }}</div>
       </div>
     </div>
@@ -94,15 +94,15 @@
     <div class="box-head">{{ L.summary_table_title }}</div>
     <table class="cmp">
       <colgroup>
-        <col style="width:22%"><!-- unit name -->
-        <col style="width:14%"><!-- permitted range -->
-        <col style="width:8%"> <!-- min -->
-        <col style="width:8%"> <!-- avg -->
-        <col style="width:8%"> <!-- max -->
-        <col style="width:10%"><!-- outside range -->
-        <col style="width:8%"> <!-- coverage -->
-        <col style="width:5%"> <!-- incidents -->
-        <col style="width:17%"><!-- status -->
+        <col style="width:21%"><!-- unit name -->
+        <col style="width:13%"><!-- permitted range -->
+        <col style="width:7%"> <!-- min -->
+        <col style="width:7%"> <!-- avg -->
+        <col style="width:7%"> <!-- max -->
+        <col style="width:12%"><!-- outside range — needs room for two-line header -->
+        <col style="width:11%"><!-- coverage — needs room for two-line header -->
+        <col style="width:6%"> <!-- incidents -->
+        <col style="width:16%"><!-- status -->
       </colgroup>
       <thead>
         <tr>
@@ -192,7 +192,7 @@
         <tr>
           <td>{{ "%02d"|format(i.n) }}</td>
           <td class="l">{{ i.unit_name }}</td>
-          <td class="l">{{ i.opened_at | dt }}</td>
+          <td class="l">{{ i.opened_at | dtlocal }}</td>
           <td>{{ i.duration_seconds | dur }}</td>
           <td>{{ i.extreme_value_c | temp }}</td>
           <td class="l ft">{{ i.cause or "" }}</td>

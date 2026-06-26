@@ -73,7 +73,28 @@ def _fmt_dt(iso, locale: str) -> str:
     return dt.strftime("%Y-%m-%d %H:%M")
 
 
-def _env(locale: str) -> Environment:
+def _fmt_dt_local(iso: str, locale: str, tz: str) -> str:
+    """Format an ISO timestamp after converting it to the report's IANA timezone.
+
+    Timestamps stored in the model (generated_at, incident opened_at) are UTC.
+    Displaying them without conversion produces UTC times even though the report
+    header shows a local-time period range \u2014 causing the visible inconsistency
+    where 'data through 00:26' contradicts 'period ends at 02:26'.
+    """
+    if not iso:
+        return "\u2014"
+    try:
+        dt = datetime.fromisoformat(iso)
+        if dt.tzinfo is not None:
+            dt = dt.astimezone(ZoneInfo(tz))
+    except Exception:  # noqa: BLE001
+        return iso or "\u2014"
+    if locale == "de":
+        return dt.strftime("%d.%m.%Y, %H:%M")
+    return dt.strftime("%Y-%m-%d %H:%M")
+
+
+def _env(locale: str, tz: str = "UTC") -> Environment:
     env = Environment(
         loader=FileSystemLoader(str(_TEMPLATES)),
         autoescape=select_autoescape(["html", "xml"]),
@@ -83,6 +104,7 @@ def _env(locale: str) -> Environment:
     env.filters["pct"] = lambda v: _fmt_pct(v, locale)
     env.filters["lim"] = lambda v: _fmt_lim(v, locale)
     env.filters["dt"] = lambda v: _fmt_dt(v, locale)
+    env.filters["dtlocal"] = lambda v: _fmt_dt_local(v, locale, tz)
     env.filters["cov"] = lambda v, below=False: _fmt_cov(v, below, locale)
     return env
 
@@ -161,7 +183,7 @@ def render_html(model: ReportModel, *, logo_path: Path | None = None) -> str:
     from .accent import accent_tokens, normalize_accent
     bac = accent_tokens(normalize_accent(model.branding.accent))
 
-    template = _env(model.locale).get_template("report.html")
+    template = _env(model.locale, model.timezone).get_template("report.html")
     return template.render(
         m=model,
         L=L,
