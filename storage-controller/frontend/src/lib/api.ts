@@ -1,4 +1,5 @@
 import { apiUrl } from "./ingress";
+import i18n from "@/i18n";
 import type {
   AppSettings,
   AppStatus,
@@ -257,7 +258,7 @@ export const api = {
   sendTestEmail: (recipient: string) =>
     request<SmtpTestResult>("api/settings/email/test-email", {
       method: "POST",
-      body: JSON.stringify({ recipient }),
+      body: JSON.stringify({ recipient, locale: i18n.language || "en" }),
     }),
 
   listSchedules: () => request<Schedule[]>("api/schedules"),

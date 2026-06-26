@@ -2,6 +2,18 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.4.18 — 2026-06-26
+
+### Fixed
+
+- **SMTP hostname no longer auto-linked**: wrapped in `<a href="#">` styled as
+  plain text (`color:inherit; text-decoration:none; cursor:default`). Email
+  clients will not auto-link content already inside an explicit anchor, so
+  `mail.example.com` renders as inert text regardless of client settings.
+- **Test email locale**: the frontend now sends `locale: i18n.language` with
+  every test-email request, so a German UI generates a fully German test email
+  and an English UI generates a fully English one.
+
 ## 0.4.17 — 2026-06-26
 
 ### Fixed
