@@ -2,6 +2,37 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.4.21 — 2026-06-26
+
+### Fixed — Stage 1 residual defects
+
+**Compact single-page fit (3-unit installation)**
+- Overview charts rendered at `plot_h=80` when detail level is compact
+  (down from 132). For a 3-unit installation this saves ~50mm of vertical
+  space, allowing DQ statement and approval panels to fit on page 1 below
+  the incident summary rather than being pushed to an almost-empty page 2.
+- Added `dl-compact` class to body; CSS `.dl-compact .box` tightens box
+  margins and body padding moderately to further reduce vertical footprint
+  without affecting typography readability.
+
+**Detailed incident table flow (starts on page 2)**
+- Root cause: `.box { break-inside: avoid }` made the entire incident table
+  box indivisible. For a 3-unit installation with 20+ incidents the box
+  exceeded the remaining space on page 2 and WeasyPrint moved it wholesale
+  to page 3, leaving page 2 half-empty after the unit cards.
+- Fix: `<section class="box frag">` on the detailed incident table and
+  per-unit DQ table. The new `.box.frag { break-inside: auto }` CSS rule
+  allows these large tables to span pages while keeping all other boxes
+  (summary metrics, comparison table, unit cards, panels) non-fragmented.
+  Table rows still carry `break-inside: avoid` (from v0.4.20) and `<thead>`
+  still repeats via `display: table-header-group`.
+
+**Empty-value consistency ("Keine" → "—")**
+- The `val` Jinja2 filter now normalises a set of common empty-marker
+  strings — "keine", "none", "n/a", "-" — to em dash in addition to
+  Python None and empty string. Handles HA integrations that write "Keine"
+  as a default text value for cause/action/note fields.
+
 ## 0.4.20 — 2026-06-26
 
 ### Fixed — Stage 1 layout and pagination defects

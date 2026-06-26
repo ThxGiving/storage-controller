@@ -62,6 +62,11 @@ body {
 
 /* ---------- section container ---------- */
 .box { border: 0.5pt solid #e5e7eb; border-radius: 4px; margin-bottom: 9pt; break-inside: avoid; }
+/* Large tables (incident list, per-unit DQ) must be allowed to span pages. */
+.box.frag { break-inside: auto; }
+/* Compact density: tighter spacing to help single-page fit. */
+.dl-compact .box { margin-bottom: 6pt; }
+.dl-compact .box-body { padding: 6pt 7pt; }
 /* Restrained section headers: top accent line + neutral background.
    Keeps branding without overwhelming semantic content colors. */
 .box-head {

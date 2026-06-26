@@ -6,7 +6,7 @@
   <style>:root { --brand-accent: {{ bac.base }}; --brand-accent-fg: {{ bac.fg }}; --brand-accent-subtle: {{ bac.subtle_bg }}; }</style>
   <title>{{ m.branding.report_title }} — {{ m.period_label }}</title>
 </head>
-<body class="status-{{ m.summary.overall_status }}">
+<body class="status-{{ m.summary.overall_status }} dl-{{ dl }}">
 
 {# ======== ICON MACROS ======== #}
 {% macro statusbadge(u) -%}
@@ -318,7 +318,7 @@
 
   <!-- DETAILED: full incident table (all rows, extra columns, no split) -->
   {% if m.incidents_flat %}
-  <section class="box">
+  <section class="box frag">
     <div class="box-head">{{ L.incidents_detail_title }}</div>
     <table class="inc">
       <thead><tr>
@@ -349,7 +349,7 @@
   {% endif %}
 
   <!-- DETAILED: expanded data quality with per-unit table -->
-  <section class="box">
+  <section class="box frag">
     <div class="box-head">{{ L.data_quality_title }}</div>
     <div class="box-body dq">
       {% if m.data_quality_ok %}{{ ic_check_c("#16a34a") }}{% else %}{{ ic_triangle("#ea580c") }}{% endif %}

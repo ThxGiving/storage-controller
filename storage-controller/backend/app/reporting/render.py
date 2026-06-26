@@ -106,7 +106,8 @@ def _env(locale: str, tz: str = "UTC") -> Environment:
     env.filters["dt"] = lambda v: _fmt_dt(v, locale)
     env.filters["dtlocal"] = lambda v: _fmt_dt_local(v, locale, tz)
     env.filters["cov"] = lambda v, below=False: _fmt_cov(v, below, locale)
-    env.filters["val"] = lambda v: v if v else "—"  # value or em dash
+    _EMPTY = frozenset({"", "keine", "none", "n/a", "-", "–", "—"})
+    env.filters["val"] = lambda v: "—" if (v is None or str(v).strip().lower() in _EMPTY) else v
     return env
 
 
@@ -163,10 +164,15 @@ def render_html(model: ReportModel, *, logo_path: Path | None = None) -> str:
         if gen_epoch and x1 and gen_epoch < x1:
             x1 = gen_epoch
 
+    dl = (model.detail_level or "standard").lower()
+    if dl not in ("compact", "standard", "detailed"):
+        dl = "standard"
+
+    chart_plot_h = 80 if dl == "compact" else 132
     overview_svgs = [
         render_chart_svg(
             c, model.timezone, upper_label=L["upper_limit"], lower_label=L["lower_limit"],
-            x_start=x0, x_end=x1, locale=model.locale,
+            x_start=x0, x_end=x1, locale=model.locale, plot_h=chart_plot_h,
             note=_sparse_note(c, x0, x1, model.locale, model.timezone, L),
         )
         for c in model.overview_charts
@@ -183,10 +189,6 @@ def render_html(model: ReportModel, *, logo_path: Path | None = None) -> str:
     from .. import __version__
     from .accent import accent_tokens, normalize_accent
     bac = accent_tokens(normalize_accent(model.branding.accent))
-
-    dl = (model.detail_level or "standard").lower()
-    if dl not in ("compact", "standard", "detailed"):
-        dl = "standard"
 
     template = _env(model.locale, model.timezone).get_template("report.html")
     return template.render(
