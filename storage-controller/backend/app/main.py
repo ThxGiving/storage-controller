@@ -18,6 +18,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from . import __version__
+from .api import backup as backup_api
 from .api import (
     dashboard,
     defrost,
@@ -29,15 +30,10 @@ from .api import (
     status,
     storage_units,
 )
-from .api import (
-    diagnostics as diagnostics_api,
-)
-from .api import backup as backup_api
+from .api import diagnostics as diagnostics_api
 from .api import email_settings as email_settings_api
 from .api import history_import as history_import_api
-from .api import (
-    maintenance as maintenance_api,
-)
+from .api import maintenance as maintenance_api
 from .api import report_branding as report_branding_api
 from .api import reports as reports_api
 from .api import schedules as schedules_api

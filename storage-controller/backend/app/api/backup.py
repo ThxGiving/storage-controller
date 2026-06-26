@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import logging
 from datetime import UTC, datetime
-from pathlib import Path
 
 from fastapi import APIRouter, Depends, Request, UploadFile
 from fastapi.responses import StreamingResponse
@@ -26,7 +25,6 @@ from ..backup import (
     ValidationResult,
     create_backup,
     execute_restore,
-    list_backup_files,
     validate_archive,
 )
 from ..config import get_settings
@@ -247,7 +245,9 @@ async def restore_backup_endpoint(
             object_type="backup_job",
             object_id=file.filename or "upload",
             details_json=(
-                f'{{"app_version":"{result.manifest_summary.get("app_version") if result.manifest_summary else ""}"}}'
+                f'{{"app_version":"'
+                f'{result.manifest_summary.get("app_version") if result.manifest_summary else ""}'
+                f'"}}'
             ),
         )
     )
