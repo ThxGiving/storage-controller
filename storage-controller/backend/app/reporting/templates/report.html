@@ -20,6 +20,20 @@
 {% macro ic_check_c(c) -%}<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="{{ c }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.3l2.4 2.4 4.6-5.1"/></svg>{%- endmacro %}
 {% macro ic_triangle(c) -%}<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="{{ c }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.3 2.5 18a1.5 1.5 0 0 0 1.3 2.2h16.4a1.5 1.5 0 0 0 1.3-2.2L13 4.3a1.2 1.2 0 0 0-2 0z"/><path d="M12 9.5v4"/><path d="M12 16.5h.01"/></svg>{%- endmacro %}
 {% macro ic_xcircle(c) -%}<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="{{ c }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>{%- endmacro %}
+{# incident_badge: shows lifecycle state (open/resolved) and review state as separate concepts.
+   open  + unreviewed → red Active
+   open  + reviewed   → red Active  + blue ✓ Reviewed  (still ongoing, but acknowledged)
+   resolved + reviewed   → blue ✓ Reviewed
+   resolved + unreviewed → orange Pending #}
+{% macro incident_badge(i) -%}
+{% if i.state == 'open' -%}
+<span class="badge b-red">{{ L.status_active }}</span>{% if i.documented %} <span class="badge b-blue">✓ {{ L.status_reviewed }}</span>{% endif %}
+{%- elif i.documented -%}
+<span class="badge b-blue">✓ {{ L.status_reviewed }}</span>
+{%- else -%}
+<span class="badge b-orange">{{ L.status_pending }}</span>
+{%- endif %}
+{%- endmacro %}
 
 {% set verdict_color = {"ok": "#16a34a", "documented": "#2563eb", "open": "#dc2626", "incomplete": "#6b7280"}[m.summary.verdict] %}
 
@@ -275,7 +289,7 @@
           <td>{{ i.extreme_value_c | temp }}</td>
           <td class="l ft">{{ i.cause | val }}</td>
           <td class="l ft">{{ i.corrective_action | val }}</td>
-          <td class="badge-cell">{% if i.documented %}<span class="badge b-blue">✓ {{ L.status_reviewed }}</span>{% else %}<span class="badge b-orange">{{ L.status_reviewed }}</span>{% endif %}</td>
+          <td class="badge-cell">{{ incident_badge(i) }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -340,7 +354,7 @@
           <td class="l ft">{{ i.cause | val }}</td>
           <td class="l ft">{{ i.corrective_action | val }}</td>
           <td class="l ft">{{ i.note | val }}</td>
-          <td class="badge-cell">{% if i.documented %}<span class="badge b-blue">✓ {{ L.status_reviewed }}</span>{% else %}<span class="badge b-orange">{{ L.status_reviewed }}</span>{% endif %}</td>
+          <td class="badge-cell">{{ incident_badge(i) }}</td>
         </tr>
         {% endfor %}
       </tbody>

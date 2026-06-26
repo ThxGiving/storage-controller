@@ -2,6 +2,39 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.4.23 — 2026-06-26
+
+### Fixed — Incident lifecycle state vs review state
+
+The incident status badge in both the standard (6-row) and detailed (all-rows)
+incident tables previously used only `documented` (review state) as its sole
+discriminant, making every reviewed incident look identical regardless of
+whether it was still open or had been resolved.
+
+**Root cause:** An active incident with `documented=True` rendered
+`✓ Reviewed` in blue — indistinguishable from a closed, reviewed incident.
+Incident 94 demonstrated this: `closed_at=None` (still active) + `documented=True`
+→ blue "✓ Reviewed" despite having no end timestamp.
+
+**Fix:** The `incident_badge` Jinja2 macro now treats lifecycle state (`i.state`)
+and review state (`i.documented`) as separate, independent concepts:
+
+| `state`   | `documented` | Badge |
+|-----------|-------------|-------|
+| open      | False       | 🔴 Aktiv |
+| open      | True        | 🔴 Aktiv  +  🔵 ✓ Geprüft |
+| resolved  | True        | 🔵 ✓ Geprüft |
+| resolved  | False       | 🟠 Ausstehend |
+
+New label keys added: `status_active` (EN: Active / DE: Aktiv) and
+`status_pending` (EN: Pending / DE: Ausstehend).
+
+### Added — Deterministic incident state tests
+
+`tests/test_report_incident_states.py` covers all four combinations of
+lifecycle × review state, end-timestamp rendering, summary count agreement,
+and English locale labels (9 assertions, 287 total passing).
+
 ## 0.4.22 — 2026-06-26
 
 ### Added — Render-time diagnostics logging
