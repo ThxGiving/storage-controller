@@ -2,6 +2,14 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.9.2 — 2026-06-26
+
+### Fixed
+
+- Restore did not restart the add-on: SIGTERM causes a clean s6 shutdown without restart in HA. Now uses the HA Supervisor API (`POST /addons/self/restart`) so the supervisor performs the restart. Falls back to SIGTERM when running outside HA.
+
+---
+
 ## 0.9.1 — 2026-06-26
 
 ### Fixed
