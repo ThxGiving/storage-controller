@@ -4,6 +4,7 @@ import type {
   AppSettings,
   AppStatus,
   AssignmentCurrentValue,
+  BackupJob,
   ConnectionStatus,
   DashboardResponse,
   DefrostCycle,
@@ -27,6 +28,7 @@ import type {
   ReportBranding,
   ReportCreate,
   ReportPreview,
+  RestoreResult,
   StorageUnit,
   StorageUnitInput,
   SmtpSettings,
@@ -35,6 +37,7 @@ import type {
   Schedule,
   ScheduleInput,
   ScheduleRun,
+  ValidationResult,
 } from "./types";
 
 export interface SamplesParams {
@@ -282,4 +285,21 @@ export const api = {
     request<ScheduleRun>(`api/schedules/runs/${runId}/resend`, { method: "POST" }),
   cancelRun: (runId: number) =>
     request<ScheduleRun>(`api/schedules/runs/${runId}/cancel`, { method: "POST" }),
+
+  // ── Backup & Restore (Phase 7) ─────────────────────────────────────────────
+  createBackup: () => request<BackupJob>("api/backup", { method: "POST" }),
+  listBackups: () => request<BackupJob[]>("api/backup"),
+  deleteBackup: (id: number) =>
+    request<{ deleted: boolean; filename: string }>(`api/backup/${id}`, { method: "DELETE" }),
+  downloadBackupUrl: (id: number) => apiUrl(`api/backup/${id}/download`),
+  validateBackup: (file: File): Promise<ValidationResult> => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return request<ValidationResult>("api/backup/validate", { method: "POST", body: fd });
+  },
+  restoreBackup: (file: File): Promise<RestoreResult> => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return request<RestoreResult>("api/backup/restore", { method: "POST", body: fd });
+  },
 };

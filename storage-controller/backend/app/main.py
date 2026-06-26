@@ -32,6 +32,7 @@ from .api import (
 from .api import (
     diagnostics as diagnostics_api,
 )
+from .api import backup as backup_api
 from .api import email_settings as email_settings_api
 from .api import history_import as history_import_api
 from .api import (
@@ -41,6 +42,7 @@ from .api import report_branding as report_branding_api
 from .api import reports as reports_api
 from .api import schedules as schedules_api
 from .api import settings as settings_api
+from .backup import complete_pending_restore
 from .collector import Collector
 from .config import get_settings
 from .db import dispose_engine, get_engine, get_session_factory
@@ -90,6 +92,10 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
     configure_logging(settings.log_level)
     log.info("Refrigeration Logbook %s starting", __version__)
+
+    # Complete any pending restore BEFORE opening the database engine.
+    # This replaces the live DB and file directories with the staged backup.
+    complete_pending_restore(settings.data_dir, settings.database_path)
 
     # Initialise the database engine (tables are created by Alembic migrations).
     get_engine()
@@ -245,6 +251,7 @@ def create_app() -> FastAPI:
     app.include_router(maintenance_api.router)
     app.include_router(email_settings_api.router)
     app.include_router(schedules_api.router)
+    app.include_router(backup_api.router)
 
     _mount_frontend(app)
     return app

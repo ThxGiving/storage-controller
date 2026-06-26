@@ -992,3 +992,38 @@ class EmailDelivery(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+# ── Phase 7: Backup jobs ───────────────────────────────────────────────────────
+
+
+class BackupStatus(str, enum.Enum):
+    completed = "completed"
+    failed = "failed"
+
+
+class BackupJob(Base):
+    """Tracks every backup archive created by the application.
+
+    Each row corresponds to one ZIP file on disk under ``/data/backups/``.
+    Safety backups (auto-created before a restore) are also tracked here with
+    ``is_safety_backup = True``.
+    """
+
+    __tablename__ = "backup_jobs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    status: Mapped[str] = mapped_column(
+        String(20), default=BackupStatus.completed.value, nullable=False
+    )
+    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    size_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    format_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    app_version: Mapped[str] = mapped_column(String(20), nullable=False, default="")
+    schema_revision: Mapped[str] = mapped_column(String(40), nullable=False, default="")
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_safety_backup: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

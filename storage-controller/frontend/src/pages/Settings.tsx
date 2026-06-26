@@ -13,6 +13,7 @@ import { formatBytes, formatDateTime } from "@/lib/utils";
 import { getStoredPreference, setLanguagePreference } from "@/i18n";
 import { SUPPORTED_LOCALES, SYSTEM_LANGUAGE } from "@/i18n/locales";
 import { DefrostDiagnosticsCard } from "@/features/diagnostics/DefrostDiagnosticsCard";
+import { BackupRestoreCard } from "@/features/backup/BackupRestoreCard";
 
 export function SettingsPage() {
   const { t } = useTranslation(["settings", "common"]);
@@ -175,6 +176,8 @@ export function SettingsPage() {
           {save.isPending ? t("settings:saving") : t("settings:save")}
         </Button>
       </div>
+
+      <BackupRestoreCard />
 
       <DefrostDiagnosticsCard />
 

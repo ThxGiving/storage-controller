@@ -2,6 +2,37 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.9.0 — 2026-06-26
+
+### Phase 7 — Hardening baseline + Backup & Restore (Section 1)
+
+This release begins Phase 7 hardening.  The report feature set is now frozen.
+
+**Backup & Restore — new feature**
+
+- Full application-level backup in a single ZIP archive: SQLite snapshot
+  (via the backup API — consistent under WAL), finalized reports, branding
+  uploads, and a manifest with format version, app version, schema revision,
+  creation timestamp, file sizes and SHA-256 checksums.
+- Archive validation: format-version check, schema-compatibility check
+  (newer-than-installed schema is rejected), file-checksum verification,
+  SQLite `integrity_check` and `foreign_key_check`, path-traversal guard.
+- Restore flow: validate → create safety backup automatically → extract to
+  staging → write `.restore_pending` marker → SIGTERM triggers HA supervisor
+  restart → on next startup the staged data replaces the live data atomically
+  using the SQLite backup API.
+- API: `POST /api/backup`, `GET /api/backup`, `GET /api/backup/{id}/download`,
+  `DELETE /api/backup/{id}`, `POST /api/backup/validate`,
+  `POST /api/backup/restore`.
+- UI: Settings → Backup & Restore — create, list (download / delete), restore
+  from file with inline validation summary and explicit confirmation.
+- Migration `0012_backups`: `backup_jobs` table tracks all backup archives.
+- 30 new deterministic tests (all synchronous, no subprocess or network).
+
+**Version bump: 0.4.24 → 0.9.0** (Phase 7 feature-freeze baseline)
+
+---
+
 ## 0.4.24 — 2026-06-26
 
 ### Changed — Stage 2: dynamic pagination for large installations

@@ -797,3 +797,42 @@ export interface ScheduleRun {
   finished_at: string | null;
   delivery: EmailDelivery | null;
 }
+
+// ── Phase 7: Backup & Restore ─────────────────────────────────────────────────
+
+export interface BackupManifestSummary {
+  format_version: number;
+  app_version: string;
+  schema_revision: string;
+  created_at: string;
+  note: string | null;
+  file_count: number;
+  db_size: number | null;
+}
+
+export interface BackupJob {
+  id: number;
+  created_at: string;
+  status: "completed" | "failed";
+  filename: string;
+  size_bytes: number | null;
+  format_version: number;
+  app_version: string;
+  schema_revision: string;
+  note: string | null;
+  is_safety_backup: boolean;
+  error_message: string | null;
+}
+
+export interface ValidationResult {
+  valid: boolean;
+  issues: string[];
+  warnings: string[];
+  manifest: BackupManifestSummary | null;
+}
+
+export interface RestoreResult {
+  status: string;
+  safety_backup: string;
+  message: string;
+}
