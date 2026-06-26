@@ -2,6 +2,20 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.9.4 — 2026-06-26
+
+### Added
+
+- Phase 7 / Section 2: Home Assistant Backup Integration hardening
+  - Startup WAL checkpoint (`PRAGMA wal_checkpoint(TRUNCATE)`) ensures DB consistency after HA backup restore
+  - Startup job reconciliation: `ScheduleRun` and `EmailDelivery` records stuck in `generating`/`sending` state after a crash or restart are immediately marked `failed`
+  - New `GET /api/settings/email/status` endpoint returns SMTP credential status (configured, password_present, requires_reentry) without exposing the password — for post-restore verification
+  - SMTP re-entry warning banner in Backup & Restore card when host is configured but password is absent
+  - Updated info panel: accurate SMTP handling description (password stored in DB, verify after restore)
+  - Documentation: `docs/backup-restore.md` — comparison table, recovery procedures, known limitations
+
+---
+
 ## 0.9.3 — 2026-06-26
 
 ### Fixed

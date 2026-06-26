@@ -39,5 +39,6 @@
   "haBackupInfo": "The Home Assistant backup includes the /data directory, which contains the database, reports, branding, and configuration. SMTP passwords must be re-entered after reinstalling the add-on.",
   "whatIsIncluded": "What does the app backup include?",
   "includedItems": "Database, generated reports, branding assets (logo), configuration",
-  "notIncluded": "Not included: SMTP passwords (must be re-entered after restore)"
+  "notIncluded": "SMTP password is stored in the database — verify by sending a test email after restore.",
+  "smtpPasswordCheck": "Check SMTP password after restore — confirm settings and send a test email."
 }

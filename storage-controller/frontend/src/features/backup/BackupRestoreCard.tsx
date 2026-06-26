@@ -96,6 +96,12 @@ export function BackupRestoreCard() {
   const { t } = useTranslation("backup");
   const qc = useQueryClient();
 
+  // ── SMTP status (post-restore warning) ────────────────────────────────────
+  const smtpStatusQuery = useQuery({
+    queryKey: ["smtp-status"],
+    queryFn: api.getSmtpStatus,
+  });
+
   // ── Backup list ────────────────────────────────────────────────────────────
   const backupsQuery = useQuery({
     queryKey: ["backups"],
@@ -175,6 +181,14 @@ export function BackupRestoreCard() {
       </CardHeader>
 
       <CardContent className="space-y-6">
+        {/* ── SMTP re-entry warning (shown after restore if password absent) ── */}
+        {smtpStatusQuery.data?.requires_reentry && (
+          <div className="flex items-start gap-1.5 rounded-md border border-amber-400/40 bg-amber-50/60 dark:bg-amber-950/20 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{t("smtpPasswordCheck")}</span>
+          </div>
+        )}
+
         {/* ── Create & list ─────────────────────────────────────────────── */}
         <section>
           <div className="mb-3 flex items-center justify-between gap-3">

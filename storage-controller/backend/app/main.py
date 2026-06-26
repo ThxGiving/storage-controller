@@ -49,12 +49,67 @@ from .ha.manager import HAConnectionManager
 from .incident_engine import IncidentEngine
 from .logging_config import configure_logging
 from .maintenance import MaintenanceRunner
+from .models import DeliveryState, EmailDelivery, ScheduleRun, ScheduleRunState
 from .scheduler import SchedulerRunner
 from .seed import run_startup_seed
 
 log = logging.getLogger("api")
 
 STATIC_DIR = Path(__file__).parent / "static"
+
+
+async def _checkpoint_wal() -> None:
+    """Run a WAL checkpoint to ensure the DB is consistent after startup."""
+    from sqlalchemy import text
+
+    try:
+        async with get_session_factory()() as session:
+            await session.execute(text("PRAGMA wal_checkpoint(TRUNCATE)"))
+            await session.commit()
+    except Exception as exc:  # noqa: BLE001
+        log.warning("startup: WAL checkpoint skipped: %s", exc)
+
+
+async def _reconcile_stale_jobs() -> None:
+    """Mark any scheduler jobs that were interrupted mid-run as failed.
+
+    Records stuck in ``generating`` or ``sending`` state indicate the process
+    was killed before the run or delivery could finish.  We cannot resume them
+    safely, so we fail them immediately to let the scheduler retry normally.
+    """
+    from sqlalchemy import select
+
+    stale_run_states = {ScheduleRunState.generating.value, ScheduleRunState.sending.value}
+
+    async with get_session_factory()() as session:
+        # ── ScheduleRun ────────────────────────────────────────────────────────
+        result = await session.execute(
+            select(ScheduleRun).where(ScheduleRun.state.in_(stale_run_states))
+        )
+        stale_runs = result.scalars().all()
+        for run in stale_runs:
+            log.warning(
+                "startup: reconciling stale ScheduleRun id=%d state=%s", run.id, run.state
+            )
+            run.state = ScheduleRunState.failed.value
+            run.generation_error = "Interrupted by restart"
+            session.add(run)
+
+        # ── EmailDelivery ──────────────────────────────────────────────────────
+        result = await session.execute(
+            select(EmailDelivery).where(
+                EmailDelivery.state == DeliveryState.sending.value
+            )
+        )
+        stale_deliveries = result.scalars().all()
+        for delivery in stale_deliveries:
+            log.warning(
+                "startup: reconciling stale EmailDelivery id=%d", delivery.id
+            )
+            delivery.state = DeliveryState.failed.value
+            session.add(delivery)
+
+        await session.commit()
 
 
 class IngressPathMiddleware:
@@ -95,6 +150,15 @@ async def lifespan(app: FastAPI):
 
     # Initialise the database engine (tables are created by Alembic migrations).
     get_engine()
+
+    # Ensure any uncommitted WAL transactions from before a restore are handled.
+    await _checkpoint_wal()
+
+    # Mark interrupted scheduler jobs as failed so they can be retried.
+    try:
+        await _reconcile_stale_jobs()
+    except Exception as exc:  # noqa: BLE001
+        log.warning("startup: stale-job reconciliation skipped: %s", type(exc).__name__)
 
     # Seed built-in monitoring profiles (always) and demo data (opt-in only).
     try:

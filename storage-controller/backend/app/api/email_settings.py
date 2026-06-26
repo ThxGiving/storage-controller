@@ -67,6 +67,27 @@ def _out(row: SmtpSettings) -> SmtpSettingsOut:
     )
 
 
+@router.get("/status")
+async def get_smtp_status(db: AsyncSession = Depends(get_db)) -> dict:
+    """Return SMTP credential status without exposing the password.
+
+    Intended for post-restore checks: ``requires_reentry`` is True when SMTP
+    appears configured (host set) but the stored password is absent.
+    """
+    row = await get_or_create(db)
+    await db.commit()
+    host_set = bool((row.host or "").strip())
+    password_present = row.password_secret is not None and row.password_secret != ""
+    needs_password = row.auth_enabled
+    configured = host_set
+    return {
+        "configured": configured,
+        "host_set": host_set,
+        "password_present": password_present,
+        "requires_reentry": configured and needs_password and not password_present,
+    }
+
+
 @router.get("", response_model=SmtpSettingsOut)
 async def get_email_settings(db: AsyncSession = Depends(get_db)) -> SmtpSettingsOut:
     row = await get_or_create(db)

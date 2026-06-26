@@ -836,3 +836,10 @@ export interface RestoreResult {
   safety_backup: string;
   message: string;
 }
+
+export interface SmtpCredentialStatus {
+  configured: boolean;
+  host_set: boolean;
+  password_present: boolean;
+  requires_reentry: boolean;
+}

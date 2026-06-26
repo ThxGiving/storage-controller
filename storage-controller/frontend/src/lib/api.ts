@@ -29,6 +29,7 @@ import type {
   ReportCreate,
   ReportPreview,
   RestoreResult,
+  SmtpCredentialStatus,
   StorageUnit,
   StorageUnitInput,
   SmtpSettings,
@@ -253,6 +254,7 @@ export const api = {
     request<ReportBranding>("api/report-branding/logo", { method: "DELETE" }),
 
   // --- Phase 6: SMTP + schedules ---
+  getSmtpStatus: () => request<SmtpCredentialStatus>("api/settings/email/status"),
   getEmailSettings: () => request<SmtpSettings>("api/settings/email"),
   updateEmailSettings: (input: SmtpSettingsInput) =>
     request<SmtpSettings>("api/settings/email", { method: "PUT", body: JSON.stringify(input) }),

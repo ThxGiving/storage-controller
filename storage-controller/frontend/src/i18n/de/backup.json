@@ -39,5 +39,6 @@
   "haBackupInfo": "Das Home Assistant Backup enthält das Verzeichnis /data. Es umfasst Datenbank, Berichte, Branding und Konfiguration. SMTP-Passwörter müssen nach einer Neuinstallation erneut eingegeben werden.",
   "whatIsIncluded": "Was ist im App-Backup enthalten?",
   "includedItems": "Datenbank, generierte Berichte, Branding-Dateien (Logo), Konfiguration",
-  "notIncluded": "Nicht enthalten: SMTP-Passwörter (werden nach der Wiederherstellung erneut eingegeben)"
+  "notIncluded": "SMTP-Passwort ist in der Datenbank gespeichert — nach der Wiederherstellung durch Test-E-Mail prüfen.",
+  "smtpPasswordCheck": "SMTP-Passwort nach Wiederherstellung prüfen — Einstellungen bestätigen und Test-E-Mail senden."
 }
