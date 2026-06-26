@@ -30,6 +30,7 @@ router = APIRouter(prefix="/api/report-branding", tags=["reports"])
 
 _MAX_LOGO_BYTES = 2 * 1024 * 1024
 _ALLOWED = {"image/png": ".png", "image/jpeg": ".jpg", "image/svg+xml": ".svg"}
+_LOGO_MIME = {".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml"}
 
 
 def _normalize_logo(data: bytes, suffix: str) -> bytes:
@@ -57,7 +58,9 @@ def _normalize_logo(data: bytes, suffix: str) -> bytes:
                 src = ImageCms.ImageCmsProfile(io.BytesIO(icc))
                 dst = ImageCms.createProfile("sRGB")
                 out_mode = "RGBA" if img.mode in ("RGBA", "LA") else "RGB"
-                img = ImageCms.profileToProfile(img, src, dst, renderingIntent=0, outputMode=out_mode)
+                img = ImageCms.profileToProfile(
+                    img, src, dst, renderingIntent=0, outputMode=out_mode
+                )
             except Exception:
                 img = img.convert("RGBA" if "A" in img.mode else "RGB")
         elif img.mode not in ("RGB", "RGBA", "L", "LA"):
@@ -190,5 +193,5 @@ async def get_logo(db: AsyncSession = Depends(get_db)):
     path = uploads_root() / b.logo_filename
     if not path.is_file():
         raise AppError("logo_not_found", status_code=404)
-    media = {"png": "image/png", "jpg": "image/jpeg", "svg": "image/svg+xml"}.get(path.suffix.lstrip("."), "image/png")
+    media = _LOGO_MIME.get(path.suffix.lower(), "image/png")
     return FileResponse(path, media_type=media)

@@ -240,7 +240,8 @@ _LABELS: dict[str, dict[str, str]] = {
         "interim_label": "Zwischenbericht",
         "interim_note": (
             "Dieser Bericht enthält Daten bis {dt}. "
-            "Der Kalendermonat ist noch nicht abgeschlossen — kein abschließendes Konformitätsdokument."
+            "Der Kalendermonat ist noch nicht abgeschlossen"
+            " — kein abschließendes Konformitätsdokument."
         ),
         "incidents_showing": "Es werden {shown} von {total} Vorfällen angezeigt",
     },

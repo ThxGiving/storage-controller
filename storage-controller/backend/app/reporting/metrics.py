@@ -331,7 +331,9 @@ def _consolidate_incidents(incidents: list[IncidentSummary]) -> list[IncidentSum
                 opened_at=prev.opened_at,
                 closed_at=inc.closed_at,
                 duration_seconds=prev.duration_seconds + inc.duration_seconds,
-                extreme_value_c=_worse_extreme(prev.extreme_value_c, inc.extreme_value_c, prev.type),
+                extreme_value_c=_worse_extreme(
+                    prev.extreme_value_c, inc.extreme_value_c, prev.type
+                ),
                 limit_value_c=prev.limit_value_c or inc.limit_value_c,
                 defrost_overlap=prev.defrost_overlap or inc.defrost_overlap,
                 acknowledged=prev.acknowledged and inc.acknowledged,

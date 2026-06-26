@@ -202,7 +202,8 @@ def _logo_data_url(logo_filename: str | None) -> str | None:
         if not p.is_file():
             return None
         suffix = p.suffix.lower()
-        mime = {"png": "image/png", "jpg": "image/jpeg", "svg": "image/svg+xml"}.get(suffix.lstrip("."), "image/png")
+        _mime_map = {"png": "image/png", "jpg": "image/jpeg", "svg": "image/svg+xml"}
+        mime = _mime_map.get(suffix.lstrip("."), "image/png")
         data = p.read_bytes()
         return f"data:{mime};base64,{base64.b64encode(data).decode('ascii')}"
     except OSError:
@@ -237,7 +238,7 @@ def _attachments(report: Report, formats: list[str]) -> list[tuple[str, str, byt
 
 
 def _default_bac() -> dict:
-    from .reporting.accent import normalize_accent, accent_tokens
+    from .reporting.accent import accent_tokens, normalize_accent
     return accent_tokens(normalize_accent(None))
 
 
@@ -340,7 +341,7 @@ def compose(
         or branding.get("organization_name")
         or "Refrigeration Logbook"
     )
-    from .reporting.accent import normalize_accent, accent_tokens
+    from .reporting.accent import accent_tokens, normalize_accent
     bac = accent_tokens(normalize_accent(branding.get("accent")))
     period = model.get("period_label", f"{report.period_year}-{report.period_month:02d}")
 
@@ -366,8 +367,10 @@ def compose(
 
     ctx = {
         "lang": locale,
-        "subject": (_SUBJECT_INTERIM if is_interim else _SUBJECT).get(locale, _SUBJECT["en"]).format(
-            site=site, period=period
+        "subject": (
+            (_SUBJECT_INTERIM if is_interim else _SUBJECT)
+            .get(locale, _SUBJECT["en"])
+            .format(site=site, period=period)
         ),
         "logo_data_url": _logo_data_url(branding.get("logo_filename")),
         "org_name": branding.get("organization_name") or "",
@@ -438,6 +441,7 @@ def compose_test_email(
 ) -> EmailMessage:
     """Build a branded SMTP test email (no report attached)."""
     from datetime import UTC, datetime
+
     from . import __version__
 
     L = _L_TEST.get(locale[:2], _L_TEST["en"])
@@ -449,7 +453,7 @@ def compose_test_email(
         "plain": "Plain (unencrypted)",
     }.get(getattr(cfg, "security_mode", "starttls") or "starttls", "STARTTLS")
 
-    from .reporting.accent import normalize_accent, accent_tokens
+    from .reporting.accent import accent_tokens, normalize_accent
     bac = accent_tokens(normalize_accent(accent_color))
 
     subject = f"Refrigeration Logbook — {L['title']}"

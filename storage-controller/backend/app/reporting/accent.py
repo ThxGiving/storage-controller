@@ -72,22 +72,13 @@ def accent_tokens(accent: str) -> dict:
         sfb = int(b * 0.55)
     secondary_fg = f"#{sfr:02x}{sfg:02x}{sfb:02x}"
 
-    subtle_bg = "#{:02x}{:02x}{:02x}".format(
-        int(r * 0.12 + 255 * 0.88),
-        int(g * 0.12 + 255 * 0.88),
-        int(b * 0.12 + 255 * 0.88),
-    )
-    border = "#{:02x}{:02x}{:02x}".format(
-        int(r * 0.35 + 255 * 0.65),
-        int(g * 0.35 + 255 * 0.65),
-        int(b * 0.35 + 255 * 0.65),
-    )
-    dark = "#{:02x}{:02x}{:02x}".format(int(r * 0.80), int(g * 0.80), int(b * 0.80))
-    light = "#{:02x}{:02x}{:02x}".format(
-        int(r * 0.45 + 255 * 0.55),
-        int(g * 0.45 + 255 * 0.55),
-        int(b * 0.45 + 255 * 0.55),
-    )
+    def _mix(c: int, w: float) -> str:
+        return f"{int(c * w + 255 * (1 - w)):02x}"
+
+    subtle_bg = f"#{_mix(r, 0.12)}{_mix(g, 0.12)}{_mix(b, 0.12)}"
+    border = f"#{_mix(r, 0.35)}{_mix(g, 0.35)}{_mix(b, 0.35)}"
+    dark = f"#{int(r * 0.80):02x}{int(g * 0.80):02x}{int(b * 0.80):02x}"
+    light = f"#{_mix(r, 0.45)}{_mix(g, 0.45)}{_mix(b, 0.45)}"
 
     fg_lum = 1.0 if fg == "#ffffff" else _luminance(17, 24, 39)
     low_contrast_warning = _contrast(lum, fg_lum) < 4.5
