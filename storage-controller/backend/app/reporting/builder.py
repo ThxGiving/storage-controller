@@ -223,9 +223,10 @@ async def build_report_model(
             flat.append(
                 FlatIncident(
                     n=0, unit_name=unit.name, opened_at=i.opened_at,
+                    closed_at=i.closed_at,
                     duration_seconds=i.duration_seconds, extreme_value_c=i.extreme_value_c,
-                    cause=i.cause, corrective_action=i.corrective_action, state=i.state,
-                    documented=i.documented,
+                    cause=i.cause, corrective_action=i.corrective_action,
+                    note=i.note, state=i.state, documented=i.documented,
                 )
             )
 

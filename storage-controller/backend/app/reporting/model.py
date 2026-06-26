@@ -136,10 +136,12 @@ class FlatIncident(BaseModel):
     n: int
     unit_name: str
     opened_at: str
+    closed_at: str | None = None
     duration_seconds: int
     extreme_value_c: float | None = None
     cause: str | None = None
     corrective_action: str | None = None
+    note: str | None = None
     state: str
     documented: bool = False
 

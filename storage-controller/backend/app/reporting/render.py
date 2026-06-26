@@ -183,6 +183,10 @@ def render_html(model: ReportModel, *, logo_path: Path | None = None) -> str:
     from .accent import accent_tokens, normalize_accent
     bac = accent_tokens(normalize_accent(model.branding.accent))
 
+    dl = (model.detail_level or "standard").lower()
+    if dl not in ("compact", "standard", "detailed"):
+        dl = "standard"
+
     template = _env(model.locale, model.timezone).get_template("report.html")
     return template.render(
         m=model,
@@ -192,6 +196,7 @@ def render_html(model: ReportModel, *, logo_path: Path | None = None) -> str:
         logo_uri=_logo_data_uri(logo_path),
         version=__version__,
         bac=bac,
+        dl=dl,
     )
 
 

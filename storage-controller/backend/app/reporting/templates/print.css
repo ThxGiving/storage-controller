@@ -167,6 +167,19 @@ table.inc td.ft { color: #374151; }
 .interim-note { font-size: 6.5pt; color: #c2410c; margin-top: 1.5pt; }
 .trunc-note { font-size: 6.5pt; color: #6b7280; margin: 3pt 0 0; font-style: italic; }
 
+/* ---------- compact incident summary ---------- */
+.cim-row { display: flex; gap: 7pt; }
+.cim-metric { flex: 1; text-align: center; padding: 5pt 4pt; border: 0.5pt solid #e5e7eb; border-radius: 4px; }
+.cim-metric .num { font-size: 12pt; font-weight: 700; color: #111827; line-height: 1.1; }
+.cim-metric .num.r { color: #dc2626; } .cim-metric .num.o { color: #ea580c; }
+.cim-metric .lbl { font-size: 6pt; color: #6b7280; margin-top: 1pt; }
+
+/* ---------- per-unit DQ table (detailed) ---------- */
+table.dq-tbl { width: 100%; border-collapse: collapse; margin-top: 5pt; }
+table.dq-tbl th, table.dq-tbl td { padding: 2.4pt 5pt; font-size: 7pt; border-bottom: 0.5pt solid #eef0f2; text-align: right; }
+table.dq-tbl th { font-size: 6.2pt; text-transform: uppercase; color: #9ca3af; font-weight: 600; vertical-align: bottom; }
+table.dq-tbl th.l, table.dq-tbl td.l { text-align: left; }
+
 /* ---------- screen preview (ignored by WeasyPrint) ---------- */
 @media screen {
   body { background: #e5e7eb; padding: 16px; margin: 0; }

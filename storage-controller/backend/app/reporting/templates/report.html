@@ -24,7 +24,7 @@
 <span class="src set-pagelabel">{{ L.page }}</span>
 <span class="src set-pageof">{{ L.of }}</span>
 
-<!-- ============================ PAGE 1 ============================ -->
+<!-- ============================ PAGE 1 (all levels) ============================ -->
 <section class="page">
   <span class="src set-footleft">Refrigeration Logbook v{{ version }}</span>
 
@@ -148,7 +148,8 @@
   </section>
 </section>
 
-<!-- ============================ PAGE 2 ============================ -->
+<!-- ============================ PAGE 2 (standard + detailed) ============================ -->
+{% if dl != 'compact' %}
 <section class="page page-2">
   <span class="src set-footleft">{{ m.branding.disclaimer or L.disclaimer_default }}</span>
 
@@ -178,7 +179,8 @@
     {% endfor %}
   </div>
 
-  <!-- VORFÄLLE -->
+  <!-- VORFÄLLE — STANDARD (first 6 with truncation note) -->
+  {% if dl == 'standard' %}
   {% if m.incidents_flat %}
   {% set inc_total = m.incidents_flat | length %}
   <section class="box">
@@ -209,8 +211,45 @@
     {% endif %}
   </section>
   {% endif %}
+  {% endif %}
 
-  <!-- DATENQUALITÄT + FREIGABE -->
+  <!-- VORFÄLLE — DETAILED (all incidents, extended columns) -->
+  {% if dl == 'detailed' %}
+  {% if m.incidents_flat %}
+  {% set inc_total = m.incidents_flat | length %}
+  <section class="box">
+    <div class="box-head">{{ L.incidents_title }}</div>
+    <table class="inc">
+      <thead><tr>
+        <th>{{ L.inc_no }}</th><th class="l">{{ L.inc_unit }}</th>
+        <th class="l">{{ L.inc_start }}</th><th class="l">{{ L.inc_end }}</th>
+        <th>{{ L.inc_duration }}</th><th>{{ L.inc_extreme }}</th>
+        <th class="l">{{ L.inc_cause }}</th><th class="l">{{ L.inc_action }}</th>
+        <th class="l">{{ L.inc_note }}</th><th>{{ L.status }}</th>
+      </tr></thead>
+      <tbody>
+        {% for i in m.incidents_flat %}
+        <tr>
+          <td>{{ "%02d"|format(i.n) }}</td>
+          <td class="l">{{ i.unit_name }}</td>
+          <td class="l">{{ i.opened_at | dtlocal }}</td>
+          <td class="l">{{ i.closed_at | dtlocal if i.closed_at else "—" }}</td>
+          <td>{{ i.duration_seconds | dur }}</td>
+          <td>{{ i.extreme_value_c | temp }}</td>
+          <td class="l ft">{{ i.cause or "" }}</td>
+          <td class="l ft">{{ i.corrective_action or "" }}</td>
+          <td class="l ft">{{ i.note or "" }}</td>
+          <td class="badge-cell">{% if i.documented %}<span class="badge b-blue">✓ {{ L.status_reviewed }}</span>{% else %}<span class="badge b-orange">{{ L.status_reviewed }}</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+  {% endif %}
+
+  <!-- DATENQUALITÄT + FREIGABE (standard) -->
+  {% if dl == 'standard' %}
   <div class="panels">
     <section class="box panel">
       <div class="box-head">{{ L.data_quality_title }}</div>
@@ -229,7 +268,107 @@
       </div>
     </section>
   </div>
+  {% endif %}
+
+  <!-- DATENQUALITÄT DETAIL + FREIGABE (detailed) -->
+  {% if dl == 'detailed' %}
+  <section class="box">
+    <div class="box-head">{{ L.data_quality_title }}</div>
+    <div class="box-body dq">
+      {% if m.data_quality_ok %}{{ ic_check_c("#16a34a") }}{% else %}{{ ic_triangle("#ea580c") }}{% endif %}
+      <span>{{ m.data_quality_note }}</span>
+    </div>
+    <table class="dq-tbl">
+      <thead><tr>
+        <th class="l">{{ L.unit }}</th><th>{{ L.coverage }}</th>
+        <th>{{ L.unavailable }}</th><th>{{ L.dq_gaps }}</th><th>{{ L.status }}</th>
+      </tr></thead>
+      <tbody>
+        {% for u in m.units %}
+        <tr>
+          <td class="l"><span class="udot" style="background: {{ u.accent }}"></span>{{ u.name }}</td>
+          <td class="{% if u.data_quality.incomplete %}o{% endif %}">{{ u.data_quality.coverage_percent | cov(u.data_quality.coverage_below_min) }}</td>
+          <td>{{ u.data_quality.unavailable_seconds | dur }}</td>
+          <td>{{ u.data_quality.gaps_count }}</td>
+          <td>{% if u.data_quality.missing_entity %}<span class="badge b-red">{{ L.status_incomplete }}</span>{% elif u.data_quality.incomplete %}<span class="badge b-orange">{{ L.status_incomplete }}</span>{% else %}<span class="badge b-green">{{ icon_check() }} OK</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  <section class="box">
+    <div class="box-head">{{ L.approval_title }}</div>
+    <div class="box-body approval">
+      {% set sigs = [L.reviewed_by, L.date, L.signature, L.comment] %}
+      {% for s in sigs %}
+      <div class="sig-line"><span class="sig-label">{{ s }}:</span><span class="sig-rule"></span></div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
 </section>
+{% endif %}
+
+<!-- ============================ COMPACT: continuation (no page 2 unit cards) ============================ -->
+{% if dl == 'compact' %}
+<section class="page page-2">
+  <span class="src set-footleft">{{ m.branding.disclaimer or L.disclaimer_default }}</span>
+
+  <!-- VORFÄLLE — COMPACT (numeric summary only, no table) -->
+  {% if m.incidents_flat %}
+  {% set inc_total = m.incidents_flat | length %}
+  {% set longest_secs = m.incidents_flat | map(attribute='duration_seconds') | max %}
+  <section class="box">
+    <div class="box-head">{{ L.incidents_title }}</div>
+    <div class="box-body cim-row">
+      <div class="cim-metric">
+        <div class="num">{{ inc_total }}</div>
+        <div class="lbl">{{ L.summary_incidents }}</div>
+      </div>
+      <div class="cim-metric">
+        <div class="num {% if m.summary.open_incidents %}r{% endif %}">{{ m.summary.open_incidents }}</div>
+        <div class="lbl">{{ L.open_incidents }}</div>
+      </div>
+      <div class="cim-metric">
+        <div class="num {% if m.summary.confirmed_deviations %}o{% endif %}">{{ m.summary.confirmed_deviations }}</div>
+        <div class="lbl">{{ L.confirmed_deviations }}</div>
+      </div>
+      <div class="cim-metric">
+        <div class="num">{{ longest_secs | dur }}</div>
+        <div class="lbl">{{ L.longest_incident }}</div>
+      </div>
+    </div>
+  </section>
+  {% else %}
+  <section class="box">
+    <div class="box-head">{{ L.incidents_title }}</div>
+    <div class="box-body" style="font-size:7.5pt;color:#374151;padding:4pt 0">{{ L.no_incidents }}</div>
+  </section>
+  {% endif %}
+
+  <!-- DATENQUALITÄT + FREIGABE (compact) -->
+  <div class="panels">
+    <section class="box panel">
+      <div class="box-head">{{ L.data_quality_title }}</div>
+      <div class="box-body dq">
+        {% if m.data_quality_ok %}{{ ic_check_c("#16a34a") }}{% else %}{{ ic_triangle("#ea580c") }}{% endif %}
+        <span>{{ m.data_quality_note }}</span>
+      </div>
+    </section>
+    <section class="box panel">
+      <div class="box-head">{{ L.approval_title }}</div>
+      <div class="box-body approval">
+        {% set sigs = [L.reviewed_by, L.date, L.signature] %}
+        {% for s in sigs %}
+        <div class="sig-line"><span class="sig-label">{{ s }}:</span><span class="sig-rule"></span></div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+</section>
+{% endif %}
 
 </body>
 </html>

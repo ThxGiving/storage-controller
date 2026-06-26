@@ -2,6 +2,37 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.4.19 — 2026-06-26
+
+### Added — Stage 1: Genuine detail-level compositions
+
+Detail level now controls actual report content, not just a label.
+
+**Compact** — reduced composition (excludes unit detail cards):
+- Overall summary, comparison table, overview charts (unchanged from standard)
+- Concise incident summary: 4 metrics (total, open, confirmed deviations, longest)
+- Single-line data quality statement
+- 3-field approval area (Reviewed by, Date, Signature)
+- No per-unit detail cards, no incident table, no extended notes
+
+**Standard** — current two-page layout, no visual change (baseline preserved):
+- Page 1: header, overall summary, comparison table, overview charts
+- Page 2: unit detail cards, first-6-incident table with truncation note,
+  data quality statement, 4-field approval area
+
+**Detailed** — standard plus additional sections where data exists:
+- All unit detail cards (unchanged from standard)
+- Complete incident table with no row limit, plus additional columns:
+  end timestamp, notes
+- Expanded data quality section with per-unit coverage, unavailable time,
+  gap count, and per-unit status
+- 4-field approval area
+
+**Architecture**: `detail_level` is now read in `render_html()` and passed as
+`dl` to the template. Jinja2 conditionals control section inclusion explicitly.
+`FlatIncident` extended with `closed_at` and `note` fields (populated from
+`IncidentSummary`); backward-compatible defaults.
+
 ## 0.4.18 — 2026-06-26
 
 ### Fixed

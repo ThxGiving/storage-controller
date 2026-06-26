@@ -1,7 +1,7 @@
 name: Refrigeration Logbook
 slug: storage_controller
 description: HACCP-oriented cold-storage monitoring and reporting
-version: 0.4.18
+version: 0.4.19
 stage: experimental
 
 url: https://github.com/ThxGiving/storage-controller
