@@ -2,6 +2,15 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.9.1 — 2026-06-26
+
+### Fixed
+
+- Backup creation failed with `TypeError: 'details_json' is an invalid keyword argument for AuditEvent` — field is named `detail`
+- Backup error was not displayed in the UI; failure now shows an inline error message
+
+---
+
 ## 0.9.0 — 2026-06-26
 
 ### Phase 7 — Hardening baseline + Backup & Restore (Section 1)
