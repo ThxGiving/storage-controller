@@ -6,7 +6,7 @@
   "searchPlaceholder": "Entity-ID oder Name suchen…",
   "loadError": "Entities konnten nicht geladen werden: {{message}}",
   "empty": "Noch keine Entities",
-  "emptyHint": "Sobald Storage Controller mit Home Assistant verbunden ist, erscheinen hier alle verfügbaren Entities.",
+  "emptyHint": "Sobald Refrigeration Logbook mit Home Assistant verbunden ist, erscheinen hier alle verfügbaren Entities.",
   "loading": "Lädt Entities…",
   "col": {
     "entity": "Entity",

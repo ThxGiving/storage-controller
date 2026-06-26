@@ -126,7 +126,7 @@ _L_TEST = {
         "title": "Test-E-Mail erfolgreich",
         "success_message": "Die E-Mail-Konfiguration wurde erfolgreich geprüft.",
         "test_notice": (
-            "Diese Nachricht wurde vom Storage Controller als Test versendet. "
+            "Diese Nachricht wurde von Refrigeration Logbook als Test versendet. "
             "Es wurde kein echter HACCP-Bericht erstellt oder angehängt."
         ),
         "smtp_label": "SMTP-Konfiguration",
@@ -150,7 +150,7 @@ _L_TEST = {
         "title": "Test email successful",
         "success_message": "The email configuration was tested successfully.",
         "test_notice": (
-            "This message was sent by Storage Controller as a test. "
+            "This message was sent by Refrigeration Logbook as a test. "
             "No real HACCP report was generated or attached."
         ),
         "smtp_label": "SMTP configuration",
@@ -329,7 +329,7 @@ def compose(
         site_name
         or branding.get("site_name")
         or branding.get("organization_name")
-        or "Storage Controller"
+        or "Refrigeration Logbook"
     )
     period = model.get("period_label", f"{report.period_year}-{report.period_month:02d}")
 
@@ -436,7 +436,7 @@ def compose_test_email(
         "plain": "Plain (unencrypted)",
     }.get(getattr(cfg, "security_mode", "starttls") or "starttls", "STARTTLS")
 
-    subject = f"Storage Controller — {L['title']}"
+    subject = f"Refrigeration Logbook — {L['title']}"
 
     ctx = {
         "lang": locale[:2],
@@ -457,7 +457,7 @@ def compose_test_email(
     msg = EmailMessage()
     msg["Subject"] = subject
     if cfg.sender_email:
-        name = org_name or cfg.sender_name or "Storage Controller"
+        name = org_name or cfg.sender_name or "Refrigeration Logbook"
         msg["From"] = formataddr((name, cfg.sender_email))
     msg["To"] = recipient
 

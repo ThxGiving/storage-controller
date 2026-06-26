@@ -36,7 +36,7 @@ class ConnectionStatus(BaseModel):
 
 
 class AppStatus(BaseModel):
-    name: str = "Storage Controller"
+    name: str = "Refrigeration Logbook"
     version: str
     home_assistant: ConnectionStatus
     storage_unit_count: int

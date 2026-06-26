@@ -89,7 +89,7 @@ class IngressPathMiddleware:
 async def lifespan(app: FastAPI):
     settings = get_settings()
     configure_logging(settings.log_level)
-    log.info("Storage Controller %s starting", __version__)
+    log.info("Refrigeration Logbook %s starting", __version__)
 
     # Initialise the database engine (tables are created by Alembic migrations).
     get_engine()
@@ -166,7 +166,7 @@ async def lifespan(app: FastAPI):
                 pass
         await manager.stop()
         await dispose_engine()
-        log.info("Storage Controller stopped")
+        log.info("Refrigeration Logbook stopped")
 
 
 async def _scheduler_loop(scheduler: SchedulerRunner, stop: asyncio.Event) -> None:
@@ -291,7 +291,7 @@ def _mount_frontend(app: FastAPI) -> None:
         async def placeholder() -> JSONResponse:
             return JSONResponse(
                 {
-                    "name": "Storage Controller",
+                    "name": "Refrigeration Logbook",
                     "version": __version__,
                     "message": "Frontend build not present. Run 'npm run build'.",
                 }

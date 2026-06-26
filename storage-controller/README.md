@@ -1,9 +1,9 @@
-# Storage Controller
+# Refrigeration Logbook
 
 HACCP-oriented cold-storage monitoring and reporting as a standalone
 **Home Assistant App**.
 
-Storage Controller runs in its own container alongside Home Assistant Core and
+Refrigeration Logbook runs in its own container alongside Home Assistant Core and
 provides a dedicated sidebar interface (via Ingress) to monitor cold rooms,
 refrigerators and freezers — independently of the Home Assistant Recorder.
 
@@ -22,7 +22,7 @@ PDF/CSV/JSON HACCP reports, scheduling and email delivery.
 ## Installation
 
 1. Add this repository to your Home Assistant App store.
-2. Install **Storage Controller**.
+2. Install **Refrigeration Logbook**.
 3. Start the App — it boots automatically and appears in the sidebar.
 
 The App needs the Home Assistant Core API (`homeassistant_api: true`). It does

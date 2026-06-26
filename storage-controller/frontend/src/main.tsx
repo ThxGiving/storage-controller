@@ -20,7 +20,7 @@ function showFatalError(error: unknown): void {
   root.innerHTML = `
     <div style="font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:24px;
                 border:1px solid #f0a;border-radius:12px;background:#1b1020;color:#f6e9ff">
-      <h2 style="margin:0 0 8px">Storage Controller – Startfehler</h2>
+      <h2 style="margin:0 0 8px">Refrigeration Logbook – Startfehler</h2>
       <p style="margin:0 0 12px;color:#cbb6d6">
         Die Oberfläche konnte nicht geladen werden. Bitte diese Meldung melden:
       </p>

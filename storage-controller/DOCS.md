@@ -1,13 +1,13 @@
-# Storage Controller — Documentation
+# Refrigeration Logbook — Documentation
 
 ## Architecture
 
-Storage Controller is a self-contained containerized **Home Assistant App**
+Refrigeration Logbook is a self-contained containerized **Home Assistant App**
 (not a custom integration). It talks to Home Assistant Core through the internal
 Supervisor proxy and exposes its own web UI through Ingress.
 
 ```
-Home Assistant Core ──REST/WebSocket──> Storage Controller (backend)
+Home Assistant Core ──REST/WebSocket──> Refrigeration Logbook (backend)
                                               │
                                          FastAPI + SQLite
                                               │

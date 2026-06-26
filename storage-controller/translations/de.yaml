@@ -3,5 +3,5 @@ configuration: {}
 network: {}
 
 addon:
-  name: Storage Controller
+  name: Refrigeration Logbook
   description: HACCP-orientierte Überwachung und Dokumentation von Kühllagern

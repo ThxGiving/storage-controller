@@ -28,7 +28,7 @@ approximate (mockup is ~768 px/page); the goal is **structural** match.
    (positive group, then TK group), each: `°C` axis label, colored multi-series,
    red/blue dashed limit lines, shaded deviation/gap/defrost bands, per-chart
    legend row (series + Oberer/Unterer Grenzwert). Shared band legend strip below.
-5. **Footer**: left `Storage Controller v…`, right `Seite 1 von 2`, top rule.
+5. **Footer**: left `Refrigeration Logbook v…`, right `Seite 1 von 2`, top rule.
 
 ## Page 2
 1. **DETAILS JE KÜHLBEREICH** title.

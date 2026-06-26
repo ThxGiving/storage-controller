@@ -1,4 +1,4 @@
-name: Storage Controller
+name: Refrigeration Logbook
 slug: storage_controller
 description: HACCP-oriented cold-storage monitoring and reporting
 version: 0.4.4
@@ -22,7 +22,7 @@ init: false
 ingress: true
 ingress_port: 8099
 ingress_entry: /
-panel_title: Storage Controller
+panel_title: Refrigeration Logbook
 panel_icon: mdi:snowflake-thermometer
 panel_admin: false
 

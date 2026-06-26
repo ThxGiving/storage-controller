@@ -6,7 +6,7 @@
   "searchPlaceholder": "Search entity ID or name…",
   "loadError": "Entities could not be loaded: {{message}}",
   "empty": "No entities yet",
-  "emptyHint": "Once Storage Controller is connected to Home Assistant, all available entities appear here.",
+  "emptyHint": "Once Refrigeration Logbook is connected to Home Assistant, all available entities appear here.",
   "loading": "Loading entities…",
   "col": {
     "entity": "Entity",

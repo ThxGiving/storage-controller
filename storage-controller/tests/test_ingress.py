@@ -20,7 +20,7 @@ async def test_api_works_with_ingress_header(app_client):
         headers={"X-Ingress-Path": "/api/hassio_ingress/abc123"},
     )
     assert resp.status_code == 200
-    assert resp.json()["name"] == "Storage Controller"
+    assert resp.json()["name"] == "Refrigeration Logbook"
 
 
 @pytest.mark.asyncio
@@ -41,7 +41,7 @@ async def test_duplicate_leading_slash_is_normalized(app_client):
     # leading "//" as a scheme-relative authority otherwise).
     resp = await app_client.get("http://test//api/status")
     assert resp.status_code == 200
-    assert resp.json()["name"] == "Storage Controller"
+    assert resp.json()["name"] == "Refrigeration Logbook"
 
     health = await app_client.get("http://test//health")
     assert health.status_code == 200

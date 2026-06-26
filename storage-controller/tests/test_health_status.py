@@ -18,7 +18,7 @@ async def test_status_reports_disconnected_without_token(app_client):
     resp = await app_client.get("/api/status")
     assert resp.status_code == 200
     body = resp.json()
-    assert body["name"] == "Storage Controller"
+    assert body["name"] == "Refrigeration Logbook"
     assert body["home_assistant"]["status"] == "disconnected"
     assert body["storage_unit_count"] == 0
     assert body["database_ok"] is True

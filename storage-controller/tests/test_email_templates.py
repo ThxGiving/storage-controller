@@ -58,7 +58,7 @@ def _test_ctx(locale="de", org_name="Muster GmbH", site_name="", logo_data_url=N
     L = _L_TEST.get(locale, _L_TEST["en"])
     return {
         "lang": locale,
-        "subject": f"Storage Controller — {L['title']}",
+        "subject": f"Refrigeration Logbook — {L['title']}",
         "logo_data_url": logo_data_url,
         "org_name": org_name,
         "site_name": site_name,
@@ -169,7 +169,7 @@ def test_report_html_long_org_name():
 
 def test_report_html_no_brand_fallback():
     html = _build_report_html(_report_ctx("de", org_name="", site_name=""))
-    assert "Storage Controller" in html
+    assert "Refrigeration Logbook" in html
 
 
 def test_report_html_is_valid_html():
@@ -308,7 +308,7 @@ def test_compose_test_email_no_branding_fallback():
     cfg = _cfg()
     msg = compose_test_email(cfg, "r@example.com", locale="en")
     parts = _parts(msg)
-    assert "Storage Controller" in parts["text/html"]
+    assert "Refrigeration Logbook" in parts["text/html"]
 
 
 def test_compose_test_email_logo_via_file(tmp_path):

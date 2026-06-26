@@ -1,6 +1,6 @@
 {
-  "appName": "Storage Controller",
-  "brand": { "top": "Storage", "bottom": "Controller" },
+  "appName": "Refrigeration Logbook",
+  "brand": { "top": "Refrigeration", "bottom": "Logbook", "subtitle": "Temperaturüberwachung und HACCP-Dokumentation" },
   "actions": {
     "save": "Speichern",
     "cancel": "Abbrechen",

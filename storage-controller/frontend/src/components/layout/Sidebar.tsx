@@ -46,6 +46,9 @@ export function Sidebar({
           <div className="text-sm font-semibold text-primary">
             {t("common:brand.bottom")}
           </div>
+          <div className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
+            {t("common:brand.subtitle")}
+          </div>
         </div>
       </div>
       <nav className="flex gap-1 md:flex-col">

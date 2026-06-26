@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the Storage Controller App are documented here.
+All notable changes to the Refrigeration Logbook App are documented here.
 
 ## 0.4.2 — 2026-06-25
 

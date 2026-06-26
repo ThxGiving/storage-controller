@@ -1,4 +1,4 @@
-# Storage Controller — Real Home Assistant OS installation & verification
+# Refrigeration Logbook — Real Home Assistant OS installation & verification
 
 This guide covers installing and verifying the current **Phase 1 + 2** build on
 a real Home Assistant OS (or Supervised) instance. It does **not** enable sample
@@ -46,7 +46,7 @@ You have two options. **Local add-on** is simplest for testing.
    for the custom-repository method.)
 3. In Home Assistant: **Settings → Add-ons → Add-on Store → ⋮ (top right) →
    Check for updates**.
-4. **Storage Controller** now appears under **Local add-ons**.
+4. **Refrigeration Logbook** now appears under **Local add-ons**.
 
 ### Option B — Custom repository (Git)
 
@@ -55,13 +55,13 @@ You have two options. **Local add-on** is simplest for testing.
    `repository.yaml` and `config.yaml` (`url:`).
 2. **Settings → Add-ons → Add-on Store → ⋮ → Repositories** → paste the repo URL
    → **Add**.
-3. **Storage Controller** appears under your repository’s section in the store.
+3. **Refrigeration Logbook** appears under your repository’s section in the store.
 
 ---
 
 ## 2. Install and start
 
-1. Open **Storage Controller** in the Add-on Store and click **Install**.
+1. Open **Refrigeration Logbook** in the Add-on Store and click **Install**.
    First install triggers an on-device container build (a few minutes; longer on
    aarch64). Watch the build progress in the add-on’s **Log** tab.
 2. After install, confirm settings on the add-on’s **Info/Configuration** tab:
@@ -69,7 +69,7 @@ You have two options. **Local add-on** is simplest for testing.
    - **Watchdog**: on (restarts on `/health` failure)
    - **Show in sidebar**: on (Ingress)
 3. Click **Start**.
-4. After ~5–15 s, a **Storage Controller** entry (snowflake-thermometer icon)
+4. After ~5–15 s, a **Refrigeration Logbook** entry (snowflake-thermometer icon)
    appears in the HA sidebar. Click it to open the UI through Ingress.
 
 There is **no separate login** — Ingress provides authentication.
@@ -80,7 +80,7 @@ There is **no separate login** — Ingress provides authentication.
 
 - [ ] Add-on **Install** completes without build errors.
 - [ ] Add-on **Start** succeeds; state shows **Started**.
-- [ ] Sidebar shows **Storage Controller**; clicking it opens the UI (no white
+- [ ] Sidebar shows **Refrigeration Logbook**; clicking it opens the UI (no white
       page, no redirect to `/login`).
 - [ ] **Overview** shows Home Assistant **Connected** (green pill) within ~15 s.
 - [ ] Overview shows a non-zero **Entities** count and a recent **Last event**.
@@ -109,10 +109,10 @@ s6-rc: info: service legacy-services successfully started
 INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
 INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
 INFO  [alembic.runtime.migration] Running upgrade  -> 0001_initial, initial schema (Phase 1 + 2)
-[run.sh] Starting Storage Controller web server on 0.0.0.0:8099
+[run.sh] Starting Refrigeration Logbook web server on 0.0.0.0:8099
 INFO:     Started server process [PID]
 INFO:     Waiting for application startup.
-2026-..  INFO    [api] Storage Controller 0.1.0 starting
+2026-..  INFO    [api] Refrigeration Logbook 0.1.0 starting
 2026-..  INFO    [database] database: seeded 4 built-in monitoring profiles   ← first boot only
 2026-..  INFO    [ha_client] ha_client: connecting to Home Assistant WebSocket
 2026-..  INFO    [ha_client] ha_client: authenticated
@@ -215,7 +215,7 @@ Notes:
 rebuilds and restarts. It is removed only on **uninstall**.
 
 1. **Take an HA backup first** (Settings → System → Backups → Create backup;
-   include the Storage Controller add-on). The add-on uses **cold** backup, so
+   include the Refrigeration Logbook add-on). The add-on uses **cold** backup, so
    `/data` is captured consistently.
 2. **Bump the version** in `config.yaml` (e.g. `0.1.0 → 0.1.1`). HA only offers
    an update when the version changes.
