@@ -11,6 +11,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+import re
 import uuid as uuidlib
 
 from fastapi import APIRouter, Depends, Request, UploadFile
@@ -33,18 +34,51 @@ _ALLOWED = {"image/png": ".png", "image/jpeg": ".jpg", "image/svg+xml": ".svg"}
 _LOGO_MIME = {".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml"}
 
 
-def _normalize_logo(data: bytes, suffix: str) -> bytes:
-    """Convert PNG/JPEG to sRGB without an embedded ICC profile.
+def _fix_svg(data: bytes) -> bytes:
+    """Move <defs> to immediately after the opening <svg> tag.
 
-    WeasyPrint's Cairo backend ignores embedded ICC profiles and treats all
-    pixel values as if they were already sRGB.  If a PNG was saved with an
-    Adobe-RGB or Display-P3 profile the colours appear washed out or
-    shifted in the generated PDF.  Applying the profile through Pillow
-    before storing the file ensures the pixel values *are* sRGB so Cairo
-    renders them correctly.  SVG files are vector and unaffected.
+    WeasyPrint's SVG renderer does not resolve forward references: if a <path>
+    references url(#gradient) before the gradient is defined in <defs>, the fill
+    is silently dropped and the shape appears transparent/white.  Browsers buffer
+    the whole document before rendering so they resolve these references fine —
+    WeasyPrint does not.  Moving <defs> to the top makes the file render
+    correctly in both environments.
+    """
+    try:
+        text = data.decode("utf-8")
+        defs_match = re.search(r"<defs\b[^>]*>.*?</defs>", text, re.DOTALL | re.IGNORECASE)
+        if not defs_match:
+            return data
+        defs_block = defs_match.group(0)
+        # Only move if defs are NOT already at the very start of the document body
+        svg_open = re.search(r"<svg\b[^>]*>", text, re.DOTALL)
+        if not svg_open:
+            return data
+        if defs_match.start() == svg_open.end():
+            return data  # already in the right place
+        text_no_defs = text[: defs_match.start()] + text[defs_match.end() :]
+        svg_end = svg_open.end()
+        fixed = text_no_defs[:svg_end] + defs_block + text_no_defs[svg_end:]
+        return fixed.encode("utf-8")
+    except Exception:
+        return data
+
+
+def _normalize_logo(data: bytes, suffix: str) -> bytes:
+    """Normalise PNG/JPEG to sRGB; fix SVG forward-reference issues.
+
+    PNG/JPEG: WeasyPrint's Cairo backend ignores embedded ICC profiles and
+    treats all pixel values as if they were already sRGB.  If a PNG was saved
+    with an Adobe-RGB or Display-P3 profile the colours appear washed out or
+    shifted in the generated PDF.  Applying the profile through Pillow before
+    storing the file ensures the pixel values *are* sRGB so Cairo renders them
+    correctly.
+
+    SVG: move <defs> to the top so WeasyPrint can resolve gradient/pattern
+    references without forward-reference lookups (see _fix_svg).
     """
     if suffix == ".svg":
-        return data
+        return _fix_svg(data)
     try:
         from PIL import Image, ImageCms
 
