@@ -2,6 +2,14 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.9.3 — 2026-06-26
+
+### Fixed
+
+- After restore and restart, the frontend now automatically reloads once the app responds again (polls `/api/status` every 2 s, reloads on first successful response)
+
+---
+
 ## 0.9.2 — 2026-06-26
 
 ### Fixed

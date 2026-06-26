@@ -127,7 +127,27 @@ export function BackupRestoreCard() {
 
   const restoreMut = useMutation({
     mutationFn: (file: File) => api.restoreBackup(file),
-    onSuccess: () => setRestorePending(true),
+    onSuccess: () => {
+      setRestorePending(true);
+      // Poll /api/version until the app comes back up, then reload.
+      const start = Date.now();
+      const poll = setInterval(async () => {
+        // Stop polling after 3 minutes.
+        if (Date.now() - start > 180_000) {
+          clearInterval(poll);
+          return;
+        }
+        try {
+          const res = await fetch("api/status", { cache: "no-store" });
+          if (res.ok) {
+            clearInterval(poll);
+            window.location.reload();
+          }
+        } catch {
+          // App still down — keep polling.
+        }
+      }, 2000);
+    },
   });
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
