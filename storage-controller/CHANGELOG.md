@@ -2,6 +2,106 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.4.6 — 2026-06-26
+
+### Fixed
+
+- **Report header: logo color fidelity.** Removed `object-fit: contain` from
+  the logo CSS rule. WeasyPrint versions before 60 do not support `object-fit`
+  on `<img>` elements and silently fall back to a resampling path that degrades
+  color fidelity. Natural proportional scaling via `max-height` / `max-width`
+  with `width: auto; height: auto` is now used instead, which is reliable across
+  all WeasyPrint versions. Logo constraints are also expressed in `pt` rather
+  than `px` so they are dimensionally correct in the PDF print context.
+- **Report header: company name no longer wraps mid-word.** The branding block
+  now receives 54 % of the content width (was 44 %) and the organization name
+  uses `white-space: nowrap` with `text-overflow: ellipsis` as a graceful
+  fallback for very long names.
+- **Report header: full organization details now shown.** The address field is
+  rendered one line at a time (was collapsed to a single `·`-separated string).
+  The contact field is rendered when configured. Display order: organization
+  name → site/branch → address lines → contact.
+- **Report header: accent bar.** The thin horizontal rule below the header now
+  uses the configured brand accent color instead of a hardcoded dark gray.
+
+## 0.4.5 — 2026-06-26
+
+### Fixed
+
+- Version bump to trigger a new container build carrying all 0.4.4 changes
+  (rebrand, accent color, SVG logo support) that landed after the 0.4.4 tag.
+
+## 0.4.4 — 2026-06-26
+
+### Added
+
+- **Configurable organization accent color.** A single `#RRGGBB` hex value stored
+  in branding settings is used to derive a full set of design tokens (foreground,
+  secondary foreground, subtle background, border, dark, light variants). The
+  accent is applied to PDF section-title bars, the header rule, email headers,
+  and the "Next Steps" action card in report emails. A color picker with live
+  preview, hex input, reset button, and low-contrast accessibility warning is
+  available in the branding settings card.
+- **SVG logo support.** The logo upload endpoint now accepts `image/svg+xml` in
+  addition to PNG and JPEG. Logos are scaled with CSS-only `max-*` constraints
+  so aspect ratio is preserved for all three formats.
+
+### Changed
+
+- **Product renamed to Refrigeration Logbook.** All user-facing occurrences of
+  "Storage Controller" are replaced with "Refrigeration Logbook". German subtitle:
+  "Temperaturüberwachung und HACCP-Dokumentation"; English subtitle: "Temperature
+  Monitoring & HACCP Reporting". The sidebar now shows the subtitle below the
+  brand name. Internal technical identifiers (HA slug, container image names,
+  package names, API paths, database paths) are unchanged — existing installations
+  upgrade in place without any re-configuration.
+
+## 0.4.3 — 2026-06-25
+
+### Added
+
+- **Polished branded HTML email for scheduled report delivery.** Emails now use
+  a table-based HTML layout (Gmail / Outlook / Apple Mail compatible, no external
+  fonts, no JavaScript) with a branded header (logo, organization, site, report
+  title, period, optional interim badge), a compliance summary card with
+  color-coded verdict, a numbered "Next Steps" action block, an attachment list,
+  and a HACCP footer. A matching branded HTML test email is sent when verifying
+  SMTP configuration. Both emails are available in German and English. Plain-text
+  fallback is always included; HTML render failures fall back to plain text
+  without sending a malformed message.
+- **Email locale selection.** The test-email API now accepts a `locale` field so
+  the test message can be sent in German or English independently of other settings.
+
+### Fixed
+
+- **Comparison table no longer overflows A4 page width.** Added `table-layout:
+  fixed` with explicit `<colgroup>` column widths. Padding and font sizes tightened.
+  Temperature ranges use non-breaking spaces around the en-dash.
+- **Web preview constrained to A4 width.** A `@media screen` block now wraps
+  each page in a centered, shadow-boxed A4-wide container so the print preview
+  matches printed output rather than stretching to the browser viewport.
+- **Wide-card span removed.** The last storage-unit card (when the unit count is
+  odd) no longer spans two grid columns. All unit cards render at equal width.
+
+### Changed
+
+- **Navigation restructure.** The top-level "Schedules & Email" sidebar entry is
+  removed. Report scheduling is now a sub-tab within the Reports page. SMTP and
+  email settings are moved under the Settings page where infrastructure
+  configuration belongs.
+- **Interim report handling.** Reports generated before the month ends are
+  detected and marked as interim. Coverage, incident, defrost, and chart metrics
+  all use the effective data window (up to generation time) rather than the full
+  calendar month. The report header shows an "Interim Report" / "Zwischenbericht"
+  badge with an explanatory note. Period range label shows the actual data window.
+- **Incident consolidation.** Adjacent same-type incidents separated by ≤ 30 min
+  are merged, preventing hysteresis crossings from inflating incident counts. The
+  incident table shows "Showing N of M incidents" when truncated.
+- **Chart refinements.** Outlier labels use locale-correct decimal separators and
+  include the °C unit. Multiple outlier markers stagger to avoid overlap. Band
+  merge thresholds increased (defrost 4 h, gap 2 h, deviation 1 h). Band opacity
+  reduced (deviation 0.28, defrost 0.25).
+
 ## 0.4.2 — 2026-06-25
 
 ### Fixed
