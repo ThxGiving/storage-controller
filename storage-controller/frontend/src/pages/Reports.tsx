@@ -346,8 +346,13 @@ function BrandingCard() {
       setTimeout(() => setSaved(false), 1500);
     },
   });
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const logo = useMutation({
     mutationFn: (f: File) => api.uploadReportLogo(f),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["report-branding"] }),
+  });
+  const deleteLogo = useMutation({
+    mutationFn: () => api.deleteReportLogo(),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["report-branding"] }),
   });
 
@@ -435,16 +440,51 @@ function BrandingCard() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-          <label className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">{t("reports:branding.logo")}</span>
+          <div className="flex items-center gap-2">
+            {branding.data?.logo_filename ? (
+              <img
+                src="api/report-branding/logo"
+                className="h-10 w-auto rounded border border-border object-contain"
+                alt="Logo"
+              />
+            ) : (
+              <span className="text-sm text-muted-foreground">{t("reports:branding.logo")}</span>
+            )}
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/png,image/jpeg,image/svg+xml"
-              onChange={(e) => e.target.files?.[0] && logo.mutate(e.target.files[0])}
-              className="text-xs"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                if (e.target.files?.[0]) logo.mutate(e.target.files[0]);
+              }}
             />
-            {branding.data?.logo_filename && <Badge tone="ok">✓</Badge>}
-          </label>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={logo.isPending}
+            >
+              {t("reports:branding.uploadLogo")}
+            </Button>
+            {logo.isError && (
+              <span className="text-xs text-danger">
+                {logo.error instanceof Error ? logo.error.message : "Upload fehlgeschlagen"}
+              </span>
+            )}
+            {branding.data?.logo_filename && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => deleteLogo.mutate()}
+                disabled={deleteLogo.isPending}
+                className="text-danger"
+                title="Logo löschen"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
           <span className="flex items-center gap-2">
             {saved && <span className="text-sm text-ok">{t("reports:branding.saved")}</span>}
             <Button onClick={() => save.mutate()} disabled={save.isPending}>{t("reports:branding.save")}</Button>

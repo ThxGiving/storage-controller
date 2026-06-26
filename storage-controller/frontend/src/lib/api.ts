@@ -245,6 +245,8 @@ export const api = {
     form.append("file", file);
     return request<ReportBranding>("api/report-branding/logo", { method: "POST", body: form });
   },
+  deleteReportLogo: () =>
+    request<ReportBranding>("api/report-branding/logo", { method: "DELETE" }),
 
   // --- Phase 6: SMTP + schedules ---
   getEmailSettings: () => request<SmtpSettings>("api/settings/email"),

@@ -195,3 +195,21 @@ async def get_logo(db: AsyncSession = Depends(get_db)):
         raise AppError("logo_not_found", status_code=404)
     media = _LOGO_MIME.get(path.suffix.lower(), "image/png")
     return FileResponse(path, media_type=media)
+
+
+@router.delete("/logo", response_model=ReportBrandingOut)
+async def delete_logo(request: Request, db: AsyncSession = Depends(get_db)) -> ReportBrandingOut:
+    user = _require_admin(request)
+    b = await _get_or_create(db)
+    old = b.logo_filename
+    b.logo_filename = None
+    db.add(
+        AuditEvent(
+            component="reports", action="branding_logo_deleted", user=user,
+            object_type="report_branding", object_id="1", detail=old or "",
+        )
+    )
+    await db.commit()
+    if old:
+        (uploads_root() / old).unlink(missing_ok=True)
+    return _to_out(b)
