@@ -3,6 +3,7 @@
   "subtitle": "Full application backup: database, reports, branding, and configuration.",
   "createBackup": "Create Backup",
   "creating": "Creating backup…",
+  "createFailed": "Backup creation failed.",
   "created": "Backup created",
   "download": "Download",
   "delete": "Delete",

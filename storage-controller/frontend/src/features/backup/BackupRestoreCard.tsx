@@ -181,6 +181,13 @@ export function BackupRestoreCard() {
             </div>
           )}
 
+          {createMut.isError && (
+            <div className="mb-2 flex items-start gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{(createMut.error as Error)?.message ?? t("createFailed")}</span>
+            </div>
+          )}
+
           {backupsQuery.isLoading && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />

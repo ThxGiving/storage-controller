@@ -3,6 +3,7 @@
   "subtitle": "Vollständige Datensicherung: Datenbank, Berichte, Branding und Konfiguration.",
   "createBackup": "Backup erstellen",
   "creating": "Backup wird erstellt…",
+  "createFailed": "Backup-Erstellung fehlgeschlagen.",
   "created": "Backup erstellt",
   "download": "Herunterladen",
   "delete": "Löschen",

@@ -104,7 +104,7 @@ async def create_backup_endpoint(
             user=user,
             object_type="backup_job",
             object_id=result.archive_path.name,
-            details_json=f'{{"filename":"{result.archive_path.name}","size":{result.size_bytes}}}',
+            detail=f'{result.archive_path.name} ({result.size_bytes} bytes)',
         )
     )
     await db.commit()
@@ -244,10 +244,9 @@ async def restore_backup_endpoint(
             user=user,
             object_type="backup_job",
             object_id=file.filename or "upload",
-            details_json=(
-                f'{{"app_version":"'
+            detail=(
+                f'app_version='
                 f'{result.manifest_summary.get("app_version") if result.manifest_summary else ""}'
-                f'"}}'
             ),
         )
     )
