@@ -56,7 +56,8 @@ function renderPage() {
 describe("ReportsPage", () => {
   it("renders config, a completed report with downloads, and the checksum", async () => {
     renderPage();
-    expect(await screen.findByText("HACCP reports")).toBeInTheDocument();
+    // page heading + tab both carry this text — at least one must be present
+    expect((await screen.findAllByText("HACCP reports")).length).toBeGreaterThan(0);
     expect(screen.getByText("New report")).toBeInTheDocument();
     // the generated report row with PDF/CSV/JSON downloads + checksum
     expect(await screen.findByText("PDF")).toBeInTheDocument();

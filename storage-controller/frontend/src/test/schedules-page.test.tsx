@@ -30,12 +30,22 @@ const schedule = {
 };
 
 import { SchedulesPage } from "@/pages/Schedules";
+import { SmtpSettingsCard } from "@/pages/Schedules";
 
 function renderPage() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={qc}>
       <SchedulesPage />
+    </QueryClientProvider>,
+  );
+}
+
+function renderSmtp() {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={qc}>
+      <SmtpSettingsCard />
     </QueryClientProvider>,
   );
 }
@@ -57,37 +67,9 @@ describe("SchedulesPage", () => {
     i18n.changeLanguage("en");
   });
 
-  it("renders SMTP settings and the schedule list", async () => {
+  it("renders the schedule list", async () => {
     renderPage();
-    expect(await screen.findByDisplayValue("smtp.example.com")).toBeTruthy();
     expect(await screen.findByText("Monthly HACCP")).toBeTruthy();
-  });
-
-  it("password is write-only: shows configured placeholder, saves without a password value", async () => {
-    renderPage();
-    const pw = (await screen.findByPlaceholderText(/configured/i)) as HTMLInputElement;
-    expect(pw.value).toBe("");  // never pre-filled with the secret
-    fireEvent.click(screen.getByText("Save"));
-    await waitFor(() => expect(mocks.updateEmailSettings).toHaveBeenCalled());
-    const arg = mocks.updateEmailSettings.mock.calls[0][0] as { password?: string };
-    expect(arg.password).toBeUndefined();  // blank field preserves the stored secret
-  });
-
-  it("tests the SMTP connection", async () => {
-    renderPage();
-    await screen.findByDisplayValue("smtp.example.com");
-    fireEvent.click(screen.getByText("Test connection"));
-    await waitFor(() => expect(mocks.testSmtpConnection).toHaveBeenCalled());
-  });
-
-  it("sends a test email to a recipient", async () => {
-    renderPage();
-    await screen.findByDisplayValue("smtp.example.com");
-    fireEvent.change(screen.getByPlaceholderText("test@example.com"), {
-      target: { value: "qa@example.com" },
-    });
-    fireEvent.click(screen.getByText("Send test email"));
-    await waitFor(() => expect(mocks.sendTestEmail).toHaveBeenCalledWith("qa@example.com"));
   });
 
   it("runs a schedule now", async () => {
@@ -111,7 +93,56 @@ describe("SchedulesPage", () => {
   it("renders German translations", async () => {
     i18n.changeLanguage("de");
     renderPage();
-    expect(await screen.findByText("Zeitpläne & E-Mail")).toBeTruthy();
+    // SchedulesPage renders ScheduleSection whose title is schedules:list.title
+    expect(await screen.findByText("Berichts-Zeitpläne")).toBeTruthy();
+  });
+});
+
+describe("SmtpSettingsCard", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getEmailSettings.mockResolvedValue(smtp);
+    mocks.updateEmailSettings.mockResolvedValue(smtp);
+    mocks.testSmtpConnection.mockResolvedValue({ ok: true, category: null, message: null });
+    mocks.sendTestEmail.mockResolvedValue({ ok: true, category: null, message: null });
+    i18n.changeLanguage("en");
+  });
+
+  it("renders SMTP settings", async () => {
+    renderSmtp();
+    expect(await screen.findByDisplayValue("smtp.example.com")).toBeTruthy();
+  });
+
+  it("password is write-only: shows configured placeholder, saves without a password value", async () => {
+    renderSmtp();
+    const pw = (await screen.findByPlaceholderText(/configured/i)) as HTMLInputElement;
+    expect(pw.value).toBe("");  // never pre-filled with the secret
+    fireEvent.click(screen.getByText("Save"));
+    await waitFor(() => expect(mocks.updateEmailSettings).toHaveBeenCalled());
+    const arg = mocks.updateEmailSettings.mock.calls[0][0] as { password?: string };
+    expect(arg.password).toBeUndefined();  // blank field preserves the stored secret
+  });
+
+  it("tests the SMTP connection", async () => {
+    renderSmtp();
+    await screen.findByDisplayValue("smtp.example.com");
+    fireEvent.click(screen.getByText("Test connection"));
+    await waitFor(() => expect(mocks.testSmtpConnection).toHaveBeenCalled());
+  });
+
+  it("sends a test email to a recipient", async () => {
+    renderSmtp();
+    await screen.findByDisplayValue("smtp.example.com");
+    fireEvent.change(screen.getByPlaceholderText("test@example.com"), {
+      target: { value: "qa@example.com" },
+    });
+    fireEvent.click(screen.getByText("Send test email"));
+    await waitFor(() => expect(mocks.sendTestEmail).toHaveBeenCalledWith("qa@example.com"));
+  });
+
+  it("renders German SMTP label", async () => {
+    i18n.changeLanguage("de");
+    renderSmtp();
     expect(await screen.findByText("SMTP-Einstellungen")).toBeTruthy();
   });
 });
