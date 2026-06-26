@@ -10,6 +10,7 @@ from __future__ import annotations
 import base64
 import csv
 import io
+import logging
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -19,6 +20,8 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from .charts import render_chart_svg, render_mini_svg
 from .labels import labels
 from .model import ReportModel
+
+log = logging.getLogger("reports")
 
 _TEMPLATES = Path(__file__).parent / "templates"
 
@@ -168,6 +171,14 @@ def render_html(model: ReportModel, *, logo_path: Path | None = None) -> str:
     if dl not in ("compact", "standard", "detailed"):
         dl = "standard"
 
+    from .. import __version__
+    _tpl_mtime = int((_TEMPLATES / "report.html").stat().st_mtime)
+    _css_mtime = int((_TEMPLATES / "print.css").stat().st_mtime)
+    log.info(
+        "render: uuid=%s dl=%s app=%s tpl_mtime=%d css_mtime=%d locale=%s",
+        model.uuid, dl, __version__, _tpl_mtime, _css_mtime, model.locale,
+    )
+
     chart_plot_h = 80 if dl == "compact" else 132
     overview_svgs = [
         render_chart_svg(
@@ -186,7 +197,6 @@ def render_html(model: ReportModel, *, logo_path: Path | None = None) -> str:
                 width=320,
                 x_start=x0, x_end=x1, locale=model.locale,
             )
-    from .. import __version__
     from .accent import accent_tokens, normalize_accent
     bac = accent_tokens(normalize_accent(model.branding.accent))
 

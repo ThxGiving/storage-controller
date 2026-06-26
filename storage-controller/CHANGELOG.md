@@ -2,6 +2,21 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.4.22 — 2026-06-26
+
+### Added — Render-time diagnostics logging
+
+`render_html` now emits an INFO log entry on every PDF render:
+
+```
+render: uuid=<report-uuid> dl=<compact|standard|detailed> app=<version> tpl_mtime=<unix-ts> css_mtime=<unix-ts> locale=<de|en>
+```
+
+`tpl_mtime` and `css_mtime` are the filesystem modification timestamps of
+`report.html` and `print.css` at render time. This makes it possible to
+confirm which exact template and stylesheet revision produced a given PDF,
+and to verify that the running instance uses the expected artifact.
+
 ## 0.4.21 — 2026-06-26
 
 ### Fixed — Stage 1 residual defects
