@@ -16,6 +16,7 @@
     content: string(pagelabel) " " counter(page) " " string(pageof) " " counter(pages);
     font: 6.5pt "DejaVu Sans", sans-serif;
     color: #9ca3af;
+    white-space: nowrap;
   }
 }
 

@@ -2,6 +2,14 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.4.17 — 2026-06-26
+
+### Fixed
+
+- **Page number wrapping**: "Seite 2 von 2" was wrapping onto two lines in the
+  bottom-right margin. Added `white-space: nowrap` to the `@bottom-right`
+  page-margin box.
+
 ## 0.4.16 — 2026-06-26
 
 ### Changed
