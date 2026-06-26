@@ -2,6 +2,14 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.9.5 — 2026-06-26
+
+### Fixed
+
+- Startup now blocks with a clear error message when the database schema is from a newer, incompatible app version (e.g. after downgrading via HA restore)
+
+---
+
 ## 0.9.4 — 2026-06-26
 
 ### Added
