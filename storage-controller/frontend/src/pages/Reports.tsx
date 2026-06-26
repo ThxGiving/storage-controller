@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText, FileDown, Trash2, Eye, Sparkles, Image as ImageIcon, CalendarClock } from "lucide-react";
+import { FileText, FileDown, Trash2, Eye, Sparkles, Image as ImageIcon, CalendarClock, AlertTriangle } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import type { Report, ReportBranding, ReportCreate, ReportDetailLevel } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,38 @@ import { SchedulesPage } from "./Schedules";
 
 const DETAILS: ReportDetailLevel[] = ["compact", "standard", "detailed"];
 const now = new Date();
+const DEFAULT_ACCENT = "#1E3A5F";
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+
+function _lin(c: number): number {
+  c /= 255;
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+function _lum(r: number, g: number, b: number): number {
+  return 0.2126 * _lin(r) + 0.7152 * _lin(g) + 0.0722 * _lin(b);
+}
+function _h2(n: number): string {
+  return Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, "0");
+}
+function accentTokens(raw: string | null | undefined) {
+  const a = raw && HEX_RE.test(raw.trim()) ? raw.trim().toUpperCase() : DEFAULT_ACCENT;
+  const r = parseInt(a.slice(1, 3), 16);
+  const g = parseInt(a.slice(3, 5), 16);
+  const b = parseInt(a.slice(5, 7), 16);
+  const lum = _lum(r, g, b);
+  const fg = lum < 0.35 ? "#ffffff" : "#111827";
+  const [sfr, sfg, sfb] = lum < 0.35
+    ? [r + (255 - r) * 0.60, g + (255 - g) * 0.60, b + (255 - b) * 0.60]
+    : [r * 0.55, g * 0.55, b * 0.55];
+  const secondaryFg = `#${_h2(sfr)}${_h2(sfg)}${_h2(sfb)}`;
+  const subtleBg = `#${_h2(r * 0.12 + 255 * 0.88)}${_h2(g * 0.12 + 255 * 0.88)}${_h2(b * 0.12 + 255 * 0.88)}`;
+  const border = `#${_h2(r * 0.35 + 255 * 0.65)}${_h2(g * 0.35 + 255 * 0.65)}${_h2(b * 0.35 + 255 * 0.65)}`;
+  const dark = `#${_h2(r * 0.80)}${_h2(g * 0.80)}${_h2(b * 0.80)}`;
+  const fgLum = fg === "#ffffff" ? 1.0 : _lum(17, 24, 39);
+  const hi = Math.max(lum, fgLum), lo = Math.min(lum, fgLum);
+  const lowContrast = (hi + 0.05) / (lo + 0.05) < 4.5;
+  return { base: a, fg, secondaryFg, subtleBg, border, dark, lowContrast };
+}
 
 type ReportsTab = "reports" | "schedules";
 
@@ -261,19 +293,46 @@ function ReportRow({
 }
 
 function BrandingCard() {
-  const { t } = useTranslation(["reports"]);
+  const { t } = useTranslation(["reports", "common"]);
   const qc = useQueryClient();
   const branding = useQuery({ queryKey: ["report-branding"], queryFn: api.getReportBranding });
   const [form, setForm] = React.useState<Partial<ReportBranding>>({});
   const [sigs, setSigs] = React.useState("");
+  const [accentHex, setAccentHex] = React.useState(DEFAULT_ACCENT);
+  const [accentValid, setAccentValid] = React.useState(true);
   const [saved, setSaved] = React.useState(false);
 
   React.useEffect(() => {
     if (branding.data) {
       setForm(branding.data);
       setSigs((branding.data.signature_labels ?? []).join(", "));
+      const hex = branding.data.accent ?? DEFAULT_ACCENT;
+      setAccentHex(hex.toUpperCase());
     }
   }, [branding.data]);
+
+  const tok = accentTokens(accentValid ? accentHex : null);
+
+  const handleAccentHex = (v: string) => {
+    const upper = v.toUpperCase();
+    setAccentHex(upper);
+    const valid = HEX_RE.test(upper);
+    setAccentValid(valid);
+    if (valid) setForm((f) => ({ ...f, accent: upper }));
+  };
+
+  const handleAccentPicker = (v: string) => {
+    const upper = v.toUpperCase();
+    setAccentHex(upper);
+    setAccentValid(true);
+    setForm((f) => ({ ...f, accent: upper }));
+  };
+
+  const resetAccent = () => {
+    setAccentHex(DEFAULT_ACCENT);
+    setAccentValid(true);
+    setForm((f) => ({ ...f, accent: null }));
+  };
 
   const save = useMutation({
     mutationFn: () =>
@@ -316,12 +375,62 @@ function BrandingCard() {
           <Field label={t("reports:branding.disclaimer")}><Input value={form.disclaimer ?? ""} onChange={(e) => set("disclaimer", e.target.value)} /></Field>
           <Field label={t("reports:branding.footer")}><Input value={form.footer_text ?? ""} onChange={(e) => set("footer_text", e.target.value)} /></Field>
         </div>
+
+        {/* Accent color picker */}
+        <div className="border-t border-border pt-3">
+          <div className="mb-1.5 text-sm font-medium">{t("reports:branding.accentColor")}</div>
+          <p className="mb-2 text-xs text-muted-foreground">{t("reports:branding.accentHint")}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="color"
+              value={accentValid ? accentHex : DEFAULT_ACCENT}
+              onChange={(e) => handleAccentPicker(e.target.value)}
+              className="h-9 w-12 cursor-pointer rounded border border-border bg-transparent p-0.5"
+              title={t("reports:branding.accentColor")}
+            />
+            <Input
+              value={accentHex}
+              onChange={(e) => handleAccentHex(e.target.value)}
+              placeholder={DEFAULT_ACCENT}
+              className={`w-32 font-mono text-sm uppercase${!accentValid ? " border-danger" : ""}`}
+              maxLength={7}
+            />
+            <Button variant="ghost" size="sm" onClick={resetAccent} className="text-muted-foreground text-xs">
+              {t("reports:branding.accentReset")}
+            </Button>
+          </div>
+
+          {/* Live preview */}
+          <div className="mt-3 overflow-hidden rounded-lg border border-border text-[13px]">
+            <div className="px-4 py-3" style={{ backgroundColor: tok.base }}>
+              <div style={{ color: tok.fg, fontWeight: 700, lineHeight: 1.3 }}>
+                {form.organization_name || t("common:appName")}
+              </div>
+              <div style={{ color: tok.secondaryFg, fontSize: "11px", marginTop: "2px" }}>
+                {form.site_name || t("reports:branding.accentPreviewSubtitle")}
+              </div>
+            </div>
+            <div className="px-4 py-2" style={{ backgroundColor: tok.subtleBg, borderLeft: `3px solid ${tok.base}` }}>
+              <span style={{ color: tok.dark, fontWeight: 600, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                {t("reports:branding.accentPreviewSection")}
+              </span>
+            </div>
+          </div>
+
+          {tok.lowContrast && (
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-warning">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              {t("reports:branding.accentLowContrast")}
+            </div>
+          )}
+        </div>
+
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
           <label className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">{t("reports:branding.logo")}</span>
             <input
               type="file"
-              accept="image/png,image/jpeg"
+              accept="image/png,image/jpeg,image/svg+xml"
               onChange={(e) => e.target.files?.[0] && logo.mutate(e.target.files[0])}
               className="text-xs"
             />

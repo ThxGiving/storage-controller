@@ -1,3 +1,9 @@
+:root {
+  --brand-accent: #1E3A5F;
+  --brand-accent-fg: #ffffff;
+  --brand-accent-subtle: #e8edf3;
+}
+
 @page {
   size: A4;
   margin: 9mm 9mm 11mm 9mm;
@@ -37,7 +43,7 @@ body {
   border-bottom: 1.4pt solid #1f2937; padding-bottom: 7pt; margin-bottom: 9pt;
 }
 .head-brand { display: flex; gap: 8pt; align-items: center; max-width: 44%; }
-.logo { max-height: 46px; max-width: 130px; object-fit: contain; }
+.logo { max-height: 46px; max-width: 130px; width: auto; height: auto; object-fit: contain; }
 .org { font-weight: 700; font-size: 10.5pt; color: #111827; }
 .addr { color: #6b7280; font-size: 7.5pt; line-height: 1.35; }
 .head-title { text-align: right; }
@@ -51,8 +57,11 @@ body {
 /* ---------- section container ---------- */
 .box { border: 0.5pt solid #e5e7eb; border-radius: 4px; margin-bottom: 9pt; break-inside: avoid; }
 .box-head {
-  background: #f3f4f6; border-bottom: 0.5pt solid #e5e7eb; border-radius: 4px 4px 0 0;
-  padding: 3.5pt 7pt; font-size: 7pt; font-weight: 700; letter-spacing: .4px; color: #374151;
+  background: var(--brand-accent, #1E3A5F);
+  border-bottom: 0.5pt solid var(--brand-accent, #1E3A5F);
+  border-radius: 4px 4px 0 0;
+  padding: 3.5pt 7pt; font-size: 7pt; font-weight: 700; letter-spacing: .4px;
+  color: var(--brand-accent-fg, #ffffff);
 }
 .box-body { padding: 8pt 9pt; }
 .section-title { font-size: 8pt; font-weight: 700; letter-spacing: .4px; color: #374151; margin: 3pt 0 6pt; }

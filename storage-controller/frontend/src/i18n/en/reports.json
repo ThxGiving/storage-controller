@@ -54,10 +54,16 @@
     "disclaimer": "Disclaimer",
     "signatures": "Signature labels (comma-separated)",
     "defaults": "Defaults",
-    "logo": "Logo (PNG/JPEG, ≤ 2 MB)",
+    "logo": "Logo (PNG/JPEG/SVG, ≤ 2 MB)",
     "uploadLogo": "Upload logo",
     "save": "Save branding",
-    "saved": "Saved"
+    "saved": "Saved",
+    "accentColor": "Accent color",
+    "accentHint": "Used for headers, section titles, and emails.",
+    "accentReset": "Reset",
+    "accentLowContrast": "This color may not provide sufficient contrast in some contexts.",
+    "accentPreviewSubtitle": "Report preview",
+    "accentPreviewSection": "Section title"
   },
   "months": {
     "1": "January", "2": "February", "3": "March", "4": "April", "5": "May", "6": "June",

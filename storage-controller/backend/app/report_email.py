@@ -202,7 +202,7 @@ def _logo_data_url(logo_filename: str | None) -> str | None:
         if not p.is_file():
             return None
         suffix = p.suffix.lower()
-        mime = "image/png" if suffix == ".png" else "image/jpeg"
+        mime = {"png": "image/png", "jpg": "image/jpeg", "svg": "image/svg+xml"}.get(suffix.lstrip("."), "image/png")
         data = p.read_bytes()
         return f"data:{mime};base64,{base64.b64encode(data).decode('ascii')}"
     except OSError:
@@ -236,8 +236,15 @@ def _attachments(report: Report, formats: list[str]) -> list[tuple[str, str, byt
     return out
 
 
+def _default_bac() -> dict:
+    from .reporting.accent import normalize_accent, accent_tokens
+    return accent_tokens(normalize_accent(None))
+
+
 def _build_report_html(ctx: dict) -> str:
     try:
+        if "bac" not in ctx:
+            ctx = {**ctx, "bac": _default_bac()}
         tpl = _JINJA.get_template("email_report.html")
         return tpl.render(**ctx)
     except Exception as exc:
@@ -247,6 +254,8 @@ def _build_report_html(ctx: dict) -> str:
 
 def _build_test_html(ctx: dict) -> str:
     try:
+        if "bac" not in ctx:
+            ctx = {**ctx, "bac": _default_bac()}
         tpl = _JINJA.get_template("email_test.html")
         return tpl.render(**ctx)
     except Exception as exc:
@@ -331,6 +340,8 @@ def compose(
         or branding.get("organization_name")
         or "Refrigeration Logbook"
     )
+    from .reporting.accent import normalize_accent, accent_tokens
+    bac = accent_tokens(normalize_accent(branding.get("accent")))
     period = model.get("period_label", f"{report.period_year}-{report.period_month:02d}")
 
     verdict = summary.get("verdict", "incomplete")
@@ -379,6 +390,7 @@ def compose(
         "attachments": att_ctx,
         "version": __version__,
         "L": L,
+        "bac": bac,
     }
 
     msg = EmailMessage()
@@ -421,6 +433,7 @@ def compose_test_email(
     org_name: str | None = None,
     site_name: str | None = None,
     logo_filename: str | None = None,
+    accent_color: str | None = None,
     locale: str = "en",
 ) -> EmailMessage:
     """Build a branded SMTP test email (no report attached)."""
@@ -435,6 +448,9 @@ def compose_test_email(
         "implicit_tls": "TLS (implicit)",
         "plain": "Plain (unencrypted)",
     }.get(getattr(cfg, "security_mode", "starttls") or "starttls", "STARTTLS")
+
+    from .reporting.accent import normalize_accent, accent_tokens
+    bac = accent_tokens(normalize_accent(accent_color))
 
     subject = f"Refrigeration Logbook — {L['title']}"
 
@@ -452,6 +468,7 @@ def compose_test_email(
         "recipient_email": recipient,
         "version": __version__,
         "L": L,
+        "bac": bac,
     }
 
     msg = EmailMessage()

@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..db import get_db
 from ..errors import AppError
 from ..models import AuditEvent, ReportBrandingSettings
+from ..reporting.accent import normalize_accent, validate_accent
 from ..reporting.service import uploads_root
 from ..schemas import ReportBrandingOut, ReportBrandingUpdate
 
@@ -27,7 +28,7 @@ log = logging.getLogger("api")
 router = APIRouter(prefix="/api/report-branding", tags=["reports"])
 
 _MAX_LOGO_BYTES = 2 * 1024 * 1024
-_ALLOWED = {"image/png": ".png", "image/jpeg": ".jpg"}
+_ALLOWED = {"image/png": ".png", "image/jpeg": ".jpg", "image/svg+xml": ".svg"}
 
 
 def _require_admin(request: Request) -> str:
@@ -84,6 +85,10 @@ async def update_branding(
     user = _require_admin(request)
     b = await _get_or_create(db)
     data = payload.model_dump(exclude_unset=True)
+    if "accent" in data and data["accent"] is not None:
+        if not validate_accent(data["accent"]):
+            raise AppError("invalid_accent_color", status_code=422)
+        data["accent"] = normalize_accent(data["accent"])
     labels = data.pop("signature_labels", None)
     for k, v in data.items():
         setattr(b, k, v)
@@ -141,5 +146,5 @@ async def get_logo(db: AsyncSession = Depends(get_db)):
     path = uploads_root() / b.logo_filename
     if not path.is_file():
         raise AppError("logo_not_found", status_code=404)
-    media = "image/png" if path.suffix == ".png" else "image/jpeg"
+    media = {"png": "image/png", "jpg": "image/jpeg", "svg": "image/svg+xml"}.get(path.suffix.lstrip("."), "image/png")
     return FileResponse(path, media_type=media)

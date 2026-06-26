@@ -54,10 +54,16 @@
     "disclaimer": "Haftungsausschluss",
     "signatures": "Unterschriftsfelder (kommagetrennt)",
     "defaults": "Standardwerte",
-    "logo": "Logo (PNG/JPEG, ≤ 2 MB)",
+    "logo": "Logo (PNG/JPEG/SVG, ≤ 2 MB)",
     "uploadLogo": "Logo hochladen",
     "save": "Branding speichern",
-    "saved": "Gespeichert"
+    "saved": "Gespeichert",
+    "accentColor": "Akzentfarbe",
+    "accentHint": "Wird für Kopfzeilen, Abschnitte und E-Mails verwendet.",
+    "accentReset": "Zurücksetzen",
+    "accentLowContrast": "Dieser Farbton bietet bei bestimmten Hintergründen möglicherweise keinen ausreichenden Kontrast.",
+    "accentPreviewSubtitle": "Berichtsvorschau",
+    "accentPreviewSection": "Abschnittstitel"
   },
   "months": {
     "1": "Januar", "2": "Februar", "3": "März", "4": "April", "5": "Mai", "6": "Juni",

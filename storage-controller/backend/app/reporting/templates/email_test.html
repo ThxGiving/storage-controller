@@ -13,29 +13,29 @@
 <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%">
 
   <!-- ====== HEADER ====== -->
-  <tr><td bgcolor="#1e3a5f" style="background-color:#1e3a5f;border-radius:8px 8px 0 0">
+  <tr><td bgcolor="{{ bac.base }}" style="background-color:{{ bac.base }};border-radius:8px 8px 0 0">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr>
       {% if logo_data_url %}
       <td width="76" valign="middle" style="padding:20px 0 20px 24px">
-        <img src="{{ logo_data_url }}" alt="{{ org_name or '' }}" width="52" height="auto"
-             style="display:block;max-width:52px;max-height:44px;border:0;object-fit:contain">
+        <img src="{{ logo_data_url }}" alt="{{ org_name or '' }}"
+             style="display:block;width:auto;height:auto;max-width:52px;max-height:44px;border:0;object-fit:contain">
       </td>
       {% endif %}
       <td valign="middle" style="padding:20px 12px 20px {% if logo_data_url %}4px{% else %}24px{% endif %}">
         {% if org_name %}
-        <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:700;color:#ffffff;line-height:1.3;margin-bottom:2px">{{ org_name }}</div>
+        <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:700;color:{{ bac.fg }};line-height:1.3;margin-bottom:2px">{{ org_name }}</div>
         {% endif %}
         {% if site_name %}
-        <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:#93c5fd;line-height:1.3">{{ site_name }}</div>
+        <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:{{ bac.secondary_fg }};line-height:1.3">{{ site_name }}</div>
         {% endif %}
         {% if not org_name and not site_name %}
-        <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#93c5fd">Refrigeration Logbook</div>
+        <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:{{ bac.secondary_fg }}">Refrigeration Logbook</div>
         {% endif %}
       </td>
       <td valign="middle" align="right" style="padding:20px 24px 20px 8px">
-        <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#ffffff;line-height:1.3">{{ L.title }}</div>
-        <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:#93c5fd;margin-top:3px">{{ sent_at }}</div>
+        <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:{{ bac.fg }};line-height:1.3">{{ L.title }}</div>
+        <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;color:{{ bac.secondary_fg }};margin-top:3px">{{ sent_at }}</div>
       </td>
     </tr>
     </table>

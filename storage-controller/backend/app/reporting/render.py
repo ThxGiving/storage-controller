@@ -91,7 +91,7 @@ def _logo_data_uri(logo_path: Path | None) -> str | None:
     if logo_path is None or not logo_path.is_file():
         return None
     suffix = logo_path.suffix.lower()
-    mime = "image/png" if suffix == ".png" else "image/jpeg"
+    mime = {"png": "image/png", "jpg": "image/jpeg", "svg": "image/svg+xml"}.get(suffix.lstrip("."), "image/png")
     try:
         data = logo_path.read_bytes()
     except OSError:
@@ -157,6 +157,8 @@ def render_html(model: ReportModel, *, logo_path: Path | None = None) -> str:
                 x_start=x0, x_end=x1, locale=model.locale,
             )
     from .. import __version__
+    from .accent import normalize_accent, accent_tokens
+    bac = accent_tokens(normalize_accent(model.branding.accent))
 
     template = _env(model.locale).get_template("report.html")
     return template.render(
@@ -166,6 +168,7 @@ def render_html(model: ReportModel, *, logo_path: Path | None = None) -> str:
         mini_svgs=mini_svgs,
         logo_uri=_logo_data_uri(logo_path),
         version=__version__,
+        bac=bac,
     )
 
 
