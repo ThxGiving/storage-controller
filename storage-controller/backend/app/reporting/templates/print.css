@@ -40,17 +40,23 @@ body {
 /* ---------- header ---------- */
 .head {
   display: flex; justify-content: space-between; align-items: flex-start;
-  border-bottom: 1.4pt solid #1f2937; padding-bottom: 7pt; margin-bottom: 9pt;
+  border-bottom: 1.4pt solid var(--brand-accent, #1E3A5F); padding-bottom: 7pt; margin-bottom: 9pt;
 }
-.head-brand { display: flex; gap: 8pt; align-items: center; max-width: 44%; }
-.logo { max-height: 46px; max-width: 130px; width: auto; height: auto; object-fit: contain; }
-.org { font-weight: 700; font-size: 10.5pt; color: #111827; }
-.addr { color: #6b7280; font-size: 7.5pt; line-height: 1.35; }
-.head-title { text-align: right; }
+/* Brand block: up to 54 % of content width; allows room for org details */
+.head-brand { display: flex; gap: 6pt; align-items: flex-start; flex: 0 0 54%; min-width: 0; }
+/* Logo: pt-based constraints, natural proportional scaling, no object-fit
+   (object-fit is unreliable in older WeasyPrint and triggers resampling
+   artefacts; max-* with auto dimensions preserve aspect ratio correctly). */
+.logo { display: block; max-height: 44pt; max-width: 110pt; width: auto; height: auto; flex-shrink: 0; }
+.org-block { min-width: 0; }
+/* Single-line truncation prevents ugly mid-name breaks. */
+.org { font-weight: 700; font-size: 10pt; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.addr { color: #6b7280; font-size: 7.2pt; line-height: 1.45; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.head-title { text-align: right; flex-shrink: 0; }
 .head-center { justify-content: center; }
 .head-center .head-title { text-align: center; }
-.head-title h1 { font-size: 15pt; font-weight: 700; margin: 0; letter-spacing: .2px; }
-.head-title .month { font-size: 10.5pt; font-weight: 600; color: #374151; margin-bottom: 4pt; }
+.head-title h1 { font-size: 14pt; font-weight: 700; margin: 0; letter-spacing: .2px; }
+.head-title .month { font-size: 10pt; font-weight: 600; color: #374151; margin-bottom: 4pt; }
 .hmeta { font-size: 6.8pt; color: #4b5563; line-height: 1.5; }
 .hmeta span { color: #9ca3af; }
 

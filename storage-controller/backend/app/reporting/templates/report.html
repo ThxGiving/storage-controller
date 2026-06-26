@@ -34,9 +34,12 @@
     <div class="head-brand">
       {% if logo_uri %}<img class="logo" src="{{ logo_uri }}" alt=""/>{% endif %}
       <div class="org-block">
-        <div class="org">{{ m.branding.organization_name or "" }}</div>
-        {% if m.branding.address %}<div class="addr">{{ m.branding.address | replace("\n", " · ") }}</div>{% endif %}
-        {% if m.branding.site_name %}<div class="addr">{{ m.branding.site_name }}</div>{% endif %}
+        {% if m.branding.organization_name %}<div class="org">{{ m.branding.organization_name }}</div>{% endif %}
+        {% if m.branding.site_name and m.branding.site_name != m.branding.organization_name %}
+        <div class="addr">{{ m.branding.site_name }}</div>
+        {% endif %}
+        {% if m.branding.address %}{% for _line in m.branding.address.split('\n') %}{% if _line.strip() %}<div class="addr">{{ _line.strip() }}</div>{% endif %}{% endfor %}{% endif %}
+        {% if m.branding.contact %}<div class="addr">{{ m.branding.contact }}</div>{% endif %}
       </div>
     </div>
     {% endif %}
