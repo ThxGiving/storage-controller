@@ -141,7 +141,7 @@ async def test_schedule_rejects_invalid_recipient(app_client):
 @pytest.mark.asyncio
 async def test_run_now_uses_previous_complete_month(app_client):
     uid = await _unit(app_client)
-    sid = (await _create_schedule(app_client, uid)).json()["id"]
+    sid = (await _create_schedule(app_client, uid, timezone="UTC")).json()["id"]
     # No SMTP host configured -> generates without sending; run completes.
     r = await app_client.post(f"/api/schedules/{sid}/run-now?send=true")
     assert r.status_code == 200
