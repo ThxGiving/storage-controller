@@ -638,46 +638,55 @@ sensor:
       - multiply: 0.1
     device_id: storage3
 
-  # ALC Alarmmodus → select entity (lese+schreibbar, mit Klartextnamen)
+  # ALC + ALP → select entities (lese+schreibbar, mit Klartextnamen)
 
-  # ── ALP: Fühlerauswahl für Temperaturalarm (P054, Adresse 821) ──────────────
-  # 1=P1 Raumfühler, 2=P2 Verdampferfühler, 3=P3, 4=P4
+
+select:
+  # ── ALP: Fühlerauswahl Temperaturalarm (P054, Adresse 821) ──────────────────
+  # Welcher Fühler löst den Temperaturalarm (ALU/ALL) aus.
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
     name: "Fühlerauswahl Temperaturalarm (ALP)"
     icon: "mdi:thermometer-probe"
-    register_type: holding
     address: 821
     value_type: U_WORD
-    accuracy_decimals: 0
-    entity_category: diagnostic
     skip_updates: ${su_alarm_cfg}
+    entity_category: config
     device_id: storage1
+    optionsmap:
+      "P1 — Raumfühler": 1
+      "P2 — Verdampferfühler": 2
+      "P3": 3
+      "P4": 4
   - platform: modbus_controller
     modbus_controller_id: storage2ctlr
     name: "Fühlerauswahl Temperaturalarm (ALP)"
     icon: "mdi:thermometer-probe"
-    register_type: holding
     address: 821
     value_type: U_WORD
-    accuracy_decimals: 0
-    entity_category: diagnostic
     skip_updates: ${su_alarm_cfg}
+    entity_category: config
     device_id: storage2
+    optionsmap:
+      "P1 — Raumfühler": 1
+      "P2 — Verdampferfühler": 2
+      "P3": 3
+      "P4": 4
   - platform: modbus_controller
     modbus_controller_id: storage3ctlr
     name: "Fühlerauswahl Temperaturalarm (ALP)"
     icon: "mdi:thermometer-probe"
-    register_type: holding
     address: 821
     value_type: U_WORD
-    accuracy_decimals: 0
-    entity_category: diagnostic
     skip_updates: ${su_alarm_cfg}
+    entity_category: config
     device_id: storage3
+    optionsmap:
+      "P1 — Raumfühler": 1
+      "P2 — Verdampferfühler": 2
+      "P3": 3
+      "P4": 4
 
-
-select:
   # ── ALC: Alarmkonfigurations-Modus (P055, Adresse 822) ──────────────────────
   # 0 = rE (relativ: ALU/ALL sind Offsets zum Setpoint)
   # 1 = Ab (absolut: ALU/ALL sind absolute Temperaturen)
