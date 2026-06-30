@@ -748,7 +748,7 @@ number:
     address: 823
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: 0.1
+    min_value: 0
     max_value: 20
     step: 0.1
     multiply: 10
@@ -764,7 +764,7 @@ number:
     address: 824
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: 0.1
+    min_value: 0
     max_value: 20
     step: 0.1
     multiply: 10
@@ -780,7 +780,7 @@ number:
     address: 823
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: 0.1
+    min_value: 0
     max_value: 20
     step: 0.1
     multiply: 10
@@ -796,7 +796,7 @@ number:
     address: 824
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: 0.1
+    min_value: 0
     max_value: 20
     step: 0.1
     multiply: 10
@@ -812,7 +812,7 @@ number:
     address: 823
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: 0.1
+    min_value: 0
     max_value: 20
     step: 0.1
     multiply: 10
@@ -828,7 +828,7 @@ number:
     address: 824
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: 0.1
+    min_value: 0
     max_value: 20
     step: 0.1
     multiply: 10
