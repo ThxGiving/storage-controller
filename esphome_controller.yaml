@@ -638,42 +638,7 @@ sensor:
       - multiply: 0.1
     device_id: storage3
 
-  # ── ALC: Alarmkonfigurations-Modus (P055, Adresse 822) ──────────────────────
-  # 0 = rE (relativ: ALU/ALL sind Offsets zum Setpoint)
-  # 1 = Ab (absolut: ALU/ALL sind absolute Temperaturen)
-  - platform: modbus_controller
-    modbus_controller_id: storage1ctlr
-    name: "ALC Alarmmodus"
-    icon: "mdi:alarm-bell"
-    register_type: holding
-    address: 822
-    value_type: U_WORD
-    accuracy_decimals: 0
-    force_new_range: true
-    skip_updates: ${su_alarm_cfg}
-    device_id: storage1
-  - platform: modbus_controller
-    modbus_controller_id: storage2ctlr
-    name: "ALC Alarmmodus"
-    icon: "mdi:alarm-bell"
-    register_type: holding
-    address: 822
-    value_type: U_WORD
-    accuracy_decimals: 0
-    force_new_range: true
-    skip_updates: ${su_alarm_cfg}
-    device_id: storage2
-  - platform: modbus_controller
-    modbus_controller_id: storage3ctlr
-    name: "ALC Alarmmodus"
-    icon: "mdi:alarm-bell"
-    register_type: holding
-    address: 822
-    value_type: U_WORD
-    accuracy_decimals: 0
-    force_new_range: true
-    skip_updates: ${su_alarm_cfg}
-    device_id: storage3
+  # ALC moved to text_sensor section below (shows "rE" / "Ab" instead of 0/1)
 
   # ── ALP: Fühlerauswahl für Temperaturalarm (P054, Adresse 821) ──────────────
   # 1=P1 Raumfühler, 2=P2 Verdampferfühler, 3=P3, 4=P4
@@ -710,6 +675,60 @@ sensor:
     entity_category: diagnostic
     skip_updates: ${su_alarm_cfg}
     device_id: storage3
+
+
+text_sensor:
+  # ── ALC: Alarmkonfigurations-Modus (P055, Adresse 822) ──────────────────────
+  # 0 = rE (relativ: ALU/ALL sind Offsets zum Setpoint)
+  # 1 = Ab (absolut: ALU/ALL sind absolute Temperaturen)
+  - platform: modbus_controller
+    modbus_controller_id: storage1ctlr
+    name: "ALC Alarmmodus"
+    icon: "mdi:alarm-bell"
+    register_type: holding
+    address: 822
+    register_count: 1
+    response_size: 2
+    force_new_range: true
+    skip_updates: ${su_alarm_cfg}
+    device_id: storage1
+    lambda: |-
+      uint16_t v = (uint16_t(data[0]) << 8) | data[1];
+      if (v == 0) return std::string("rE (relativ)");
+      if (v == 1) return std::string("Ab (absolut)");
+      return str_sprintf("? (%u)", v);
+  - platform: modbus_controller
+    modbus_controller_id: storage2ctlr
+    name: "ALC Alarmmodus"
+    icon: "mdi:alarm-bell"
+    register_type: holding
+    address: 822
+    register_count: 1
+    response_size: 2
+    force_new_range: true
+    skip_updates: ${su_alarm_cfg}
+    device_id: storage2
+    lambda: |-
+      uint16_t v = (uint16_t(data[0]) << 8) | data[1];
+      if (v == 0) return std::string("rE (relativ)");
+      if (v == 1) return std::string("Ab (absolut)");
+      return str_sprintf("? (%u)", v);
+  - platform: modbus_controller
+    modbus_controller_id: storage3ctlr
+    name: "ALC Alarmmodus"
+    icon: "mdi:alarm-bell"
+    register_type: holding
+    address: 822
+    register_count: 1
+    response_size: 2
+    force_new_range: true
+    skip_updates: ${su_alarm_cfg}
+    device_id: storage3
+    lambda: |-
+      uint16_t v = (uint16_t(data[0]) << 8) | data[1];
+      if (v == 0) return std::string("rE (relativ)");
+      if (v == 1) return std::string("Ab (absolut)");
+      return str_sprintf("? (%u)", v);
 
 
 number:
