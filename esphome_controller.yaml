@@ -644,7 +644,7 @@ sensor:
   # 1=P1 Raumfühler, 2=P2 Verdampferfühler, 3=P3, 4=P4
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
-    name: "ALP Alarm-Fühler"
+    name: "Fühlerauswahl Temperaturalarm (ALP)"
     icon: "mdi:thermometer-probe"
     register_type: holding
     address: 821
@@ -655,7 +655,7 @@ sensor:
     device_id: storage1
   - platform: modbus_controller
     modbus_controller_id: storage2ctlr
-    name: "ALP Alarm-Fühler"
+    name: "Fühlerauswahl Temperaturalarm (ALP)"
     icon: "mdi:thermometer-probe"
     register_type: holding
     address: 821
@@ -666,7 +666,7 @@ sensor:
     device_id: storage2
   - platform: modbus_controller
     modbus_controller_id: storage3ctlr
-    name: "ALP Alarm-Fühler"
+    name: "Fühlerauswahl Temperaturalarm (ALP)"
     icon: "mdi:thermometer-probe"
     register_type: holding
     address: 821
