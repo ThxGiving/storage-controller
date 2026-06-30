@@ -1072,7 +1072,6 @@ number:
     min_value: 0
     max_value: 120
     step: 1
-    accuracy_decimals: 0
     multiply: 1
     entity_category: config
     skip_updates: ${su_defrost}
@@ -1090,7 +1089,6 @@ number:
     min_value: 0
     max_value: 255
     step: 1
-    accuracy_decimals: 0
     multiply: 1
     entity_category: config
     skip_updates: ${su_defrost}
@@ -1125,7 +1123,6 @@ number:
     min_value: 0
     max_value: 120
     step: 1
-    accuracy_decimals: 0
     multiply: 1
     entity_category: config
     skip_updates: ${su_defrost}
@@ -1143,7 +1140,6 @@ number:
     min_value: 0
     max_value: 255
     step: 1
-    accuracy_decimals: 0
     multiply: 1
     entity_category: config
     skip_updates: ${su_defrost}
@@ -1178,7 +1174,6 @@ number:
     min_value: 0
     max_value: 120
     step: 1
-    accuracy_decimals: 0
     multiply: 1
     entity_category: config
     skip_updates: ${su_defrost}
@@ -1196,7 +1191,6 @@ number:
     min_value: 0
     max_value: 255
     step: 1
-    accuracy_decimals: 0
     multiply: 1
     entity_category: config
     skip_updates: ${su_defrost}
@@ -1219,7 +1213,6 @@ number:
     min_value: 0
     max_value: 50
     step: 1
-    accuracy_decimals: 0
     multiply: 1
     entity_category: config
     skip_updates: ${su_mechanical}
@@ -1254,7 +1247,6 @@ number:
     min_value: 0
     max_value: 50
     step: 1
-    accuracy_decimals: 0
     multiply: 1
     entity_category: config
     skip_updates: ${su_mechanical}
@@ -1289,7 +1281,6 @@ number:
     min_value: 0
     max_value: 50
     step: 1
-    accuracy_decimals: 0
     multiply: 1
     entity_category: config
     skip_updates: ${su_mechanical}
@@ -1349,7 +1340,6 @@ number:
     min_value: 0
     max_value: 255
     step: 1
-    accuracy_decimals: 0
     multiply: 1
     entity_category: config
     skip_updates: ${su_alarm_time}
@@ -1367,7 +1357,6 @@ number:
     min_value: 0
     max_value: 1440
     step: 10
-    accuracy_decimals: 0
     multiply: 1
     entity_category: config
     skip_updates: ${su_alarm_time}
@@ -1403,7 +1392,6 @@ number:
     min_value: 0
     max_value: 255
     step: 1
-    accuracy_decimals: 0
     multiply: 1
     entity_category: config
     skip_updates: ${su_alarm_time}
@@ -1421,7 +1409,6 @@ number:
     min_value: 0
     max_value: 1440
     step: 10
-    accuracy_decimals: 0
     multiply: 1
     entity_category: config
     skip_updates: ${su_alarm_time}
@@ -1457,7 +1444,6 @@ number:
     min_value: 0
     max_value: 255
     step: 1
-    accuracy_decimals: 0
     multiply: 1
     entity_category: config
     skip_updates: ${su_alarm_time}
@@ -1475,7 +1461,6 @@ number:
     min_value: 0
     max_value: 1440
     step: 10
-    accuracy_decimals: 0
     multiply: 1
     entity_category: config
     skip_updates: ${su_alarm_time}
