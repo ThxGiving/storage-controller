@@ -116,6 +116,14 @@ modbus:
   uart_id: uart_rs485
   flow_control_pin: GPIO21
 
+# Each Dixell controller is a Modbus slave on the SHARED RS485 bus. A single
+# flaky slave (e.g. wiring/termination at the far end, or that controller itself)
+# silently turns ITS entities "unavailable" in HA while the others keep working
+# — which looks like "Kühlhaus X gets no live data for minutes". The on_online/
+# on_offline triggers below publish an explicit per-controller connectivity signal
+# so the dropout is visible and alarmable instead of silent. max_cmd_retries +
+# offline_skip_updates make a dead slave fail fast and stop hogging the bus with
+# retry traffic while it is down (so the healthy controllers aren't starved).
 modbus_controller:
   - id: storage1ctlr
     address: 1
@@ -123,21 +131,78 @@ modbus_controller:
     setup_priority: -10
     command_throttle: 200ms
     update_interval: 10s
+    max_cmd_retries: 2
+    offline_skip_updates: 3
+    on_online:
+      then:
+        - binary_sensor.template.publish:
+            id: storage1_online
+            state: ON
+    on_offline:
+      then:
+        - binary_sensor.template.publish:
+            id: storage1_online
+            state: OFF
   - id: storage2ctlr
     address: 2
     modbus_id: modbus1
     setup_priority: -10
     command_throttle: 200ms
     update_interval: 10s
+    max_cmd_retries: 2
+    offline_skip_updates: 3
+    on_online:
+      then:
+        - binary_sensor.template.publish:
+            id: storage2_online
+            state: ON
+    on_offline:
+      then:
+        - binary_sensor.template.publish:
+            id: storage2_online
+            state: OFF
   - id: storage3ctlr
     address: 3
     modbus_id: modbus1
     setup_priority: -10
     command_throttle: 200ms
     update_interval: 10s
+    max_cmd_retries: 2
+    offline_skip_updates: 3
+    on_online:
+      then:
+        - binary_sensor.template.publish:
+            id: storage3_online
+            state: ON
+    on_offline:
+      then:
+        - binary_sensor.template.publish:
+            id: storage3_online
+            state: OFF
 
 # ====== SCAN: Identifikation ======
 binary_sensor:
+    # Per-controller Modbus connectivity. Published by the modbus_controller
+    # on_online/on_offline triggers above. device_class: connectivity surfaces a
+    # clear "verbunden/getrennt" state in HA you can alarm on — so a slave that
+    # stops answering on the shared RS485 bus is noticed immediately instead of
+    # only showing up as a silent temperature gap.
+  - platform: template
+    name: "Modbus verbunden"
+    id: storage1_online
+    device_id: storage1
+    device_class: connectivity
+  - platform: template
+    name: "Modbus verbunden"
+    id: storage2_online
+    device_id: storage2
+    device_class: connectivity
+  - platform: template
+    name: "Modbus verbunden"
+    id: storage3_online
+    device_id: storage3
+    device_class: connectivity
+
     #COMPRESSOR
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
