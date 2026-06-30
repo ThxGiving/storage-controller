@@ -17,7 +17,21 @@ esphome:
   on_boot:
     then:
       # read the RTC time once when the system boots
-      pcf85063.read_time:
+      - pcf85063.read_time:
+      # Seed the connectivity sensors so HA shows a defined state immediately.
+      # on_online only fires on a LATER offline->online transition, so without a
+      # seed the template binary_sensors read "unknown" when a slave is online
+      # from boot. We seed ON (optimistic); on_offline flips any slave that is
+      # actually down to OFF within the first poll cycles.
+      - binary_sensor.template.publish:
+          id: storage1_online
+          state: ON
+      - binary_sensor.template.publish:
+          id: storage2_online
+          state: ON
+      - binary_sensor.template.publish:
+          id: storage3_online
+          state: ON
 
 
 esp32:
@@ -39,6 +53,20 @@ logger:
 api:
   encryption:
     key: "replace_with_your_own_encryption_key"
+  # Re-publish the connectivity states whenever HA (re)connects, so they are not
+  # shown as "unknown" after a Home Assistant restart (the ESP keeps running and
+  # would otherwise not emit a fresh state until the next online/offline change).
+  on_client_connected:
+    then:
+      - binary_sensor.template.publish:
+          id: storage1_online
+          state: !lambda 'return id(storage1_online).state;'
+      - binary_sensor.template.publish:
+          id: storage2_online
+          state: !lambda 'return id(storage2_online).state;'
+      - binary_sensor.template.publish:
+          id: storage3_online
+          state: !lambda 'return id(storage3_online).state;'
 
 ota:
   - platform: esphome
@@ -254,6 +282,49 @@ binary_sensor:
     address: 542
     device_id: storage3
 
+  # ============================================================
+  # TEMPORARY READ-ONLY COIL SCAN — gap between Defrost(513) and Light(538).
+  # The coil space above the outputs (543+) doesn't exist on the XW60K, so this
+  # is the last unexplored region that might hold door/alarm/aux bits.
+  # force_new_range: true => each coil is its OWN single-coil FC01 read, so an
+  # invalid address errors in isolation (exception 2) WITHOUT killing a batch or
+  # disturbing the real 512/513/538/539/542 reads. Read-only, safe.
+  #
+  # How to use: flash, then watch which "SCAN coil N" actually gets a state in HA
+  # (valid coil) vs stays unavailable (invalid). For the valid ones, force a known
+  # state on Kühlhaus 1 (open door / trigger alarm) and see which bit flips.
+  # >>> REMOVE once mapped — generates one error line per invalid coil. <<<
+  # ------------------------------------------------------------
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 514", register_type: coil, address: 514, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 515", register_type: coil, address: 515, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 516", register_type: coil, address: 516, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 517", register_type: coil, address: 517, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 518", register_type: coil, address: 518, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 519", register_type: coil, address: 519, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 520", register_type: coil, address: 520, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 521", register_type: coil, address: 521, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 522", register_type: coil, address: 522, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 523", register_type: coil, address: 523, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 524", register_type: coil, address: 524, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 525", register_type: coil, address: 525, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 526", register_type: coil, address: 526, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 527", register_type: coil, address: 527, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 528", register_type: coil, address: 528, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 529", register_type: coil, address: 529, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 530", register_type: coil, address: 530, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 531", register_type: coil, address: 531, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 532", register_type: coil, address: 532, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 533", register_type: coil, address: 533, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 534", register_type: coil, address: 534, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 535", register_type: coil, address: 535, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 536", register_type: coil, address: 536, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 537", register_type: coil, address: 537, force_new_range: true, device_id: storage1 }
+  # 540/541 = the unscanned GAPS inside the valid output cluster (538 light,
+  # 539 compressor, 542 fan) — prime candidates for defrost-output / alarm-relay.
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 540", register_type: coil, address: 540, force_new_range: true, device_id: storage1 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 541", register_type: coil, address: 541, force_new_range: true, device_id: storage1 }
+  # ============================================================
+
 switch:
   #ON/OFF R/W
   - platform: modbus_controller
@@ -341,6 +412,7 @@ sensor:
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
     name: "Temperatur"
+    id: kh1_temp
     icon: "mdi:thermometer"
     register_type: holding
     address: 256
@@ -354,6 +426,7 @@ sensor:
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
     name: "Verdampfertemperatur"
+    id: kh1_evap
     icon: "mdi:coolant-temperature"
     register_type: holding
     address: 257
@@ -367,6 +440,7 @@ sensor:
   - platform: modbus_controller
     modbus_controller_id: storage2ctlr
     name: "Temperatur"
+    id: kh2_temp
     icon: "mdi:thermometer"
     register_type: holding
     address: 256
@@ -380,6 +454,7 @@ sensor:
   - platform: modbus_controller
     modbus_controller_id: storage2ctlr
     name: "Verdampfertemperatur"
+    id: kh2_evap
     icon: "mdi:coolant-temperature"
     register_type: holding
     address: 257
@@ -393,6 +468,7 @@ sensor:
   - platform: modbus_controller
     modbus_controller_id: storage3ctlr
     name: "Temperatur"
+    id: kh3_temp
     icon: "mdi:thermometer"
     register_type: holding
     address: 256
@@ -406,6 +482,7 @@ sensor:
   - platform: modbus_controller
     modbus_controller_id: storage3ctlr
     name: "Verdampfertemperatur"
+    id: kh3_evap
     icon: "mdi:coolant-temperature"
     register_type: holding
     address: 257
@@ -415,7 +492,12 @@ sensor:
     filters:
       - multiply: 0.1
     device_id: storage3
-  
+
+  # (Holding-register scan removed: the XW60K rejected 0x500/0x800 with Modbus
+  #  exceptions 3/2 — those addresses don't exist on this model. Digital state
+  #  lives in the COIL space instead; see the read-only coil scan in
+  #  binary_sensor: below.)
+
 number:
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
@@ -507,3 +589,25 @@ number:
     multiply: 10
     device_id: storage3
 
+
+
+# ============================================================
+# TEMPORARY: one consolidated, unit-labelled temperature line in the log.
+# Uses INTERNAL ids only — it does NOT rename the sensors, so HA entity_ids
+# and the Storage-Controller app's entity assignments stay unchanged.
+# Remove this block once you no longer need it for debugging.
+# ------------------------------------------------------------
+interval:
+  - interval: 30s
+    then:
+      - logger.log:
+          level: INFO
+          format: "Temp °C — KH1 %.1f/%.1f  KH2 %.1f/%.1f  KH3 %.1f/%.1f  (Raum/Verdampfer)"
+          args:
+            - 'id(kh1_temp).state'
+            - 'id(kh1_evap).state'
+            - 'id(kh2_temp).state'
+            - 'id(kh2_evap).state'
+            - 'id(kh3_temp).state'
+            - 'id(kh3_evap).state'
+# ============================================================
