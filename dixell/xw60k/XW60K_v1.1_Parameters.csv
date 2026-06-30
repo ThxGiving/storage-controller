@@ -1,0 +1,88 @@
+Index,Address (hex),Address (dec),Code,Group,Description,FC Read,FC Write
+0,0x0400,1024,SEt,Regulation,Set point,FC03,FC16
+1,0x0401,1025,Hy,Regulation,Differential,FC03,FC16
+2,0x0402,1026,LS,Regulation,Minimum set point,FC03,FC16
+3,0x0403,1027,US,Regulation,Maximum set point,FC03,FC16
+4,0x0404,1028,ot,Regulation,Thermostat probe calibration,FC03,FC16
+5,0x0405,1029,P2P,Regulation,Evaporator probe presence,FC03,FC16
+6,0x0406,1030,oE,Regulation,Evaporator probe calibration,FC03,FC16
+7,0x0407,1031,P3P,Regulation,Third probe presence,FC03,FC16
+8,0x0408,1032,o3,Regulation,Third probe calibration,FC03,FC16
+9,0x0409,1033,P4P,Regulation,Fourth probe presence,FC03,FC16
+10,0x040A,1034,o4,Regulation,Fourth probe calibration,FC03,FC16
+11,0x040B,1035,Ods,Regulation,Outputs delay at start up,FC03,FC16
+12,0x040C,1036,Ac,Regulation,Anti-short cycle delay,FC03,FC16
+13,0x040D,1037,Ac1,Regulation,Second compressor start delay,FC03,FC16
+14,0x040E,1038,tMC,Regulation,MAX time compressor ON,FC03,FC16
+15,0x040F,1039,rtr,Regulation,P1-P2 percentage for regulation,FC03,FC16
+16,0x0410,1040,CCt,Regulation,Continuous cycle duration,FC03,FC16
+17,0x0411,1041,CCS,Regulation,Set point for continuous cycle,FC03,FC16
+18,0x0412,1042,Con,Regulation,Compressor ON time with faulty probe,FC03,FC16
+19,0x0413,1043,CoF,Regulation,Compressor OFF time with faulty probe,FC03,FC16
+20,0x0414,1044,CH,Regulation,Kind of action: heating cooling,FC03,FC16
+21,0x0415,1045,CF,Display,Temperature measurement unit,FC03,FC16
+22,0x0416,1046,rES,Display,Resolution,FC03,FC16
+23,0x0417,1047,Lod,Display,Probe displayed,FC03,FC16
+24,0x0418,1048,Red,Display,X-REP display,FC03,FC16
+25,0x0419,1049,dLy,Display,Display temperature delay,FC03,FC16
+26,0x041A,1050,dtr,Display,P1-P2 percentage for display,FC03,FC16
+27,0x041B,1051,tdF,Defrost,Defrost type,FC03,FC16
+28,0x041C,1052,dFP,Defrost,Probe selection for first defrost,FC03,FC16
+29,0x041D,1053,dSP,Defrost,Probe selection for second defrost,FC03,FC16
+30,0x041E,1054,dtE,Defrost,Defrost termination temperature first defrost,FC03,FC16
+31,0x041F,1055,dtS,Defrost,Defrost termination temperature second defrost,FC03,FC16
+32,0x0420,1056,IdF,Defrost,Interval between defrost cycles,FC03,FC16
+33,0x0421,1057,MdF,Defrost,(Maximum) length for  first defrost,FC03,FC16
+34,0x0422,1058,MdS,Defrost,(Maximum) length for  second  defrost,FC03,FC16
+35,0x0423,1059,dSd,Defrost,Start defrost delay,FC03,FC16
+36,0x0424,1060,dFd,Defrost,Displaying during defrost,FC03,FC16
+37,0x0425,1061,dAd,Defrost,MAX display delay after defrost,FC03,FC16
+38,0x0426,1062,Fdt,Defrost,Draining time,FC03,FC16
+39,0x0427,1063,dPo,Defrost,First defrost after start-up,FC03,FC16
+40,0x0428,1064,dAF,Defrost,Defrost delay after fast freezing,FC03,FC16
+41,0x0429,1065,Fnc,Fans,Fan operating mode,FC03,FC16
+42,0x042A,1066,Fnd,Fans,Fan delay after defrost,FC03,FC16
+43,0x042B,1067,FCt,Fans,Differential of temperature for forced activation of fans,FC03,FC16
+44,0x042C,1068,FSt,Fans,Fan stop temperature,FC03,FC16
+45,0x042D,1069,Fon,Fans,Fan on time with compressor off,FC03,FC16
+46,0x042E,1070,FoF,Fans,Fan off time with compressor off,FC03,FC16
+47,0x042F,1071,FAP,Fans,Probe selection for fan,FC03,FC16
+48,0x0430,1072,FSU,Fans,Kind of action of fan,FC03,FC16
+49,0x0431,1073,ACH,Regulation,Kind of action for auxiliary relay,FC03,FC16
+50,0x0432,1074,SAA,Regulation,Set point for auxiliary relay,FC03,FC16
+51,0x0433,1075,SHy,Regulation,Differential for auxiliary relay,FC03,FC16
+52,0x0434,1076,ArP,Regulation,Probe selection for auxiliary relay,FC03,FC16
+53,0x0435,1077,Sdd,Regulation,Auxiliary relay switched off during defrost,FC03,FC16
+54,0x0436,1078,ALP,Alarms,Probe selection for temperature alarms,FC03,FC16
+55,0x0437,1079,ALC,Alarms,Temperature alarms configuration,FC03,FC16
+56,0x0438,1080,ALU,Alarms,Maximun temperature alarm,FC03,FC16
+57,0x0439,1081,ALL,Alarms,Minimum temperature alarm,FC03,FC16
+58,0x043A,1082,AFH,Alarms,Differential for temperature alarm recovery,FC03,FC16
+59,0x043B,1083,ALd,Alarms,Temperature alarm delay,FC03,FC16
+60,0x043C,1084,dAo,Alarms,Delay of temperature alarm at start up,FC03,FC16
+61,0x043D,1085,AP2,Alarms,Probe selection for condenser temperature alarms,FC03,FC16
+62,0x043E,1086,AL2,Alarms,Condenser  low temperature alarm,FC03,FC16
+63,0x043F,1087,AU2,Alarms,Condenser  high temperature alarm,FC03,FC16
+64,0x0440,1088,AH2,Alarms,Differ. for condenser temp. alarm recovery,FC03,FC16
+65,0x0441,1089,Ad2,Alarms,Condenser temperature alarm delay,FC03,FC16
+66,0x0442,1090,dA2,Alarms,Delay of condenser temper. alarm at start up,FC03,FC16
+67,0x0443,1091,bLL,Alarms,Compressor off for condenser low temperature alarm,FC03,FC16
+68,0x0444,1092,AC2,Alarms,Compressor off for condenser high temperature alarm,FC03,FC16
+69,0x0445,1093,tbA,Alarms,Alarm relay switched off by pushing a key,FC03,FC16
+70,0x0446,1094,nP1,Other1,Min. display time for msg ENG probe P3,FC03,FC16
+71,0x0447,1095,nP2,Other1,Min. display time for msg ENG probe P4,FC03,FC16
+72,0x0448,1096,oA1,Configuration,First relay configuration,FC03,FC16
+73,0x0449,1097,oA2,Configuration,Second relay configuration,FC03,FC16
+74,0x044A,1098,oA3,Configuration,Third relay configuration,FC03,FC16
+75,0x044B,1099,AOP,Configuration,Alarm relay polarity,FC03,FC16
+76,0x044C,1100,i1P,Digital Input,Digital input polarity,FC03,FC16
+77,0x044D,1101,i1F,Digital Input,Digital input configuration,FC03,FC16
+78,0x044E,1102,did,Digital Input,Digital input alarm delay,FC03,FC16
+79,0x044F,1103,nPS,Digital Input,Number of activation of pressure switch,FC03,FC16
+80,0x0450,1104,Odc,Digital Input,Compress and fan status when open door,FC03,FC16
+81,0x0451,1105,rrd,Digital Input,Regulation restart with door open alarm,FC03,FC16
+82,0x0452,1106,HES,Regulation,Differential for Energy Saving,FC03,FC16
+83,0x0453,1107,pbC,Regulation,Kind of probe,FC03,FC16
+84,0x0454,1108,onF,Configuration,On/off key configuration,FC03,FC16
+85,0x0455,1109,LPC,Configuration,Light key configuration,FC03,FC16
+86,0x0456,1110,dPC,Configuration,Defrost key configuration,FC03,FC16

@@ -138,11 +138,11 @@ uart:
   stop_bits: 1
   tx_pin: GPIO17
   rx_pin: GPIO18
+  flow_control_pin: GPIO21
 
 modbus:
   id: modbus1
   uart_id: uart_rs485
-  flow_control_pin: GPIO21
 
 # Each Dixell controller is a Modbus slave on the SHARED RS485 bus. A single
 # flaky slave (e.g. wiring/termination at the far end, or that controller itself)
@@ -158,7 +158,7 @@ modbus_controller:
     modbus_id: modbus1
     setup_priority: -10
     command_throttle: 200ms
-    update_interval: 10s
+    update_interval: 15s
     max_cmd_retries: 2
     offline_skip_updates: 3
     on_online:
@@ -176,7 +176,7 @@ modbus_controller:
     modbus_id: modbus1
     setup_priority: -10
     command_throttle: 200ms
-    update_interval: 10s
+    update_interval: 15s
     max_cmd_retries: 2
     offline_skip_updates: 3
     on_online:
@@ -194,7 +194,7 @@ modbus_controller:
     modbus_id: modbus1
     setup_priority: -10
     command_throttle: 200ms
-    update_interval: 10s
+    update_interval: 15s
     max_cmd_retries: 2
     offline_skip_updates: 3
     on_online:
@@ -208,7 +208,6 @@ modbus_controller:
             id: storage3_online
             state: OFF
 
-# ====== SCAN: Identifikation ======
 binary_sensor:
     # Per-controller Modbus connectivity. Published by the modbus_controller
     # on_online/on_offline triggers above. device_class: connectivity surfaces a
@@ -231,99 +230,226 @@ binary_sensor:
     device_id: storage3
     device_class: connectivity
 
-    #COMPRESSOR
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
-    name: "Kompressor"
-    icon: "mdi:engine"
+    name: "Ventilator"
+    icon: "mdi:fan"
     register_type: coil
     address: 539
     device_id: storage1
 
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
-    name: "Ventilator"
-    icon: "mdi:fan"
+    name: "Kompressor"
+    icon: "mdi:engine"
     register_type: coil
     address: 542
     device_id: storage1
-  
-    #COMPRESSOR
-  - platform: modbus_controller
-    modbus_controller_id: storage2ctlr
-    name: "Kompressor"
-    icon: "mdi:engine"
-    register_type: coil
-    address: 539
-    device_id: storage2
 
   - platform: modbus_controller
     modbus_controller_id: storage2ctlr
     name: "Ventilator"
     icon: "mdi:fan"
     register_type: coil
-    address: 542
+    address: 539
     device_id: storage2
 
-    #COMPRESSOR
   - platform: modbus_controller
-    modbus_controller_id: storage3ctlr
+    modbus_controller_id: storage2ctlr
     name: "Kompressor"
     icon: "mdi:engine"
     register_type: coil
-    address: 539
-    device_id: storage3
+    address: 542
+    device_id: storage2
 
   - platform: modbus_controller
     modbus_controller_id: storage3ctlr
     name: "Ventilator"
     icon: "mdi:fan"
     register_type: coil
+    address: 539
+    device_id: storage3
+
+  - platform: modbus_controller
+    modbus_controller_id: storage3ctlr
+    name: "Kompressor"
+    icon: "mdi:engine"
+    register_type: coil
     address: 542
     device_id: storage3
 
-  # ============================================================
-  # TEMPORARY READ-ONLY COIL SCAN — gap between Defrost(513) and Light(538).
-  # The coil space above the outputs (543+) doesn't exist on the XW60K, so this
-  # is the last unexplored region that might hold door/alarm/aux bits.
-  # force_new_range: true => each coil is its OWN single-coil FC01 read, so an
-  # invalid address errors in isolation (exception 2) WITHOUT killing a batch or
-  # disturbing the real 512/513/538/539/542 reads. Read-only, safe.
-  #
-  # How to use: flash, then watch which "SCAN coil N" actually gets a state in HA
-  # (valid coil) vs stays unavailable (invalid). For the valid ones, force a known
-  # state on Kühlhaus 1 (open door / trigger alarm) and see which bit flips.
-  # >>> REMOVE once mapped — generates one error line per invalid coil. <<<
-  # ------------------------------------------------------------
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 514", register_type: coil, address: 514, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 515", register_type: coil, address: 515, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 516", register_type: coil, address: 516, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 517", register_type: coil, address: 517, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 518", register_type: coil, address: 518, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 519", register_type: coil, address: 519, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 520", register_type: coil, address: 520, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 521", register_type: coil, address: 521, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 522", register_type: coil, address: 522, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 523", register_type: coil, address: 523, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 524", register_type: coil, address: 524, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 525", register_type: coil, address: 525, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 526", register_type: coil, address: 526, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 527", register_type: coil, address: 527, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 528", register_type: coil, address: 528, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 529", register_type: coil, address: 529, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 530", register_type: coil, address: 530, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 531", register_type: coil, address: 531, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 532", register_type: coil, address: 532, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 533", register_type: coil, address: 533, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 534", register_type: coil, address: 534, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 535", register_type: coil, address: 535, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 536", register_type: coil, address: 536, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 537", register_type: coil, address: 537, force_new_range: true, device_id: storage1 }
-  # 540/541 = the unscanned GAPS inside the valid output cluster (538 light,
-  # 539 compressor, 542 fan) — prime candidates for defrost-output / alarm-relay.
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 540", register_type: coil, address: 540, force_new_range: true, device_id: storage1 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "SCAN coil 541", register_type: coil, address: 541, force_new_range: true, device_id: storage1 }
-  # ============================================================
+  # ====== Alarm & Status — decoded from XW60K v1.1 Modbus library ======
+  # Coils 520–530 are batched automatically by ESPHome into one FC01 read per controller.
+  - platform: modbus_controller
+    modbus_controller_id: storage1ctlr
+    name: "Fühler 1 Fehler"
+    icon: "mdi:thermometer-alert"
+    device_class: problem
+    register_type: coil
+    address: 520
+    device_id: storage1
+  - platform: modbus_controller
+    modbus_controller_id: storage1ctlr
+    name: "Fühler 2 Fehler"
+    icon: "mdi:thermometer-alert"
+    device_class: problem
+    register_type: coil
+    address: 521
+    device_id: storage1
+  - platform: modbus_controller
+    modbus_controller_id: storage1ctlr
+    name: "Temperatur hoch"
+    icon: "mdi:thermometer-chevron-up"
+    device_class: heat
+    register_type: coil
+    address: 524
+    device_id: storage1
+  - platform: modbus_controller
+    modbus_controller_id: storage1ctlr
+    name: "Temperatur tief"
+    icon: "mdi:thermometer-chevron-down"
+    device_class: cold
+    register_type: coil
+    address: 525
+    device_id: storage1
+  - platform: modbus_controller
+    modbus_controller_id: storage1ctlr
+    name: "Externer Alarm"
+    icon: "mdi:alert-circle"
+    device_class: problem
+    register_type: coil
+    address: 528
+    device_id: storage1
+  - platform: modbus_controller
+    modbus_controller_id: storage1ctlr
+    name: "Schwerer Alarm"
+    icon: "mdi:alert"
+    device_class: problem
+    register_type: coil
+    address: 529
+    device_id: storage1
+  - platform: modbus_controller
+    modbus_controller_id: storage1ctlr
+    name: "Tür offen"
+    icon: "mdi:door-open"
+    device_class: door
+    register_type: coil
+    address: 530
+    device_id: storage1
+
+  - platform: modbus_controller
+    modbus_controller_id: storage2ctlr
+    name: "Fühler 1 Fehler"
+    icon: "mdi:thermometer-alert"
+    device_class: problem
+    register_type: coil
+    address: 520
+    device_id: storage2
+  - platform: modbus_controller
+    modbus_controller_id: storage2ctlr
+    name: "Fühler 2 Fehler"
+    icon: "mdi:thermometer-alert"
+    device_class: problem
+    register_type: coil
+    address: 521
+    device_id: storage2
+  - platform: modbus_controller
+    modbus_controller_id: storage2ctlr
+    name: "Temperatur hoch"
+    icon: "mdi:thermometer-chevron-up"
+    device_class: heat
+    register_type: coil
+    address: 524
+    device_id: storage2
+  - platform: modbus_controller
+    modbus_controller_id: storage2ctlr
+    name: "Temperatur tief"
+    icon: "mdi:thermometer-chevron-down"
+    device_class: cold
+    register_type: coil
+    address: 525
+    device_id: storage2
+  - platform: modbus_controller
+    modbus_controller_id: storage2ctlr
+    name: "Externer Alarm"
+    icon: "mdi:alert-circle"
+    device_class: problem
+    register_type: coil
+    address: 528
+    device_id: storage2
+  - platform: modbus_controller
+    modbus_controller_id: storage2ctlr
+    name: "Schwerer Alarm"
+    icon: "mdi:alert"
+    device_class: problem
+    register_type: coil
+    address: 529
+    device_id: storage2
+  - platform: modbus_controller
+    modbus_controller_id: storage2ctlr
+    name: "Tür offen"
+    icon: "mdi:door-open"
+    device_class: door
+    register_type: coil
+    address: 530
+    device_id: storage2
+
+  - platform: modbus_controller
+    modbus_controller_id: storage3ctlr
+    name: "Fühler 1 Fehler"
+    icon: "mdi:thermometer-alert"
+    device_class: problem
+    register_type: coil
+    address: 520
+    device_id: storage3
+  - platform: modbus_controller
+    modbus_controller_id: storage3ctlr
+    name: "Fühler 2 Fehler"
+    icon: "mdi:thermometer-alert"
+    device_class: problem
+    register_type: coil
+    address: 521
+    device_id: storage3
+  - platform: modbus_controller
+    modbus_controller_id: storage3ctlr
+    name: "Temperatur hoch"
+    icon: "mdi:thermometer-chevron-up"
+    device_class: heat
+    register_type: coil
+    address: 524
+    device_id: storage3
+  - platform: modbus_controller
+    modbus_controller_id: storage3ctlr
+    name: "Temperatur tief"
+    icon: "mdi:thermometer-chevron-down"
+    device_class: cold
+    register_type: coil
+    address: 525
+    device_id: storage3
+  - platform: modbus_controller
+    modbus_controller_id: storage3ctlr
+    name: "Externer Alarm"
+    icon: "mdi:alert-circle"
+    device_class: problem
+    register_type: coil
+    address: 528
+    device_id: storage3
+  - platform: modbus_controller
+    modbus_controller_id: storage3ctlr
+    name: "Schwerer Alarm"
+    icon: "mdi:alert"
+    device_class: problem
+    register_type: coil
+    address: 529
+    device_id: storage3
+  - platform: modbus_controller
+    modbus_controller_id: storage3ctlr
+    name: "Tür offen"
+    icon: "mdi:door-open"
+    device_class: door
+    register_type: coil
+    address: 530
+    device_id: storage3
 
 switch:
   #ON/OFF R/W
@@ -429,7 +555,7 @@ sensor:
     id: kh1_evap
     icon: "mdi:coolant-temperature"
     register_type: holding
-    address: 257
+    address: 264
     value_type: S_WORD
     unit_of_measurement: "°C"
     accuracy_decimals: 1
@@ -457,7 +583,7 @@ sensor:
     id: kh2_evap
     icon: "mdi:coolant-temperature"
     register_type: holding
-    address: 257
+    address: 264
     value_type: S_WORD
     unit_of_measurement: "°C"
     accuracy_decimals: 1
@@ -485,7 +611,7 @@ sensor:
     id: kh3_evap
     icon: "mdi:coolant-temperature"
     register_type: holding
-    address: 257
+    address: 264
     value_type: S_WORD
     unit_of_measurement: "°C"
     accuracy_decimals: 1
@@ -493,10 +619,28 @@ sensor:
       - multiply: 0.1
     device_id: storage3
 
-  # (Holding-register scan removed: the XW60K rejected 0x500/0x800 with Modbus
-  #  exceptions 3/2 — those addresses don't exist on this model. Digital state
-  #  lives in the COIL space instead; see the read-only coil scan in
-  #  binary_sensor: below.)
+  # ── Parameter-Sensoren (P[N] → 0x0300 + N-1, P000/SEt → 0x035E) ────────────
+  # ALU/ALL = Alarm-Offsets relativ zu SEt (ALC=0): ALU=+8°C über, ALL=5°C unter Sollwert
+  # Kühlhaus 1
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "Abtau-Endtemp",      icon: "mdi:thermometer-chevron-up",   register_type: holding, address: 797, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage1, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "Abtau-Intervall",    icon: "mdi:timer-refresh-outline",    register_type: holding, address: 799, value_type: U_WORD, unit_of_measurement: "h",  accuracy_decimals: 0, device_id: storage1, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "Abtau-Maxzeit",      icon: "mdi:timer-stop-outline",       register_type: holding, address: 800, value_type: U_WORD, unit_of_measurement: "min", accuracy_decimals: 0, device_id: storage1, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "Setpoint-Min",       icon: "mdi:thermometer-chevron-down", register_type: holding, address: 769, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage1, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "Setpoint-Max",       icon: "mdi:thermometer-chevron-up",   register_type: holding, address: 770, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage1, skip_updates: 40 }
+  # Kühlhaus 2
+  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "Abtau-Endtemp",      icon: "mdi:thermometer-chevron-up",   register_type: holding, address: 797, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage2, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "Abtau-Intervall",    icon: "mdi:timer-refresh-outline",    register_type: holding, address: 799, value_type: U_WORD, unit_of_measurement: "h",  accuracy_decimals: 0, device_id: storage2, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "Abtau-Maxzeit",      icon: "mdi:timer-stop-outline",       register_type: holding, address: 800, value_type: U_WORD, unit_of_measurement: "min", accuracy_decimals: 0, device_id: storage2, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "Setpoint-Min",       icon: "mdi:thermometer-chevron-down", register_type: holding, address: 769, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage2, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "Setpoint-Max",       icon: "mdi:thermometer-chevron-up",   register_type: holding, address: 770, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage2, skip_updates: 40 }
+  # Kühlhaus 3
+  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "Abtau-Endtemp",      icon: "mdi:thermometer-chevron-up",   register_type: holding, address: 797, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage3, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "Abtau-Intervall",    icon: "mdi:timer-refresh-outline",    register_type: holding, address: 799, value_type: U_WORD, unit_of_measurement: "h",  accuracy_decimals: 0, device_id: storage3, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "Abtau-Maxzeit",      icon: "mdi:timer-stop-outline",       register_type: holding, address: 800, value_type: U_WORD, unit_of_measurement: "min", accuracy_decimals: 0, device_id: storage3, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "Setpoint-Min",       icon: "mdi:thermometer-chevron-down", register_type: holding, address: 769, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage3, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "Setpoint-Max",       icon: "mdi:thermometer-chevron-up",   register_type: holding, address: 770, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage3, skip_updates: 40 }
+
+
 
 number:
   - platform: modbus_controller
@@ -527,8 +671,9 @@ number:
     max_value: 10
     step: 0.1
     multiply: 10
+    skip_updates: 40
     device_id: storage1
-  
+
   - platform: modbus_controller
     modbus_controller_id: storage2ctlr
     name: "Setpoint"
@@ -557,6 +702,7 @@ number:
     max_value: 10
     step: 0.1
     multiply: 10
+    skip_updates: 40
     device_id: storage2
 
   - platform: modbus_controller
@@ -587,27 +733,104 @@ number:
     max_value: 10
     step: 0.1
     multiply: 10
+    skip_updates: 40
     device_id: storage3
 
+  # ── Alarmgrenzen (ALU/ALL = Offset relativ zu SEt, ALC=0) ───────────────────
+  # ALU: Alarm wenn Temp > SEt + ALU  (z.B. 30 = +3.0°C über Sollwert)
+  # ALL: Alarm wenn Temp < SEt - ALL  (z.B. 50 = 5.0°C unter Sollwert)
+  - platform: modbus_controller
+    modbus_controller_id: storage1ctlr
+    name: "Alarm Max Offset"
+    icon: "mdi:thermometer-alert"
+    mode: BOX
+    register_type: holding
+    address: 823
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    min_value: 0.1
+    max_value: 20
+    step: 0.1
+    multiply: 10
+    skip_updates: 40
+    device_id: storage1
 
+  - platform: modbus_controller
+    modbus_controller_id: storage1ctlr
+    name: "Alarm Min Offset"
+    icon: "mdi:thermometer-alert"
+    mode: BOX
+    register_type: holding
+    address: 824
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    min_value: 0.1
+    max_value: 20
+    step: 0.1
+    multiply: 10
+    skip_updates: 40
+    device_id: storage1
 
-# ============================================================
-# TEMPORARY: one consolidated, unit-labelled temperature line in the log.
-# Uses INTERNAL ids only — it does NOT rename the sensors, so HA entity_ids
-# and the Storage-Controller app's entity assignments stay unchanged.
-# Remove this block once you no longer need it for debugging.
-# ------------------------------------------------------------
-interval:
-  - interval: 30s
-    then:
-      - logger.log:
-          level: INFO
-          format: "Temp °C — KH1 %.1f/%.1f  KH2 %.1f/%.1f  KH3 %.1f/%.1f  (Raum/Verdampfer)"
-          args:
-            - 'id(kh1_temp).state'
-            - 'id(kh1_evap).state'
-            - 'id(kh2_temp).state'
-            - 'id(kh2_evap).state'
-            - 'id(kh3_temp).state'
-            - 'id(kh3_evap).state'
-# ============================================================
+  - platform: modbus_controller
+    modbus_controller_id: storage2ctlr
+    name: "Alarm Max Offset"
+    icon: "mdi:thermometer-alert"
+    mode: BOX
+    register_type: holding
+    address: 823
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    min_value: 0.1
+    max_value: 20
+    step: 0.1
+    multiply: 10
+    skip_updates: 40
+    device_id: storage2
+
+  - platform: modbus_controller
+    modbus_controller_id: storage2ctlr
+    name: "Alarm Min Offset"
+    icon: "mdi:thermometer-alert"
+    mode: BOX
+    register_type: holding
+    address: 824
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    min_value: 0.1
+    max_value: 20
+    step: 0.1
+    multiply: 10
+    skip_updates: 40
+    device_id: storage2
+
+  - platform: modbus_controller
+    modbus_controller_id: storage3ctlr
+    name: "Alarm Max Offset"
+    icon: "mdi:thermometer-alert"
+    mode: BOX
+    register_type: holding
+    address: 823
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    min_value: 0.1
+    max_value: 20
+    step: 0.1
+    multiply: 10
+    skip_updates: 40
+    device_id: storage3
+
+  - platform: modbus_controller
+    modbus_controller_id: storage3ctlr
+    name: "Alarm Min Offset"
+    icon: "mdi:thermometer-alert"
+    mode: BOX
+    register_type: holding
+    address: 824
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    min_value: 0.1
+    max_value: 20
+    step: 0.1
+    multiply: 10
+    skip_updates: 40
+    device_id: storage3

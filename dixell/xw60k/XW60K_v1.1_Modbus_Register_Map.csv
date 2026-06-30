@@ -1,0 +1,135 @@
+Abschnitt,FC,Adresse (hex),Adresse (dez),Name/Code,Gruppe,Einheit,Skalierung,Typ,R/W,Hinweis
+Messwerte,FC03,0x0108,264,Probe 1,,°C,×0.1,INT16,R,
+Messwerte,FC03,0x0109,265,Probe 2,,°C,×0.1,INT16,R,
+Messwerte,FC03,0x010A,266,Probe 3,,°C,×0.1,INT16,R,
+Messwerte,FC03,0x0100,256,Probe R,,°C,×0.1,INT16,R,
+Messwerte,FC03,0x0108,264,Probe 1-I,,°C,×0.1,INT16,R,
+Sollwert,FC03,0x0600,1536,Set Point R (aktiv),,°C,×0.1,INT16,R,"Immer gleich, alle Versionen"
+Messwerte,FC03,0x0109,265,Probe 2-I,,°C,×0.1,INT16,R,
+Messwerte,FC03,0x010A,266,Probe 3-I,,°C,×0.1,INT16,R,
+Messwerte,FC03,0x0100,256,Probe R-I,,°C,×0.1,INT16,R,
+Messwerte,FC03,0x0600,1536,Set Point R,,°C,×0.1,INT16,R,
+Sollwert,FC03,0x035E,862,Set Point,,°C,×0.1,INT16,R/W,"Schreiben: FC16, Wert ×10"
+Sollwert,FC03,0x035E,862,Set Point,,°C,×0.1,INT16,R/W,"Schreiben: FC16, Wert ×10"
+Messwerte,FC03,0x0600,1536,Set Point R-I,,°C,×0.1,INT16,R,
+Sollwert,FC03,0x035E,862,Set Point-F,,°C,×0.1,INT16,R/W,"Schreiben: FC16, Wert ×10"
+Status / Alarme,FC01,0x0216,534,On/Off Out,,bit,0x0100,BOOL,R,(reg & 0x0100) != 0
+Status / Alarme,FC01,0x0216,534,Defrost,,bit,0x0200,BOOL,R,(reg & 0x0200) != 0
+Status / Alarme,FC01,0x0216,534,Defrost 2,,bit,0x0400,BOOL,R,(reg & 0x0400) != 0
+Status / Alarme,FC01,0x0216,534,Alarm,,bit,0x0800,BOOL,R,(reg & 0x0800) != 0
+Status / Alarme,FC01,0x0216,534,Light,,bit,0x1000,BOOL,R,(reg & 0x1000) != 0
+Status / Alarme,FC01,0x0216,534,Fan,,bit,0x2000,BOOL,R,(reg & 0x2000) != 0
+Status / Alarme,FC01,0x0216,534,Aux,,bit,0x4000,BOOL,R,(reg & 0x4000) != 0
+Status / Alarme,FC01,0x0216,534,Generic out 1,,bit,0x8000,BOOL,R,(reg & 0x8000) != 0
+Status / Alarme,FC01,0x0216,534,Compressor,,bit,0x0001,BOOL,R,(reg & 0x0001) != 0
+Status / Alarme,FC01,0x0216,534,Compressor 2,,bit,0x0002,BOOL,R,(reg & 0x0002) != 0
+Status / Alarme,FC01,0x0200,512,On,,bit,0x0001,BOOL,R,(reg & 0x0001) != 0
+Status / Alarme,FC01,0x0200,512,Defrost,,bit,0x0002,BOOL,R,(reg & 0x0002) != 0
+Status / Alarme,FC01,0x0200,512,Fast Freezing,,bit,0x0004,BOOL,R,(reg & 0x0004) != 0
+Status / Alarme,FC01,0x0200,512,Keyboard,,bit,0x0008,BOOL,R,(reg & 0x0008) != 0
+Status / Alarme,FC01,0x0200,512,Buzzer,,bit,0x0010,BOOL,R,(reg & 0x0010) != 0
+Status / Alarme,FC01,0x0200,512,DI,,bit,0x0080,BOOL,R,(reg & 0x0080) != 0
+Status / Alarme,FC01,0x0208,520,Error Pb1,,bit,0x0100,BOOL,R,(reg & 0x0100) != 0
+Status / Alarme,FC01,0x0208,520,Error Pb2,,bit,0x0200,BOOL,R,(reg & 0x0200) != 0
+Status / Alarme,FC01,0x0208,520,Error Pb3,,bit,0x0400,BOOL,R,(reg & 0x0400) != 0
+Status / Alarme,FC01,0x0208,520,Error Pb4,,bit,0x0800,BOOL,R,(reg & 0x0800) != 0
+Status / Alarme,FC01,0x0208,520,High Value Pb1,,bit,0x1000,BOOL,R,(reg & 0x1000) != 0
+Status / Alarme,FC01,0x0208,520,Low Value Pb1,,bit,0x2000,BOOL,R,(reg & 0x2000) != 0
+Status / Alarme,FC01,0x0208,520,High Value Pb2,,bit,0x4000,BOOL,R,(reg & 0x4000) != 0
+Status / Alarme,FC01,0x0208,520,Low Value Pb2,,bit,0x8000,BOOL,R,(reg & 0x8000) != 0
+Status / Alarme,FC01,0x0208,520,External Alarm,,bit,0x0001,BOOL,R,(reg & 0x0001) != 0
+Status / Alarme,FC01,0x0208,520,Severe Alarm,,bit,0x0002,BOOL,R,(reg & 0x0002) != 0
+Status / Alarme,FC01,0x0208,520,Open Door,,bit,0x0004,BOOL,R,(reg & 0x0004) != 0
+Status / Alarme,FC01,0x0208,520,EEPROM Failure,,bit,0x0008,BOOL,R,(reg & 0x0008) != 0
+Messwerte,FC03,0x010B,267,Probe 4,,°C,×0.1,INT16,R,
+Messwerte,FC03,0x010B,267,Probe 4 -I,,°C,×0.1,INT16,R,
+
+"--- Parameter (FC03/FC16, Basis 0x0400) ---"
+Abschnitt,FC,Adresse (hex),Adresse (dez),Code,Gruppe,,,,R/W,Beschreibung
+Parameter,FC03/FC16,0x0400,1024,SEt,Regulation,,×0.1 (Temp),INT16,R/W,Set point
+Parameter,FC03/FC16,0x0401,1025,Hy,Regulation,,×0.1 (Temp),INT16,R/W,Differential
+Parameter,FC03/FC16,0x0402,1026,LS,Regulation,,×0.1 (Temp),INT16,R/W,Minimum set point
+Parameter,FC03/FC16,0x0403,1027,US,Regulation,,×0.1 (Temp),INT16,R/W,Maximum set point
+Parameter,FC03/FC16,0x0404,1028,ot,Regulation,,×0.1 (Temp),INT16,R/W,Thermostat probe calibration
+Parameter,FC03/FC16,0x0405,1029,P2P,Regulation,,×0.1 (Temp),INT16,R/W,Evaporator probe presence
+Parameter,FC03/FC16,0x0406,1030,oE,Regulation,,×0.1 (Temp),INT16,R/W,Evaporator probe calibration
+Parameter,FC03/FC16,0x0407,1031,P3P,Regulation,,×0.1 (Temp),INT16,R/W,Third probe presence
+Parameter,FC03/FC16,0x0408,1032,o3,Regulation,,×0.1 (Temp),INT16,R/W,Third probe calibration
+Parameter,FC03/FC16,0x0409,1033,P4P,Regulation,,×0.1 (Temp),INT16,R/W,Fourth probe presence
+Parameter,FC03/FC16,0x040A,1034,o4,Regulation,,×0.1 (Temp),INT16,R/W,Fourth probe calibration
+Parameter,FC03/FC16,0x040B,1035,Ods,Regulation,,×0.1 (Temp),INT16,R/W,Outputs delay at start up
+Parameter,FC03/FC16,0x040C,1036,Ac,Regulation,,×0.1 (Temp),INT16,R/W,Anti-short cycle delay
+Parameter,FC03/FC16,0x040D,1037,Ac1,Regulation,,×0.1 (Temp),INT16,R/W,Second compressor start delay
+Parameter,FC03/FC16,0x040E,1038,tMC,Regulation,,×0.1 (Temp),INT16,R/W,MAX time compressor ON
+Parameter,FC03/FC16,0x040F,1039,rtr,Regulation,,×0.1 (Temp),INT16,R/W,P1-P2 percentage for regulation
+Parameter,FC03/FC16,0x0410,1040,CCt,Regulation,,×0.1 (Temp),INT16,R/W,Continuous cycle duration
+Parameter,FC03/FC16,0x0411,1041,CCS,Regulation,,×0.1 (Temp),INT16,R/W,Set point for continuous cycle
+Parameter,FC03/FC16,0x0412,1042,Con,Regulation,,×0.1 (Temp),INT16,R/W,Compressor ON time with faulty probe
+Parameter,FC03/FC16,0x0413,1043,CoF,Regulation,,×0.1 (Temp),INT16,R/W,Compressor OFF time with faulty probe
+Parameter,FC03/FC16,0x0414,1044,CH,Regulation,,×0.1 (Temp),INT16,R/W,Kind of action: heating cooling
+Parameter,FC03/FC16,0x0415,1045,CF,Display,,×0.1 (Temp),INT16,R/W,Temperature measurement unit
+Parameter,FC03/FC16,0x0416,1046,rES,Display,,×0.1 (Temp),INT16,R/W,Resolution
+Parameter,FC03/FC16,0x0417,1047,Lod,Display,,×0.1 (Temp),INT16,R/W,Probe displayed
+Parameter,FC03/FC16,0x0418,1048,Red,Display,,×0.1 (Temp),INT16,R/W,X-REP display
+Parameter,FC03/FC16,0x0419,1049,dLy,Display,,×0.1 (Temp),INT16,R/W,Display temperature delay
+Parameter,FC03/FC16,0x041A,1050,dtr,Display,,×0.1 (Temp),INT16,R/W,P1-P2 percentage for display
+Parameter,FC03/FC16,0x041B,1051,tdF,Defrost,,×0.1 (Temp),INT16,R/W,Defrost type
+Parameter,FC03/FC16,0x041C,1052,dFP,Defrost,,×0.1 (Temp),INT16,R/W,Probe selection for first defrost
+Parameter,FC03/FC16,0x041D,1053,dSP,Defrost,,×0.1 (Temp),INT16,R/W,Probe selection for second defrost
+Parameter,FC03/FC16,0x041E,1054,dtE,Defrost,,×0.1 (Temp),INT16,R/W,Defrost termination temperature first defrost
+Parameter,FC03/FC16,0x041F,1055,dtS,Defrost,,×0.1 (Temp),INT16,R/W,Defrost termination temperature second defrost
+Parameter,FC03/FC16,0x0420,1056,IdF,Defrost,,×0.1 (Temp),INT16,R/W,Interval between defrost cycles
+Parameter,FC03/FC16,0x0421,1057,MdF,Defrost,,×0.1 (Temp),INT16,R/W,(Maximum) length for  first defrost
+Parameter,FC03/FC16,0x0422,1058,MdS,Defrost,,×0.1 (Temp),INT16,R/W,(Maximum) length for  second  defrost
+Parameter,FC03/FC16,0x0423,1059,dSd,Defrost,,×0.1 (Temp),INT16,R/W,Start defrost delay
+Parameter,FC03/FC16,0x0424,1060,dFd,Defrost,,×0.1 (Temp),INT16,R/W,Displaying during defrost
+Parameter,FC03/FC16,0x0425,1061,dAd,Defrost,,×0.1 (Temp),INT16,R/W,MAX display delay after defrost
+Parameter,FC03/FC16,0x0426,1062,Fdt,Defrost,,×0.1 (Temp),INT16,R/W,Draining time
+Parameter,FC03/FC16,0x0427,1063,dPo,Defrost,,×0.1 (Temp),INT16,R/W,First defrost after start-up
+Parameter,FC03/FC16,0x0428,1064,dAF,Defrost,,×0.1 (Temp),INT16,R/W,Defrost delay after fast freezing
+Parameter,FC03/FC16,0x0429,1065,Fnc,Fans,,×0.1 (Temp),INT16,R/W,Fan operating mode
+Parameter,FC03/FC16,0x042A,1066,Fnd,Fans,,×0.1 (Temp),INT16,R/W,Fan delay after defrost
+Parameter,FC03/FC16,0x042B,1067,FCt,Fans,,×0.1 (Temp),INT16,R/W,Differential of temperature for forced activation of fans
+Parameter,FC03/FC16,0x042C,1068,FSt,Fans,,×0.1 (Temp),INT16,R/W,Fan stop temperature
+Parameter,FC03/FC16,0x042D,1069,Fon,Fans,,×0.1 (Temp),INT16,R/W,Fan on time with compressor off
+Parameter,FC03/FC16,0x042E,1070,FoF,Fans,,×0.1 (Temp),INT16,R/W,Fan off time with compressor off
+Parameter,FC03/FC16,0x042F,1071,FAP,Fans,,×0.1 (Temp),INT16,R/W,Probe selection for fan
+Parameter,FC03/FC16,0x0430,1072,FSU,Fans,,×0.1 (Temp),INT16,R/W,Kind of action of fan
+Parameter,FC03/FC16,0x0431,1073,ACH,Regulation,,×0.1 (Temp),INT16,R/W,Kind of action for auxiliary relay
+Parameter,FC03/FC16,0x0432,1074,SAA,Regulation,,×0.1 (Temp),INT16,R/W,Set point for auxiliary relay
+Parameter,FC03/FC16,0x0433,1075,SHy,Regulation,,×0.1 (Temp),INT16,R/W,Differential for auxiliary relay
+Parameter,FC03/FC16,0x0434,1076,ArP,Regulation,,×0.1 (Temp),INT16,R/W,Probe selection for auxiliary relay
+Parameter,FC03/FC16,0x0435,1077,Sdd,Regulation,,×0.1 (Temp),INT16,R/W,Auxiliary relay switched off during defrost
+Parameter,FC03/FC16,0x0436,1078,ALP,Alarms,,×0.1 (Temp),INT16,R/W,Probe selection for temperature alarms
+Parameter,FC03/FC16,0x0437,1079,ALC,Alarms,,×0.1 (Temp),INT16,R/W,Temperature alarms configuration
+Parameter,FC03/FC16,0x0438,1080,ALU,Alarms,,×0.1 (Temp),INT16,R/W,Maximun temperature alarm
+Parameter,FC03/FC16,0x0439,1081,ALL,Alarms,,×0.1 (Temp),INT16,R/W,Minimum temperature alarm
+Parameter,FC03/FC16,0x043A,1082,AFH,Alarms,,×0.1 (Temp),INT16,R/W,Differential for temperature alarm recovery
+Parameter,FC03/FC16,0x043B,1083,ALd,Alarms,,×0.1 (Temp),INT16,R/W,Temperature alarm delay
+Parameter,FC03/FC16,0x043C,1084,dAo,Alarms,,×0.1 (Temp),INT16,R/W,Delay of temperature alarm at start up
+Parameter,FC03/FC16,0x043D,1085,AP2,Alarms,,×0.1 (Temp),INT16,R/W,Probe selection for condenser temperature alarms
+Parameter,FC03/FC16,0x043E,1086,AL2,Alarms,,×0.1 (Temp),INT16,R/W,Condenser  low temperature alarm
+Parameter,FC03/FC16,0x043F,1087,AU2,Alarms,,×0.1 (Temp),INT16,R/W,Condenser  high temperature alarm
+Parameter,FC03/FC16,0x0440,1088,AH2,Alarms,,×0.1 (Temp),INT16,R/W,Differ. for condenser temp. alarm recovery
+Parameter,FC03/FC16,0x0441,1089,Ad2,Alarms,,×0.1 (Temp),INT16,R/W,Condenser temperature alarm delay
+Parameter,FC03/FC16,0x0442,1090,dA2,Alarms,,×0.1 (Temp),INT16,R/W,Delay of condenser temper. alarm at start up
+Parameter,FC03/FC16,0x0443,1091,bLL,Alarms,,×0.1 (Temp),INT16,R/W,Compressor off for condenser low temperature alarm
+Parameter,FC03/FC16,0x0444,1092,AC2,Alarms,,×0.1 (Temp),INT16,R/W,Compressor off for condenser high temperature alarm
+Parameter,FC03/FC16,0x0445,1093,tbA,Alarms,,×0.1 (Temp),INT16,R/W,Alarm relay switched off by pushing a key
+Parameter,FC03/FC16,0x0446,1094,nP1,Other1,,×0.1 (Temp),INT16,R/W,Min. display time for msg ENG probe P3
+Parameter,FC03/FC16,0x0447,1095,nP2,Other1,,×0.1 (Temp),INT16,R/W,Min. display time for msg ENG probe P4
+Parameter,FC03/FC16,0x0448,1096,oA1,Configuration,,×0.1 (Temp),INT16,R/W,First relay configuration
+Parameter,FC03/FC16,0x0449,1097,oA2,Configuration,,×0.1 (Temp),INT16,R/W,Second relay configuration
+Parameter,FC03/FC16,0x044A,1098,oA3,Configuration,,×0.1 (Temp),INT16,R/W,Third relay configuration
+Parameter,FC03/FC16,0x044B,1099,AOP,Configuration,,×0.1 (Temp),INT16,R/W,Alarm relay polarity
+Parameter,FC03/FC16,0x044C,1100,i1P,Digital Input,,×0.1 (Temp),INT16,R/W,Digital input polarity
+Parameter,FC03/FC16,0x044D,1101,i1F,Digital Input,,×0.1 (Temp),INT16,R/W,Digital input configuration
+Parameter,FC03/FC16,0x044E,1102,did,Digital Input,,×0.1 (Temp),INT16,R/W,Digital input alarm delay
+Parameter,FC03/FC16,0x044F,1103,nPS,Digital Input,,×0.1 (Temp),INT16,R/W,Number of activation of pressure switch
+Parameter,FC03/FC16,0x0450,1104,Odc,Digital Input,,×0.1 (Temp),INT16,R/W,Compress and fan status when open door
+Parameter,FC03/FC16,0x0451,1105,rrd,Digital Input,,×0.1 (Temp),INT16,R/W,Regulation restart with door open alarm
+Parameter,FC03/FC16,0x0452,1106,HES,Regulation,,×0.1 (Temp),INT16,R/W,Differential for Energy Saving
+Parameter,FC03/FC16,0x0453,1107,pbC,Regulation,,×0.1 (Temp),INT16,R/W,Kind of probe
+Parameter,FC03/FC16,0x0454,1108,onF,Configuration,,×0.1 (Temp),INT16,R/W,On/off key configuration
+Parameter,FC03/FC16,0x0455,1109,LPC,Configuration,,×0.1 (Temp),INT16,R/W,Light key configuration
+Parameter,FC03/FC16,0x0456,1110,dPC,Configuration,,×0.1 (Temp),INT16,R/W,Defrost key configuration

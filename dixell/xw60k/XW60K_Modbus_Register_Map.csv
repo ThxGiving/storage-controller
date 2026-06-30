@@ -1,0 +1,54 @@
+Section,FC,Address (hex),Address (dec),Name,Label,Unit,Scaling,Data Type,Access,Notes
+Temperature Probes,FC03,0x0100,256,PbReg,Regulation Probe,°C,×0.1,INT16,R,Display temperature / active regulation probe
+Temperature Probes,FC03,0x0108,264,Pb1,Probe 1,°C,×0.1,INT16,R,HACCP probe (main temperature sensor)
+Temperature Probes,FC03,0x0109,265,Pb2,Probe 2,°C,×0.1,INT16,R,
+Temperature Probes,FC03,0x010A,266,Pb3,Probe 3,°C,×0.1,INT16,R,
+Temperature Probes,FC03,0x010B,267,Pb4,Probe 4,°C,×0.1,INT16,R,
+Setpoint,FC03,0x0360,864,SetPoint,Setpoint (read),°C,×0.1,INT16,R/W,User setpoint; write via FC16
+Setpoint,FC03,0x0600,1536,SetReg,Regulation Setpoint,°C,×0.1,INT16,R,Active regulation setpoint (may differ from user SP)
+Device Status,FC01,0x0200,512,On,Device On,bool,—,BOOL,R,1=device powered on
+Device Status,FC01,0x0201,513,Defrost,Defrost Active,bool,—,BOOL,R,1=defrost cycle in progress
+Device Status,FC01,0x0202,514,FastFreezing,Fast Freeze,bool,—,BOOL,R,1=fast freeze mode active
+Device Status,FC01,0x0203,515,Keyboard,Keyboard Locked,bool,—,BOOL,R,1=keypad locked
+Device Status,FC01,0x0204,516,EnergySaving,Energy Saving,bool,—,BOOL,R,1=energy saving mode active
+Device Status,FC01,0x0206,518,Buzzer,Buzzer,bool,—,BOOL,R,1=buzzer sounding
+Device Status,FC01,0x0207,519,DigitalInput,Digital Input,bool,—,BOOL,R,State of digital input
+Alarms,FC01,0x0208,520,ErrorPb1,Probe 1 Error,bool,—,BOOL,R,Probe 1 fault (short/open)
+Alarms,FC01,0x0209,521,ErrorPb2,Probe 2 Error,bool,—,BOOL,R,
+Alarms,FC01,0x020A,522,ErrorPb3,Probe 3 Error,bool,—,BOOL,R,
+Alarms,FC01,0x020B,523,ErrorPb4,Probe 4 Error,bool,—,BOOL,R,
+Alarms,FC01,0x020C,524,HTA,High Temp Alarm,bool,—,BOOL,R,Temperature exceeds high alarm threshold
+Alarms,FC01,0x020D,525,LTA,Low Temp Alarm,bool,—,BOOL,R,Temperature below low alarm threshold
+Alarms,FC01,0x020E,526,CHTA,Condenser High Temp Alarm,bool,—,BOOL,R,Condenser temperature too high
+Alarms,FC01,0x020F,527,CLTA,Condenser Low Temp Alarm,bool,—,BOOL,R,
+Alarms,FC01,0x0210,528,ExternalAlarm,External Alarm,bool,—,BOOL,R,State of external alarm input
+Alarms,FC01,0x0211,529,SevereAlarm,Severe Alarm,bool,—,BOOL,R,Critical alarm active
+Alarms,FC01,0x0212,530,OpenDoor,Door Open,bool,—,BOOL,R,Door/lid open alarm
+Alarms,FC01,0x0213,531,EEPROMFailure,EEPROM Failure,bool,—,BOOL,R,EEPROM read/write error
+Relay Outputs,FC01,0x0216,534,OnOffOUT,On/Off Relay,bool,—,BOOL,R,Main on/off relay state
+Relay Outputs,FC01,0x0217,535,DefrostOUT,Defrost Relay,bool,—,BOOL,R,
+Relay Outputs,FC01,0x0218,536,Defrost2OUT,Defrost 2 Relay,bool,—,BOOL,R,
+Relay Outputs,FC01,0x0219,537,Alarm,Alarm Relay,bool,—,BOOL,R,Alarm relay energized
+Relay Outputs,FC01,0x021A,538,Light,Light Relay,bool,—,BOOL,R,
+Relay Outputs,FC01,0x021B,539,Fan,Fan Relay,bool,—,BOOL,R,
+Relay Outputs,FC01,0x021C,540,Aux,Aux Relay,bool,—,BOOL,R,
+Relay Outputs,FC01,0x021D,541,DeadBand,Dead Band,bool,—,BOOL,R,Controller in dead band (neither cooling nor heating)
+Relay Outputs,FC01,0x021E,542,Compressor1,Compressor 1,bool,—,BOOL,R,Compressor 1 running
+Relay Outputs,FC01,0x021F,543,Compressor2,Compressor 2,bool,—,BOOL,R,
+Commands,FC05,0x0200,512,DeviceON,Device On,—,0xFF00,COIL,W,Write 0xFF00 to switch device on
+Commands,FC05,0x0200,512,DeviceOFF,Device Off,—,0x0000,COIL,W,Write 0x0000 to switch device off
+Commands,FC05,0x0201,513,ActiveDefrost,Start Defrost,—,0xFF00,COIL,W,Trigger manual defrost
+Commands,FC05,0x0202,514,FastFreezeON,Fast Freeze ON,—,0xFF00,COIL,W,
+Commands,FC05,0x0202,514,FastFreezeOFF,Fast Freeze OFF,—,0x0000,COIL,W,
+Commands,FC05,0x0203,515,KeyboardLOCK,Lock Keyboard,—,0xFF00,COIL,W,
+Commands,FC05,0x0203,515,KeyboardUN-LOCK,Unlock Keyboard,—,0x0000,COIL,W,
+Commands,FC05,0x0204,516,AlarmMute,Mute Alarm,—,0xFF00,COIL,W,Silence buzzer
+Commands,FC05,0x0206,518,EnergysavingON,Energy Saving ON,—,0xFF00,COIL,W,
+Commands,FC05,0x0206,518,EnergysavingOFF,Energy Saving OFF,—,0x0000,COIL,W,
+Commands,FC05,0x021A,538,LightON,Light ON,—,0xFF00,COIL,W,
+Commands,FC05,0x021A,538,LightOFF,Light OFF,—,0x0000,COIL,W,
+Commands,FC05,0x021C,540,AuxON,Aux ON,—,0xFF00,COIL,W,
+Commands,FC05,0x021C,540,AuxOFF,Aux OFF,—,0x0000,COIL,W,
+Commands,FC05,0x0222,546,HumidityFanON,Humidity Fan ON,—,0xFF00,COIL,W,
+Commands,FC05,0x0222,546,HumidityFanOFF,Humidity Fan OFF,—,0x0000,COIL,W,
+Commands,FC16,0x0360,864,SetPoint,Write Setpoint,°C,×0.1 (write val×10),INT16,W,Write 1 register. Example: -20.0°C → write -200 (0xFF38)
