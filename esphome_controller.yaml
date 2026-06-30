@@ -760,7 +760,6 @@ number:
     max_value: 25.5
     step: 0.1
     multiply: 10
-    entity_category: config
     skip_updates: ${su_setpt_bounds}
     device_id: storage1
 
@@ -792,7 +791,6 @@ number:
     max_value: 25.5
     step: 0.1
     multiply: 10
-    entity_category: config
     skip_updates: ${su_setpt_bounds}
     device_id: storage2
 
@@ -824,7 +822,6 @@ number:
     max_value: 25.5
     step: 0.1
     multiply: 10
-    entity_category: config
     skip_updates: ${su_setpt_bounds}
     device_id: storage3
 
