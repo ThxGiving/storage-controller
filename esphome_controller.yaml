@@ -219,16 +219,19 @@ binary_sensor:
     id: storage1_online
     device_id: storage1
     device_class: connectivity
+    entity_category: diagnostic
   - platform: template
     name: "Modbus verbunden"
     id: storage2_online
     device_id: storage2
     device_class: connectivity
+    entity_category: diagnostic
   - platform: template
     name: "Modbus verbunden"
     id: storage3_online
     device_id: storage3
     device_class: connectivity
+    entity_category: diagnostic
 
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
@@ -534,6 +537,7 @@ switch:
 sensor:
   - platform: internal_temperature
     name: "Interne Temperatur"
+    entity_category: diagnostic
 
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
@@ -657,6 +661,7 @@ number:
     max_value: 25.5
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage1
 
@@ -688,6 +693,7 @@ number:
     max_value: 25.5
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage2
 
@@ -719,6 +725,7 @@ number:
     max_value: 25.5
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage3
 
@@ -738,6 +745,7 @@ number:
     max_value: 150
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage1
 
@@ -754,6 +762,7 @@ number:
     max_value: 150
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage1
 
@@ -770,6 +779,7 @@ number:
     max_value: 150
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage2
 
@@ -786,6 +796,7 @@ number:
     max_value: 150
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage2
 
@@ -802,6 +813,7 @@ number:
     max_value: 150
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage3
 
@@ -818,6 +830,7 @@ number:
     max_value: 150
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage3
 
@@ -838,6 +851,7 @@ number:
     max_value: 150
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage1
 
@@ -854,6 +868,7 @@ number:
     max_value: 150
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage1
 
@@ -870,6 +885,7 @@ number:
     max_value: 150
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage2
 
@@ -886,6 +902,7 @@ number:
     max_value: 150
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage2
 
@@ -902,6 +919,7 @@ number:
     max_value: 150
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage3
 
@@ -918,6 +936,7 @@ number:
     max_value: 150
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage3
 
@@ -941,6 +960,7 @@ number:
     max_value: 50
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage1
 
@@ -957,6 +977,7 @@ number:
     max_value: 120
     step: 1
     multiply: 1
+    entity_category: config
     skip_updates: 40
     device_id: storage1
 
@@ -973,6 +994,7 @@ number:
     max_value: 255
     step: 1
     multiply: 1
+    entity_category: config
     skip_updates: 40
     device_id: storage1
 
@@ -989,6 +1011,7 @@ number:
     max_value: 50
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage2
 
@@ -1005,6 +1028,7 @@ number:
     max_value: 120
     step: 1
     multiply: 1
+    entity_category: config
     skip_updates: 40
     device_id: storage2
 
@@ -1021,6 +1045,7 @@ number:
     max_value: 255
     step: 1
     multiply: 1
+    entity_category: config
     skip_updates: 40
     device_id: storage2
 
@@ -1037,6 +1062,7 @@ number:
     max_value: 50
     step: 0.1
     multiply: 10
+    entity_category: config
     skip_updates: 40
     device_id: storage3
 
@@ -1053,6 +1079,7 @@ number:
     max_value: 120
     step: 1
     multiply: 1
+    entity_category: config
     skip_updates: 40
     device_id: storage3
 
@@ -1069,5 +1096,6 @@ number:
     max_value: 255
     step: 1
     multiply: 1
+    entity_category: config
     skip_updates: 40
     device_id: storage3
