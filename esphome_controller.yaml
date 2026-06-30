@@ -626,15 +626,15 @@ sensor:
   # ── ALC: Alarmkonfigurations-Modus (P055, Adresse 822) ──────────────────────
   # 0 = rE (relativ: ALU/ALL sind Offsets zum Setpoint)
   # 1 = Ab (absolut: ALU/ALL sind absolute Temperaturen)
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, force_new_range: true, device_id: storage1, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, force_new_range: true, device_id: storage2, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, force_new_range: true, device_id: storage3, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, force_new_range: true, device_id: storage1, skip_updates: 12 }
+  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, force_new_range: true, device_id: storage2, skip_updates: 12 }
+  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, force_new_range: true, device_id: storage3, skip_updates: 12 }
 
   # ── ALP: Fühlerauswahl für Temperaturalarm (P054, Adresse 821) ──────────────
   # 1=P1 Raumfühler, 2=P2 Verdampferfühler, 3=P3, 4=P4
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "ALP Alarm-Fühler", icon: "mdi:thermometer-probe", register_type: holding, address: 821, value_type: U_WORD, accuracy_decimals: 0, entity_category: diagnostic, device_id: storage1, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "ALP Alarm-Fühler", icon: "mdi:thermometer-probe", register_type: holding, address: 821, value_type: U_WORD, accuracy_decimals: 0, entity_category: diagnostic, device_id: storage2, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "ALP Alarm-Fühler", icon: "mdi:thermometer-probe", register_type: holding, address: 821, value_type: U_WORD, accuracy_decimals: 0, entity_category: diagnostic, device_id: storage3, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "ALP Alarm-Fühler", icon: "mdi:thermometer-probe", register_type: holding, address: 821, value_type: U_WORD, accuracy_decimals: 0, entity_category: diagnostic, device_id: storage1, skip_updates: 12 }
+  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "ALP Alarm-Fühler", icon: "mdi:thermometer-probe", register_type: holding, address: 821, value_type: U_WORD, accuracy_decimals: 0, entity_category: diagnostic, device_id: storage2, skip_updates: 12 }
+  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "ALP Alarm-Fühler", icon: "mdi:thermometer-probe", register_type: holding, address: 821, value_type: U_WORD, accuracy_decimals: 0, entity_category: diagnostic, device_id: storage3, skip_updates: 12 }
 
 
 number:
@@ -667,7 +667,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 8
     device_id: storage1
 
   - platform: modbus_controller
@@ -699,7 +699,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 8
     device_id: storage2
 
   - platform: modbus_controller
@@ -731,7 +731,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 8
     device_id: storage3
 
   # ── Alarmgrenzen (ALU/ALL = Offset relativ zu SEt, ALC=0) ───────────────────
@@ -751,7 +751,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 12
     device_id: storage1
 
   - platform: modbus_controller
@@ -768,7 +768,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 12
     device_id: storage1
 
   - platform: modbus_controller
@@ -785,7 +785,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 12
     device_id: storage2
 
   - platform: modbus_controller
@@ -802,7 +802,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 12
     device_id: storage2
 
   - platform: modbus_controller
@@ -819,7 +819,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 12
     device_id: storage3
 
   - platform: modbus_controller
@@ -836,7 +836,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 12
     device_id: storage3
 
   # ── Setpoint-Grenzen (LS / US) ───────────────────────────────────────────────
@@ -857,7 +857,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 8
     device_id: storage1
 
   - platform: modbus_controller
@@ -874,7 +874,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 8
     device_id: storage1
 
   - platform: modbus_controller
@@ -891,7 +891,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 8
     device_id: storage2
 
   - platform: modbus_controller
@@ -908,7 +908,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 8
     device_id: storage2
 
   - platform: modbus_controller
@@ -925,7 +925,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 8
     device_id: storage3
 
   - platform: modbus_controller
@@ -942,7 +942,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 8
     device_id: storage3
 
   # ── Abtau-Parameter (dtE / idF / MdF) ───────────────────────────────────────
@@ -966,7 +966,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 20
     device_id: storage1
 
   - platform: modbus_controller
@@ -983,7 +983,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 40
+    skip_updates: 20
     device_id: storage1
 
   - platform: modbus_controller
@@ -1000,7 +1000,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 40
+    skip_updates: 20
     device_id: storage1
 
   - platform: modbus_controller
@@ -1017,7 +1017,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 20
     device_id: storage2
 
   - platform: modbus_controller
@@ -1034,7 +1034,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 40
+    skip_updates: 20
     device_id: storage2
 
   - platform: modbus_controller
@@ -1051,7 +1051,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 40
+    skip_updates: 20
     device_id: storage2
 
   - platform: modbus_controller
@@ -1068,7 +1068,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 20
     device_id: storage3
 
   - platform: modbus_controller
@@ -1085,7 +1085,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 40
+    skip_updates: 20
     device_id: storage3
 
   - platform: modbus_controller
@@ -1102,7 +1102,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 40
+    skip_updates: 20
     device_id: storage3
 
   # ── Kompressor-Schutz & Lüfter ───────────────────────────────────────────────
@@ -1124,7 +1124,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 40
+    skip_updates: 24
     device_id: storage1
 
   - platform: modbus_controller
@@ -1141,7 +1141,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 24
     device_id: storage1
 
   - platform: modbus_controller
@@ -1158,7 +1158,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 40
+    skip_updates: 24
     device_id: storage2
 
   - platform: modbus_controller
@@ -1175,7 +1175,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 24
     device_id: storage2
 
   - platform: modbus_controller
@@ -1192,7 +1192,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 40
+    skip_updates: 24
     device_id: storage3
 
   - platform: modbus_controller
@@ -1209,7 +1209,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 24
     device_id: storage3
 
   # ── Alarm-Timing (AFH / ALd / dAo) ──────────────────────────────────────────
@@ -1234,7 +1234,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 16
     device_id: storage1
 
   - platform: modbus_controller
@@ -1251,7 +1251,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 40
+    skip_updates: 16
     device_id: storage1
 
   - platform: modbus_controller
@@ -1268,7 +1268,7 @@ number:
     step: 10
     multiply: 1
     entity_category: config
-    skip_updates: 40
+    skip_updates: 16
     device_id: storage1
 
   - platform: modbus_controller
@@ -1286,7 +1286,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 16
     device_id: storage2
 
   - platform: modbus_controller
@@ -1303,7 +1303,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 40
+    skip_updates: 16
     device_id: storage2
 
   - platform: modbus_controller
@@ -1320,7 +1320,7 @@ number:
     step: 10
     multiply: 1
     entity_category: config
-    skip_updates: 40
+    skip_updates: 16
     device_id: storage2
 
   - platform: modbus_controller
@@ -1338,7 +1338,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 40
+    skip_updates: 16
     device_id: storage3
 
   - platform: modbus_controller
@@ -1355,7 +1355,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 40
+    skip_updates: 16
     device_id: storage3
 
   - platform: modbus_controller
@@ -1372,5 +1372,5 @@ number:
     step: 10
     multiply: 1
     entity_category: config
-    skip_updates: 40
+    skip_updates: 16
     device_id: storage3
