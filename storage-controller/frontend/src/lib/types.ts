@@ -350,7 +350,9 @@ export type IncidentType =
   | "sensor_invalid"
   | "home_assistant_disconnected"
   | "abnormal_defrost"
-  | "recovery_timeout";
+  | "recovery_timeout"
+  | "door_open"
+  | "controller_alarm";
 
 export interface IncidentEvent {
   timestamp: string;

@@ -43,6 +43,10 @@ log = logging.getLogger("incident_engine")
 # Grace period before a Home-Assistant disconnect becomes an active incident.
 DISCONNECT_GRACE_SECONDS = 60
 
+# Delay before a door-open or hardware-alarm state triggers a new incident.
+DOOR_OPEN_DELAY_SECONDS = 300   # 5 min — brief door opens are normal
+CONTROLLER_ALARM_DELAY_SECONDS = 60  # 1 min — hardware alarms are urgent
+
 
 # Conservative built-in bounds for gross-failure detection BEFORE a learned model
 # is approved. These detect a stuck defrost / failed recovery but are NEVER used
@@ -125,6 +129,9 @@ class UnitReading:
     defrost_entity_id: str | None = None
     defrost_assignment_id: int | None = None
     defrost: DefrostSettings | None = None
+    # Door / alarm (Phase 7). None = entity not assigned; True/False = known state.
+    door_open: bool | None = None
+    alarm_active: bool | None = None
 
 
 @dataclass
@@ -199,6 +206,17 @@ def _conditions(r: UnitReading) -> list[_Cond]:
     conds.append(_Cond(IncidentType.sensor_unavailable, unavailable, None, None, od, rd))
     conds.append(_Cond(IncidentType.sensor_invalid, invalid, None, None, od, rd))
     conds.append(_Cond(IncidentType.sensor_stale, stale, None, None, od, rd))
+
+    if r.door_open is not None:
+        door_res = EvalResult.ACTIVE if r.door_open else EvalResult.CLEAR
+        conds.append(_Cond(IncidentType.door_open, door_res, None, None,
+                           DOOR_OPEN_DELAY_SECONDS, rd))
+
+    if r.alarm_active is not None:
+        alarm_res = EvalResult.ACTIVE if r.alarm_active else EvalResult.CLEAR
+        conds.append(_Cond(IncidentType.controller_alarm, alarm_res, None, None,
+                           CONTROLLER_ALARM_DELAY_SECONDS, rd))
+
     return conds
 
 
@@ -320,6 +338,28 @@ class IncidentEngine:
                     if e_res.quality.value == Quality.valid.value:
                         evaporator_c = e_res.normalized_value_c
 
+            door_open: bool | None = None
+            door_assignment = by_role.get(EntityRole.door.value)
+            if door_assignment is not None:
+                d_entity = get_entity(door_assignment.entity_id)
+                if d_entity is not None:
+                    door_open = normalize_bool(
+                        getattr(d_entity, "state", None),
+                        invert=door_assignment.invert_state,
+                        mapping=parse_bool_mapping(door_assignment.value_mapping_json),
+                    ).normalized_bool
+
+            alarm_active: bool | None = None
+            alarm_assignment = by_role.get(EntityRole.alarm.value)
+            if alarm_assignment is not None:
+                a_entity = get_entity(alarm_assignment.entity_id)
+                if a_entity is not None:
+                    alarm_active = normalize_bool(
+                        getattr(a_entity, "state", None),
+                        invert=alarm_assignment.invert_state,
+                        mapping=parse_bool_mapping(alarm_assignment.value_mapping_json),
+                    ).normalized_bool
+
             learned: LearnedEnvelope | None = None
             if unit.defrost_evaluation_enabled and defrost is not None:
                 model = await get_active_model(session, unit.id)
@@ -359,6 +399,8 @@ class IncidentEngine:
                     defrost_entity_id=defrost_entity_id,
                     defrost_assignment_id=defrost_assignment_id,
                     defrost=defrost_settings,
+                    door_open=door_open,
+                    alarm_active=alarm_active,
                 )
             )
         return readings
@@ -386,11 +428,12 @@ class IncidentEngine:
 
         for cond in _conditions(r):
             # Suppress only a NEW high excursion that meets every expected-defrost
-            # condition; an already-open temperature_high keeps progressing.
+            # condition OR the door is known-open (temp rise expected); an
+            # already-open temperature_high keeps progressing in both cases.
             if (
                 cond.type == IncidentType.temperature_high
                 and cond.result == EvalResult.ACTIVE
-                and ctx.suppress_high
+                and (ctx.suppress_high or r.door_open is True)
                 and open_by_type.get(cond.type.value) is None
             ):
                 continue

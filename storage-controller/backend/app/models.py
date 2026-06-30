@@ -82,6 +82,8 @@ class IncidentType(str, enum.Enum):
     home_assistant_disconnected = "home_assistant_disconnected"
     abnormal_defrost = "abnormal_defrost"
     recovery_timeout = "recovery_timeout"
+    door_open = "door_open"
+    controller_alarm = "controller_alarm"
 
 
 class DefrostStatus(str, enum.Enum):

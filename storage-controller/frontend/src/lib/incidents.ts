@@ -2,8 +2,10 @@ import {
   AlertOctagon,
   AlertTriangle,
   CloudOff,
+  DoorOpen,
   HelpCircle,
   History,
+  Siren,
   Snowflake,
   Timer,
   WifiOff,
@@ -25,6 +27,8 @@ export const INCIDENT_VISUALS: Record<string, IncidentVisual> = {
   home_assistant_disconnected: { Icon: WifiOff, tone: "neutral" },
   abnormal_defrost: { Icon: Snowflake, tone: "warn" },
   recovery_timeout: { Icon: Timer, tone: "danger" },
+  door_open: { Icon: DoorOpen, tone: "warn" },
+  controller_alarm: { Icon: Siren, tone: "danger" },
 };
 
 export function incidentVisual(type: string): IncidentVisual {
