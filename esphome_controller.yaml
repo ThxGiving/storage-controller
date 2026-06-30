@@ -619,26 +619,7 @@ sensor:
       - multiply: 0.1
     device_id: storage3
 
-  # ── Parameter-Sensoren (P[N] → 0x0300 + N-1, P000/SEt → 0x035E) ────────────
-  # ALU/ALL = Alarm-Offsets relativ zu SEt (ALC=0): ALU=+8°C über, ALL=5°C unter Sollwert
-  # Kühlhaus 1
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "Abtau-Endtemp",      icon: "mdi:thermometer-chevron-up",   register_type: holding, address: 797, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage1, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "Abtau-Intervall",    icon: "mdi:timer-refresh-outline",    register_type: holding, address: 799, value_type: U_WORD, unit_of_measurement: "h",  accuracy_decimals: 0, device_id: storage1, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "Abtau-Maxzeit",      icon: "mdi:timer-stop-outline",       register_type: holding, address: 800, value_type: U_WORD, unit_of_measurement: "min", accuracy_decimals: 0, device_id: storage1, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "Setpoint-Min",       icon: "mdi:thermometer-chevron-down", register_type: holding, address: 769, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage1, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "Setpoint-Max",       icon: "mdi:thermometer-chevron-up",   register_type: holding, address: 770, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage1, skip_updates: 40 }
-  # Kühlhaus 2
-  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "Abtau-Endtemp",      icon: "mdi:thermometer-chevron-up",   register_type: holding, address: 797, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage2, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "Abtau-Intervall",    icon: "mdi:timer-refresh-outline",    register_type: holding, address: 799, value_type: U_WORD, unit_of_measurement: "h",  accuracy_decimals: 0, device_id: storage2, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "Abtau-Maxzeit",      icon: "mdi:timer-stop-outline",       register_type: holding, address: 800, value_type: U_WORD, unit_of_measurement: "min", accuracy_decimals: 0, device_id: storage2, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "Setpoint-Min",       icon: "mdi:thermometer-chevron-down", register_type: holding, address: 769, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage2, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "Setpoint-Max",       icon: "mdi:thermometer-chevron-up",   register_type: holding, address: 770, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage2, skip_updates: 40 }
-  # Kühlhaus 3
-  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "Abtau-Endtemp",      icon: "mdi:thermometer-chevron-up",   register_type: holding, address: 797, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage3, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "Abtau-Intervall",    icon: "mdi:timer-refresh-outline",    register_type: holding, address: 799, value_type: U_WORD, unit_of_measurement: "h",  accuracy_decimals: 0, device_id: storage3, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "Abtau-Maxzeit",      icon: "mdi:timer-stop-outline",       register_type: holding, address: 800, value_type: U_WORD, unit_of_measurement: "min", accuracy_decimals: 0, device_id: storage3, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "Setpoint-Min",       icon: "mdi:thermometer-chevron-down", register_type: holding, address: 769, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage3, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "Setpoint-Max",       icon: "mdi:thermometer-chevron-up",   register_type: holding, address: 770, value_type: S_WORD, unit_of_measurement: "°C", accuracy_decimals: 1, filters: [{multiply: 0.1}], device_id: storage3, skip_updates: 40 }
+  # ── Keine read-only Parameter-Sensoren mehr — alle unten als Number-Entities ──
 
 
 
@@ -652,8 +633,8 @@ number:
     address: 862
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: -40
-    max_value: 40
+    min_value: -55
+    max_value: 150
     step: 0.1
     multiply: 10
     device_id: storage1
@@ -683,8 +664,8 @@ number:
     address: 862
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: -40
-    max_value: 40
+    min_value: -55
+    max_value: 150
     step: 0.1
     multiply: 10
     device_id: storage2
@@ -714,8 +695,8 @@ number:
     address: 862
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: -40
-    max_value: 40
+    min_value: -55
+    max_value: 150
     step: 0.1
     multiply: 10
     device_id: storage3
@@ -748,8 +729,8 @@ number:
     address: 823
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: -60
-    max_value: 40
+    min_value: -55
+    max_value: 150
     step: 0.1
     multiply: 10
     skip_updates: 40
@@ -764,8 +745,8 @@ number:
     address: 824
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: -60
-    max_value: 40
+    min_value: -55
+    max_value: 150
     step: 0.1
     multiply: 10
     skip_updates: 40
@@ -780,8 +761,8 @@ number:
     address: 823
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: -60
-    max_value: 40
+    min_value: -55
+    max_value: 150
     step: 0.1
     multiply: 10
     skip_updates: 40
@@ -796,8 +777,8 @@ number:
     address: 824
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: -60
-    max_value: 40
+    min_value: -55
+    max_value: 150
     step: 0.1
     multiply: 10
     skip_updates: 40
@@ -812,8 +793,8 @@ number:
     address: 823
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: -60
-    max_value: 40
+    min_value: -55
+    max_value: 150
     step: 0.1
     multiply: 10
     skip_updates: 40
@@ -828,9 +809,260 @@ number:
     address: 824
     value_type: S_WORD
     unit_of_measurement: "°C"
-    min_value: -60
-    max_value: 40
+    min_value: -55
+    max_value: 150
     step: 0.1
     multiply: 10
+    skip_updates: 40
+    device_id: storage3
+
+  # ── Setpoint-Grenzen (LS / US) ───────────────────────────────────────────────
+  # LS (P002): Untere Grenze für den Sollwert — Setpoint kann nicht tiefer gesetzt werden.
+  # US (P003): Obere Grenze für den Sollwert — Setpoint kann nicht höher gesetzt werden.
+  # Bereich laut Manual: -55 bis 150 °C. Level Pr2.
+  - platform: modbus_controller
+    modbus_controller_id: storage1ctlr
+    name: "Setpoint-Min (LS)"
+    icon: "mdi:thermometer-chevron-down"
+    mode: BOX
+    register_type: holding
+    address: 769
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    min_value: -55
+    max_value: 150
+    step: 0.1
+    multiply: 10
+    skip_updates: 40
+    device_id: storage1
+
+  - platform: modbus_controller
+    modbus_controller_id: storage1ctlr
+    name: "Setpoint-Max (US)"
+    icon: "mdi:thermometer-chevron-up"
+    mode: BOX
+    register_type: holding
+    address: 770
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    min_value: -55
+    max_value: 150
+    step: 0.1
+    multiply: 10
+    skip_updates: 40
+    device_id: storage1
+
+  - platform: modbus_controller
+    modbus_controller_id: storage2ctlr
+    name: "Setpoint-Min (LS)"
+    icon: "mdi:thermometer-chevron-down"
+    mode: BOX
+    register_type: holding
+    address: 769
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    min_value: -55
+    max_value: 150
+    step: 0.1
+    multiply: 10
+    skip_updates: 40
+    device_id: storage2
+
+  - platform: modbus_controller
+    modbus_controller_id: storage2ctlr
+    name: "Setpoint-Max (US)"
+    icon: "mdi:thermometer-chevron-up"
+    mode: BOX
+    register_type: holding
+    address: 770
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    min_value: -55
+    max_value: 150
+    step: 0.1
+    multiply: 10
+    skip_updates: 40
+    device_id: storage2
+
+  - platform: modbus_controller
+    modbus_controller_id: storage3ctlr
+    name: "Setpoint-Min (LS)"
+    icon: "mdi:thermometer-chevron-down"
+    mode: BOX
+    register_type: holding
+    address: 769
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    min_value: -55
+    max_value: 150
+    step: 0.1
+    multiply: 10
+    skip_updates: 40
+    device_id: storage3
+
+  - platform: modbus_controller
+    modbus_controller_id: storage3ctlr
+    name: "Setpoint-Max (US)"
+    icon: "mdi:thermometer-chevron-up"
+    mode: BOX
+    register_type: holding
+    address: 770
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    min_value: -55
+    max_value: 150
+    step: 0.1
+    multiply: 10
+    skip_updates: 40
+    device_id: storage3
+
+  # ── Abtau-Parameter (dtE / idF / MdF) ───────────────────────────────────────
+  # dtE (P030): Abtau-Endtemperatur — Abtauen stoppt wenn der Verdampfer diese Temp erreicht.
+  #   Bereich: -50 bis 50 °C. Level Pr1.
+  # idF (P032): Intervall zwischen Abtauzyklen in Stunden.
+  #   Bereich: 0 bis 120 h. Level Pr1.
+  # MdF (P033): Maximale Abtaudauer — Notabbruch wenn dtE nicht erreicht wird.
+  #   Bereich: 0 bis 255 min. Level Pr1.
+  - platform: modbus_controller
+    modbus_controller_id: storage1ctlr
+    name: "Abtau-Endtemperatur (dtE)"
+    icon: "mdi:thermometer-chevron-up"
+    mode: BOX
+    register_type: holding
+    address: 797
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    min_value: -50
+    max_value: 50
+    step: 0.1
+    multiply: 10
+    skip_updates: 40
+    device_id: storage1
+
+  - platform: modbus_controller
+    modbus_controller_id: storage1ctlr
+    name: "Abtau-Intervall (idF)"
+    icon: "mdi:timer-refresh-outline"
+    mode: BOX
+    register_type: holding
+    address: 799
+    value_type: U_WORD
+    unit_of_measurement: "h"
+    min_value: 0
+    max_value: 120
+    step: 1
+    multiply: 1
+    skip_updates: 40
+    device_id: storage1
+
+  - platform: modbus_controller
+    modbus_controller_id: storage1ctlr
+    name: "Abtau-Maxzeit (MdF)"
+    icon: "mdi:timer-stop-outline"
+    mode: BOX
+    register_type: holding
+    address: 800
+    value_type: U_WORD
+    unit_of_measurement: "min"
+    min_value: 0
+    max_value: 255
+    step: 1
+    multiply: 1
+    skip_updates: 40
+    device_id: storage1
+
+  - platform: modbus_controller
+    modbus_controller_id: storage2ctlr
+    name: "Abtau-Endtemperatur (dtE)"
+    icon: "mdi:thermometer-chevron-up"
+    mode: BOX
+    register_type: holding
+    address: 797
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    min_value: -50
+    max_value: 50
+    step: 0.1
+    multiply: 10
+    skip_updates: 40
+    device_id: storage2
+
+  - platform: modbus_controller
+    modbus_controller_id: storage2ctlr
+    name: "Abtau-Intervall (idF)"
+    icon: "mdi:timer-refresh-outline"
+    mode: BOX
+    register_type: holding
+    address: 799
+    value_type: U_WORD
+    unit_of_measurement: "h"
+    min_value: 0
+    max_value: 120
+    step: 1
+    multiply: 1
+    skip_updates: 40
+    device_id: storage2
+
+  - platform: modbus_controller
+    modbus_controller_id: storage2ctlr
+    name: "Abtau-Maxzeit (MdF)"
+    icon: "mdi:timer-stop-outline"
+    mode: BOX
+    register_type: holding
+    address: 800
+    value_type: U_WORD
+    unit_of_measurement: "min"
+    min_value: 0
+    max_value: 255
+    step: 1
+    multiply: 1
+    skip_updates: 40
+    device_id: storage2
+
+  - platform: modbus_controller
+    modbus_controller_id: storage3ctlr
+    name: "Abtau-Endtemperatur (dtE)"
+    icon: "mdi:thermometer-chevron-up"
+    mode: BOX
+    register_type: holding
+    address: 797
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    min_value: -50
+    max_value: 50
+    step: 0.1
+    multiply: 10
+    skip_updates: 40
+    device_id: storage3
+
+  - platform: modbus_controller
+    modbus_controller_id: storage3ctlr
+    name: "Abtau-Intervall (idF)"
+    icon: "mdi:timer-refresh-outline"
+    mode: BOX
+    register_type: holding
+    address: 799
+    value_type: U_WORD
+    unit_of_measurement: "h"
+    min_value: 0
+    max_value: 120
+    step: 1
+    multiply: 1
+    skip_updates: 40
+    device_id: storage3
+
+  - platform: modbus_controller
+    modbus_controller_id: storage3ctlr
+    name: "Abtau-Maxzeit (MdF)"
+    icon: "mdi:timer-stop-outline"
+    mode: BOX
+    register_type: holding
+    address: 800
+    value_type: U_WORD
+    unit_of_measurement: "min"
+    min_value: 0
+    max_value: 255
+    step: 1
+    multiply: 1
     skip_updates: 40
     device_id: storage3
