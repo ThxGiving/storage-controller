@@ -619,7 +619,12 @@ sensor:
       - multiply: 0.1
     device_id: storage3
 
-  # ── Keine read-only Parameter-Sensoren mehr — alle unten als Number-Entities ──
+  # ── ALC: Alarmkonfigurations-Modus (P055, Adresse 822) ──────────────────────
+  # 0 = rE (relativ: ALU/ALL sind Offsets zum Setpoint)
+  # 1 = Ab (absolut: ALU/ALL sind absolute Temperaturen)
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, device_id: storage1, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, device_id: storage2, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, device_id: storage3, skip_updates: 40 }
 
 
 
