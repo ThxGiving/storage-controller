@@ -2,6 +2,21 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.9.6 — 2026-06-30
+
+### Fixed
+
+- Defrost-anomaly incidents (`abnormal_defrost`, `recovery_timeout`) were opened
+  directly in `active_violation` but had no path to ever close — they appear in no
+  per-tick condition, and the incidents API only documents/acknowledges, never
+  closes. As a result an "Auffällige Abtauung" stayed flagged active indefinitely
+  (observed: 3d 21h after the defrost had long ended). The engine now auto-closes
+  such an incident once the defrost is physically over (no active cycle, defrost
+  signal off) and the room has recovered to within its upper safety limit.
+  Existing stuck incidents close on the next evaluation tick after update.
+
+---
+
 ## 0.9.5 — 2026-06-26
 
 ### Fixed

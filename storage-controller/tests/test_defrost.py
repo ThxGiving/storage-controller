@@ -226,6 +226,57 @@ async def test_recovery_timeout(app_client):
 
 
 @pytest.mark.asyncio
+async def test_abnormal_defrost_auto_closes_after_recovery(app_client):
+    """An abnormal_defrost incident is opened directly in active_violation; once the
+    defrost is over and the room is back within limits the engine closes it itself
+    (it has no per-condition tick to advance it otherwise)."""
+    unit = await _make_unit(app_client)
+    uid = unit["id"]
+    eng = _engine(app_client)
+    await _feed(eng, [
+        _r(uid, T0, value=6.0, defrost_on=True),
+        _r(uid, T0 + timedelta(minutes=31), value=6.0, defrost_on=True),   # >30 min -> abnormal
+        _r(uid, T0 + timedelta(minutes=40), value=5.0, defrost_on=False),  # defrost off, <=8 -> recovered
+    ])
+    incs = [i for i in await _incidents(uid) if i.type == IncidentType.abnormal_defrost.value]
+    assert len(incs) == 1
+    assert incs[0].state == "closed"
+    assert incs[0].closed_at is not None
+
+
+@pytest.mark.asyncio
+async def test_abnormal_defrost_stays_open_until_recovered(app_client):
+    """While the room is still above the upper limit the anomaly must stay open."""
+    unit = await _make_unit(app_client)
+    uid = unit["id"]
+    eng = _engine(app_client)
+    await _feed(eng, [
+        _r(uid, T0, value=6.0, defrost_on=True),
+        _r(uid, T0 + timedelta(minutes=31), value=6.0, defrost_on=True),   # abnormal
+        _r(uid, T0 + timedelta(minutes=40), value=10.0, defrost_on=False),  # off but still >8
+    ])
+    incs = [i for i in await _incidents(uid) if i.type == IncidentType.abnormal_defrost.value]
+    assert len(incs) == 1
+    assert incs[0].state == "active_violation"
+
+
+@pytest.mark.asyncio
+async def test_recovery_timeout_auto_closes_after_recovery(app_client):
+    unit = await _make_unit(app_client)
+    uid = unit["id"]
+    eng = _engine(app_client)
+    await _feed(eng, [
+        _r(uid, T0, value=6.0, defrost_on=True),
+        _r(uid, T0 + timedelta(minutes=5), value=10.0, defrost_on=False),   # recovering
+        _r(uid, T0 + timedelta(minutes=70), value=10.0, defrost_on=False),  # >60 min -> recovery_timeout
+        _r(uid, T0 + timedelta(minutes=80), value=7.0, defrost_on=False),   # <=8 -> recovered
+    ])
+    incs = [i for i in await _incidents(uid) if i.type == IncidentType.recovery_timeout.value]
+    assert len(incs) == 1
+    assert incs[0].state == "closed"
+
+
+@pytest.mark.asyncio
 async def test_pre_existing_high_not_suppressed_by_defrost(app_client):
     unit = await _make_unit(app_client)
     uid = unit["id"]

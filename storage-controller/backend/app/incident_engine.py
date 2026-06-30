@@ -409,6 +409,11 @@ class IncidentEngine:
             elif cond.result == EvalResult.ACTIVE:
                 self._open(session, r.storage_unit_id, cond, r.now, defrost_on=related)
 
+        # Defrost-anomaly incidents (abnormal_defrost / recovery_timeout) are opened
+        # directly in active_violation and have no per-condition tick to advance them.
+        # Close them once the defrost is physically over and the room has recovered.
+        self._resolve_defrost_incidents(session, r, open_by_type, ctx)
+
     async def _evaluate_defrost(
         self, session: AsyncSession, r: UnitReading, open_by_type: dict[str, Incident]
     ) -> DefrostContext:
@@ -649,6 +654,72 @@ class IncidentEngine:
         )
         open_by_type[itype.value] = inc
         log.info("incident: opened %s for unit %s (%s)", itype.value, r.storage_unit_id, rule)
+
+    # Defrost-anomaly incident types are point-in-time markers, not progressing
+    # conditions: they are opened directly in active_violation and never appear in
+    # ``_conditions`` so the normal tick never closes them.
+    _DEFROST_INCIDENT_TYPES = (IncidentType.abnormal_defrost, IncidentType.recovery_timeout)
+
+    def _resolve_defrost_incidents(
+        self,
+        session: AsyncSession,
+        r: UnitReading,
+        open_by_type: dict[str, Incident],
+        ctx: DefrostContext,
+    ) -> None:
+        open_defrost = [
+            open_by_type[t.value]
+            for t in self._DEFROST_INCIDENT_TYPES
+            if open_by_type.get(t.value) is not None
+        ]
+        if not open_defrost:
+            return
+        # Hold while we cannot confirm the anomaly is over: a defrost cycle is still
+        # in its active/recovering window, the defrost is still on, or its state is
+        # unknown (entity missing / HA disconnected). Never close unverifiable.
+        if ctx.in_window or r.defrost_on is None or r.defrost_on:
+            return
+        valid_room = r.quality == Quality.valid.value and r.normalized_c is not None
+        if not valid_room:
+            return
+        # Recovered = room back within the upper safety limit (when one is configured).
+        if r.upper is not None and r.normalized_c > r.upper:
+            return
+        for inc in open_defrost:
+            self._close_incident(session, inc, r.now, "defrost_recovered")
+
+    def _close_incident(
+        self, session: AsyncSession, incident: Incident, now: datetime, detail: str
+    ) -> None:
+        from_state = incident.state
+        incident.state = IncidentState.closed.value
+        if incident.recovering_at is None:
+            incident.recovering_at = now
+        incident.closed_at = now
+        incident.events.append(
+            IncidentEvent(
+                timestamp=now,
+                kind="transition",
+                from_state=from_state,
+                to_state=IncidentState.closed.value,
+                detail=detail,
+            )
+        )
+        session.add(
+            AuditEvent(
+                component="incident_engine",
+                action="incident_closed",
+                object_type="incident",
+                object_id=str(incident.id),
+                detail=f"{from_state}->closed ({detail})",
+            )
+        )
+        log.info(
+            "incident: closed %s for unit %s (%s)",
+            incident.type,
+            incident.storage_unit_id,
+            detail,
+        )
 
     async def _evaluate_disconnect(
         self, session: AsyncSession, connected: bool, now: datetime
