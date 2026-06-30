@@ -626,9 +626,9 @@ sensor:
   # ── ALC: Alarmkonfigurations-Modus (P055, Adresse 822) ──────────────────────
   # 0 = rE (relativ: ALU/ALL sind Offsets zum Setpoint)
   # 1 = Ab (absolut: ALU/ALL sind absolute Temperaturen)
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, device_id: storage1, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, device_id: storage2, skip_updates: 40 }
-  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, device_id: storage3, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, force_new_range: true, device_id: storage1, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, force_new_range: true, device_id: storage2, skip_updates: 40 }
+  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, force_new_range: true, device_id: storage3, skip_updates: 40 }
 
   # ── ALP: Fühlerauswahl für Temperaturalarm (P054, Adresse 821) ──────────────
   # 1=P1 Raumfühler, 2=P2 Verdampferfühler, 3=P3, 4=P4
@@ -1226,6 +1226,7 @@ number:
     mode: BOX
     register_type: holding
     address: 825
+    force_new_range: true
     value_type: S_WORD
     unit_of_measurement: "°C"
     min_value: 0.1
@@ -1277,6 +1278,7 @@ number:
     mode: BOX
     register_type: holding
     address: 825
+    force_new_range: true
     value_type: S_WORD
     unit_of_measurement: "°C"
     min_value: 0.1
@@ -1328,6 +1330,7 @@ number:
     mode: BOX
     register_type: holding
     address: 825
+    force_new_range: true
     value_type: S_WORD
     unit_of_measurement: "°C"
     min_value: 0.1
