@@ -61,7 +61,7 @@ logger:
 # Enable Home Assistant API
 api:
   encryption:
-    key: "replace_with_your_own_encryption_key"
+    key: !secret api_key
   # Re-publish the connectivity states whenever HA (re)connects, so they are not
   # shown as "unknown" after a Home Assistant restart (the ESP keeps running and
   # would otherwise not emit a fresh state until the next online/offline change).
@@ -79,7 +79,7 @@ api:
 
 ota:
   - platform: esphome
-    password: "replace_with_your_own_ota_password"
+    password: !secret ota_password
 
 wifi:
   ssid: !secret wifi_ssid
@@ -638,7 +638,7 @@ sensor:
       - multiply: 0.1
     device_id: storage3
 
-  # ALC moved to text_sensor section below (shows "rE" / "Ab" instead of 0/1)
+  # ALC Alarmmodus → select entity (lese+schreibbar, mit Klartextnamen)
 
   # ── ALP: Fühlerauswahl für Temperaturalarm (P054, Adresse 821) ──────────────
   # 1=P1 Raumfühler, 2=P2 Verdampferfühler, 3=P3, 4=P4
@@ -677,58 +677,49 @@ sensor:
     device_id: storage3
 
 
-text_sensor:
+select:
   # ── ALC: Alarmkonfigurations-Modus (P055, Adresse 822) ──────────────────────
   # 0 = rE (relativ: ALU/ALL sind Offsets zum Setpoint)
   # 1 = Ab (absolut: ALU/ALL sind absolute Temperaturen)
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
-    name: "ALC Alarmmodus"
+    name: "Alarmmodus (ALC)"
     icon: "mdi:alarm-bell"
-    register_type: holding
     address: 822
-    register_count: 1
-    response_size: 2
+    value_type: U_WORD
     force_new_range: true
     skip_updates: ${su_alarm_cfg}
+    entity_category: config
     device_id: storage1
-    lambda: |-
-      uint16_t v = (uint16_t(data[0]) << 8) | data[1];
-      if (v == 0) return std::string("rE (relativ)");
-      if (v == 1) return std::string("Ab (absolut)");
-      return str_sprintf("? (%u)", v);
+    optionsmap:
+      "rE — Offset zum Setpoint": 0
+      "Ab — Absolute Temperatur": 1
   - platform: modbus_controller
     modbus_controller_id: storage2ctlr
-    name: "ALC Alarmmodus"
+    name: "Alarmmodus (ALC)"
     icon: "mdi:alarm-bell"
-    register_type: holding
     address: 822
-    register_count: 1
-    response_size: 2
+    value_type: U_WORD
     force_new_range: true
     skip_updates: ${su_alarm_cfg}
+    entity_category: config
     device_id: storage2
-    lambda: |-
-      uint16_t v = (uint16_t(data[0]) << 8) | data[1];
-      if (v == 0) return std::string("rE (relativ)");
-      if (v == 1) return std::string("Ab (absolut)");
-      return str_sprintf("? (%u)", v);
+    optionsmap:
+      "rE — Offset zum Setpoint": 0
+      "Ab — Absolute Temperatur": 1
   - platform: modbus_controller
     modbus_controller_id: storage3ctlr
-    name: "ALC Alarmmodus"
+    name: "Alarmmodus (ALC)"
     icon: "mdi:alarm-bell"
-    register_type: holding
     address: 822
-    register_count: 1
-    response_size: 2
+    value_type: U_WORD
     force_new_range: true
     skip_updates: ${su_alarm_cfg}
+    entity_category: config
     device_id: storage3
-    lambda: |-
-      uint16_t v = (uint16_t(data[0]) << 8) | data[1];
-      if (v == 0) return std::string("rE (relativ)");
-      if (v == 1) return std::string("Ab (absolut)");
-      return str_sprintf("? (%u)", v);
+    optionsmap:
+      "rE — Offset zum Setpoint": 0
+      "Ab — Absolute Temperatur": 1
 
 
 number:
