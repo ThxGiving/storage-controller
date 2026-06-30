@@ -550,7 +550,7 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
-    name: "Temperatur"
+    name: "Raumtemperatur (P1)"
     id: kh1_temp
     icon: "mdi:thermometer"
     register_type: holding
@@ -565,7 +565,7 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
-    name: "Verdampfertemperatur"
+    name: "Verdampfertemperatur (P2)"
     id: kh1_evap
     icon: "mdi:coolant-temperature"
     register_type: holding
@@ -580,7 +580,7 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: storage2ctlr
-    name: "Temperatur"
+    name: "Raumtemperatur (P1)"
     id: kh2_temp
     icon: "mdi:thermometer"
     register_type: holding
@@ -595,7 +595,7 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: storage2ctlr
-    name: "Verdampfertemperatur"
+    name: "Verdampfertemperatur (P2)"
     id: kh2_evap
     icon: "mdi:coolant-temperature"
     register_type: holding
@@ -610,7 +610,7 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: storage3ctlr
-    name: "Temperatur"
+    name: "Raumtemperatur (P1)"
     id: kh3_temp
     icon: "mdi:thermometer"
     register_type: holding
@@ -625,7 +625,7 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: storage3ctlr
-    name: "Verdampfertemperatur"
+    name: "Verdampfertemperatur (P2)"
     id: kh3_evap
     icon: "mdi:coolant-temperature"
     register_type: holding
@@ -734,7 +734,7 @@ select:
 number:
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
-    name: "Setpoint"
+    name: "Solltemperatur (SEt)"
     icon: "mdi:target"
     mode: BOX
     register_type: holding
@@ -749,7 +749,7 @@ number:
 
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
-    name: "Hysterese"
+    name: "Hysterese (Hy)"
     icon: "mdi:delta"
     mode: BOX
     register_type: holding
@@ -765,7 +765,7 @@ number:
 
   - platform: modbus_controller
     modbus_controller_id: storage2ctlr
-    name: "Setpoint"
+    name: "Solltemperatur (SEt)"
     icon: "mdi:target"
     mode: BOX
     register_type: holding
@@ -780,7 +780,7 @@ number:
 
   - platform: modbus_controller
     modbus_controller_id: storage2ctlr
-    name: "Hysterese"
+    name: "Hysterese (Hy)"
     icon: "mdi:delta"
     mode: BOX
     register_type: holding
@@ -796,7 +796,7 @@ number:
 
   - platform: modbus_controller
     modbus_controller_id: storage3ctlr
-    name: "Setpoint"
+    name: "Solltemperatur (SEt)"
     icon: "mdi:target"
     mode: BOX
     register_type: holding
@@ -811,7 +811,7 @@ number:
 
   - platform: modbus_controller
     modbus_controller_id: storage3ctlr
-    name: "Hysterese"
+    name: "Hysterese (Hy)"
     icon: "mdi:delta"
     mode: BOX
     register_type: holding
@@ -825,12 +825,12 @@ number:
     skip_updates: ${su_setpt_bounds}
     device_id: storage3
 
-  # ── Alarmgrenzen (ALU/ALL = Offset relativ zu SEt, ALC=0) ───────────────────
-  # ALU: Alarm wenn Temp > SEt + ALU  (z.B. 30 = +3.0°C über Sollwert)
-  # ALL: Alarm wenn Temp < SEt - ALL  (z.B. 50 = 5.0°C unter Sollwert)
+  # ── Alarmgrenzen ALU/ALL ─────────────────────────────────────────────────────
+  # ALC=0 (rE): ALU/ALL sind Offsets zum Setpoint
+  # ALC=1 (Ab): ALU/ALL sind absolute Temperaturen
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
-    name: "Alarm Max Offset"
+    name: "Alarm obere Grenze (ALU)"
     icon: "mdi:thermometer-alert"
     mode: BOX
     register_type: holding
@@ -847,7 +847,7 @@ number:
 
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
-    name: "Alarm Min Offset"
+    name: "Alarm untere Grenze (ALL)"
     icon: "mdi:thermometer-alert"
     mode: BOX
     register_type: holding
@@ -864,7 +864,7 @@ number:
 
   - platform: modbus_controller
     modbus_controller_id: storage2ctlr
-    name: "Alarm Max Offset"
+    name: "Alarm obere Grenze (ALU)"
     icon: "mdi:thermometer-alert"
     mode: BOX
     register_type: holding
@@ -881,7 +881,7 @@ number:
 
   - platform: modbus_controller
     modbus_controller_id: storage2ctlr
-    name: "Alarm Min Offset"
+    name: "Alarm untere Grenze (ALL)"
     icon: "mdi:thermometer-alert"
     mode: BOX
     register_type: holding
@@ -898,7 +898,7 @@ number:
 
   - platform: modbus_controller
     modbus_controller_id: storage3ctlr
-    name: "Alarm Max Offset"
+    name: "Alarm obere Grenze (ALU)"
     icon: "mdi:thermometer-alert"
     mode: BOX
     register_type: holding
@@ -915,7 +915,7 @@ number:
 
   - platform: modbus_controller
     modbus_controller_id: storage3ctlr
-    name: "Alarm Min Offset"
+    name: "Alarm untere Grenze (ALL)"
     icon: "mdi:thermometer-alert"
     mode: BOX
     register_type: holding
