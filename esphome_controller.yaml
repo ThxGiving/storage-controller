@@ -2,6 +2,15 @@ substitutions:
   name: dixell-gateway
   friendly_name: "Dixell Waveshare"
 
+  # Poll intervals — all multiples of update_interval (15 s)
+  # Change here to reschedule entire groups without touching individual entities.
+  su_temp:        "1"   #  1 × 15 s =  30 s  — Raum-/Verdampfertemperatur
+  su_setpt_bounds: "8"  #  8 × 15 s =   2 min — LS / US / HY
+  su_alarm_cfg:   "12"  # 12 × 15 s =   3 min — ALC / ALP / ALU / ALL
+  su_alarm_time:  "16"  # 16 × 15 s =   4 min — AFH / ALd / dAo
+  su_defrost:     "20"  # 20 × 15 s =   5 min — dtE / idF / MdF
+  su_mechanical:  "24"  # 24 × 15 s =   6 min — Ac / FSt
+
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
@@ -549,6 +558,7 @@ sensor:
     value_type: S_WORD
     unit_of_measurement: "°C"
     accuracy_decimals: 1
+    skip_updates: ${su_temp}
     filters:
       - multiply: 0.1
     device_id: storage1
@@ -563,6 +573,7 @@ sensor:
     value_type: S_WORD
     unit_of_measurement: "°C"
     accuracy_decimals: 1
+    skip_updates: ${su_temp}
     filters:
       - multiply: 0.1
     device_id: storage1
@@ -577,6 +588,7 @@ sensor:
     value_type: S_WORD
     unit_of_measurement: "°C"
     accuracy_decimals: 1
+    skip_updates: ${su_temp}
     filters:
       - multiply: 0.1
     device_id: storage2
@@ -591,6 +603,7 @@ sensor:
     value_type: S_WORD
     unit_of_measurement: "°C"
     accuracy_decimals: 1
+    skip_updates: ${su_temp}
     filters:
       - multiply: 0.1
     device_id: storage2
@@ -605,6 +618,7 @@ sensor:
     value_type: S_WORD
     unit_of_measurement: "°C"
     accuracy_decimals: 1
+    skip_updates: ${su_temp}
     filters:
       - multiply: 0.1
     device_id: storage3
@@ -619,6 +633,7 @@ sensor:
     value_type: S_WORD
     unit_of_measurement: "°C"
     accuracy_decimals: 1
+    skip_updates: ${su_temp}
     filters:
       - multiply: 0.1
     device_id: storage3
@@ -626,15 +641,15 @@ sensor:
   # ── ALC: Alarmkonfigurations-Modus (P055, Adresse 822) ──────────────────────
   # 0 = rE (relativ: ALU/ALL sind Offsets zum Setpoint)
   # 1 = Ab (absolut: ALU/ALL sind absolute Temperaturen)
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, force_new_range: true, device_id: storage1, skip_updates: 12 }
-  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, force_new_range: true, device_id: storage2, skip_updates: 12 }
-  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, force_new_range: true, device_id: storage3, skip_updates: 12 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, force_new_range: true, device_id: storage1, skip_updates: ${su_alarm_cfg} }
+  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, force_new_range: true, device_id: storage2, skip_updates: ${su_alarm_cfg} }
+  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "ALC Alarmmodus", icon: "mdi:alarm-bell", register_type: holding, address: 822, value_type: U_WORD, accuracy_decimals: 0, force_new_range: true, device_id: storage3, skip_updates: ${su_alarm_cfg} }
 
   # ── ALP: Fühlerauswahl für Temperaturalarm (P054, Adresse 821) ──────────────
   # 1=P1 Raumfühler, 2=P2 Verdampferfühler, 3=P3, 4=P4
-  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "ALP Alarm-Fühler", icon: "mdi:thermometer-probe", register_type: holding, address: 821, value_type: U_WORD, accuracy_decimals: 0, entity_category: diagnostic, device_id: storage1, skip_updates: 12 }
-  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "ALP Alarm-Fühler", icon: "mdi:thermometer-probe", register_type: holding, address: 821, value_type: U_WORD, accuracy_decimals: 0, entity_category: diagnostic, device_id: storage2, skip_updates: 12 }
-  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "ALP Alarm-Fühler", icon: "mdi:thermometer-probe", register_type: holding, address: 821, value_type: U_WORD, accuracy_decimals: 0, entity_category: diagnostic, device_id: storage3, skip_updates: 12 }
+  - { platform: modbus_controller, modbus_controller_id: storage1ctlr, name: "ALP Alarm-Fühler", icon: "mdi:thermometer-probe", register_type: holding, address: 821, value_type: U_WORD, accuracy_decimals: 0, entity_category: diagnostic, device_id: storage1, skip_updates: ${su_alarm_cfg} }
+  - { platform: modbus_controller, modbus_controller_id: storage2ctlr, name: "ALP Alarm-Fühler", icon: "mdi:thermometer-probe", register_type: holding, address: 821, value_type: U_WORD, accuracy_decimals: 0, entity_category: diagnostic, device_id: storage2, skip_updates: ${su_alarm_cfg} }
+  - { platform: modbus_controller, modbus_controller_id: storage3ctlr, name: "ALP Alarm-Fühler", icon: "mdi:thermometer-probe", register_type: holding, address: 821, value_type: U_WORD, accuracy_decimals: 0, entity_category: diagnostic, device_id: storage3, skip_updates: ${su_alarm_cfg} }
 
 
 number:
@@ -667,7 +682,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 8
+    skip_updates: ${su_setpt_bounds}
     device_id: storage1
 
   - platform: modbus_controller
@@ -699,7 +714,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 8
+    skip_updates: ${su_setpt_bounds}
     device_id: storage2
 
   - platform: modbus_controller
@@ -731,7 +746,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 8
+    skip_updates: ${su_setpt_bounds}
     device_id: storage3
 
   # ── Alarmgrenzen (ALU/ALL = Offset relativ zu SEt, ALC=0) ───────────────────
@@ -751,7 +766,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 12
+    skip_updates: ${su_alarm_cfg}
     device_id: storage1
 
   - platform: modbus_controller
@@ -768,7 +783,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 12
+    skip_updates: ${su_alarm_cfg}
     device_id: storage1
 
   - platform: modbus_controller
@@ -785,7 +800,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 12
+    skip_updates: ${su_alarm_cfg}
     device_id: storage2
 
   - platform: modbus_controller
@@ -802,7 +817,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 12
+    skip_updates: ${su_alarm_cfg}
     device_id: storage2
 
   - platform: modbus_controller
@@ -819,7 +834,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 12
+    skip_updates: ${su_alarm_cfg}
     device_id: storage3
 
   - platform: modbus_controller
@@ -836,7 +851,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 12
+    skip_updates: ${su_alarm_cfg}
     device_id: storage3
 
   # ── Setpoint-Grenzen (LS / US) ───────────────────────────────────────────────
@@ -857,7 +872,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 8
+    skip_updates: ${su_setpt_bounds}
     device_id: storage1
 
   - platform: modbus_controller
@@ -874,7 +889,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 8
+    skip_updates: ${su_setpt_bounds}
     device_id: storage1
 
   - platform: modbus_controller
@@ -891,7 +906,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 8
+    skip_updates: ${su_setpt_bounds}
     device_id: storage2
 
   - platform: modbus_controller
@@ -908,7 +923,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 8
+    skip_updates: ${su_setpt_bounds}
     device_id: storage2
 
   - platform: modbus_controller
@@ -925,7 +940,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 8
+    skip_updates: ${su_setpt_bounds}
     device_id: storage3
 
   - platform: modbus_controller
@@ -942,7 +957,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 8
+    skip_updates: ${su_setpt_bounds}
     device_id: storage3
 
   # ── Abtau-Parameter (dtE / idF / MdF) ───────────────────────────────────────
@@ -966,7 +981,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 20
+    skip_updates: ${su_defrost}
     device_id: storage1
 
   - platform: modbus_controller
@@ -983,7 +998,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 20
+    skip_updates: ${su_defrost}
     device_id: storage1
 
   - platform: modbus_controller
@@ -1000,7 +1015,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 20
+    skip_updates: ${su_defrost}
     device_id: storage1
 
   - platform: modbus_controller
@@ -1017,7 +1032,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 20
+    skip_updates: ${su_defrost}
     device_id: storage2
 
   - platform: modbus_controller
@@ -1034,7 +1049,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 20
+    skip_updates: ${su_defrost}
     device_id: storage2
 
   - platform: modbus_controller
@@ -1051,7 +1066,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 20
+    skip_updates: ${su_defrost}
     device_id: storage2
 
   - platform: modbus_controller
@@ -1068,7 +1083,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 20
+    skip_updates: ${su_defrost}
     device_id: storage3
 
   - platform: modbus_controller
@@ -1085,7 +1100,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 20
+    skip_updates: ${su_defrost}
     device_id: storage3
 
   - platform: modbus_controller
@@ -1102,7 +1117,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 20
+    skip_updates: ${su_defrost}
     device_id: storage3
 
   # ── Kompressor-Schutz & Lüfter ───────────────────────────────────────────────
@@ -1124,7 +1139,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 24
+    skip_updates: ${su_mechanical}
     device_id: storage1
 
   - platform: modbus_controller
@@ -1141,7 +1156,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 24
+    skip_updates: ${su_mechanical}
     device_id: storage1
 
   - platform: modbus_controller
@@ -1158,7 +1173,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 24
+    skip_updates: ${su_mechanical}
     device_id: storage2
 
   - platform: modbus_controller
@@ -1175,7 +1190,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 24
+    skip_updates: ${su_mechanical}
     device_id: storage2
 
   - platform: modbus_controller
@@ -1192,7 +1207,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 24
+    skip_updates: ${su_mechanical}
     device_id: storage3
 
   - platform: modbus_controller
@@ -1209,7 +1224,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 24
+    skip_updates: ${su_mechanical}
     device_id: storage3
 
   # ── Alarm-Timing (AFH / ALd / dAo) ──────────────────────────────────────────
@@ -1234,7 +1249,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 16
+    skip_updates: ${su_alarm_time}
     device_id: storage1
 
   - platform: modbus_controller
@@ -1251,7 +1266,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 16
+    skip_updates: ${su_alarm_time}
     device_id: storage1
 
   - platform: modbus_controller
@@ -1268,7 +1283,7 @@ number:
     step: 10
     multiply: 1
     entity_category: config
-    skip_updates: 16
+    skip_updates: ${su_alarm_time}
     device_id: storage1
 
   - platform: modbus_controller
@@ -1286,7 +1301,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 16
+    skip_updates: ${su_alarm_time}
     device_id: storage2
 
   - platform: modbus_controller
@@ -1303,7 +1318,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 16
+    skip_updates: ${su_alarm_time}
     device_id: storage2
 
   - platform: modbus_controller
@@ -1320,7 +1335,7 @@ number:
     step: 10
     multiply: 1
     entity_category: config
-    skip_updates: 16
+    skip_updates: ${su_alarm_time}
     device_id: storage2
 
   - platform: modbus_controller
@@ -1338,7 +1353,7 @@ number:
     step: 0.1
     multiply: 10
     entity_category: config
-    skip_updates: 16
+    skip_updates: ${su_alarm_time}
     device_id: storage3
 
   - platform: modbus_controller
@@ -1355,7 +1370,7 @@ number:
     step: 1
     multiply: 1
     entity_category: config
-    skip_updates: 16
+    skip_updates: ${su_alarm_time}
     device_id: storage3
 
   - platform: modbus_controller
@@ -1372,5 +1387,5 @@ number:
     step: 10
     multiply: 1
     entity_category: config
-    skip_updates: 16
+    skip_updates: ${su_alarm_time}
     device_id: storage3
