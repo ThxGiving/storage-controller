@@ -246,6 +246,7 @@ binary_sensor:
     modbus_controller_id: storage1ctlr
     name: "Ventilator"
     icon: "mdi:fan"
+    device_class: running
     register_type: coil
     address: 539
     device_id: storage1
@@ -254,6 +255,7 @@ binary_sensor:
     modbus_controller_id: storage1ctlr
     name: "Kompressor"
     icon: "mdi:engine"
+    device_class: running
     register_type: coil
     address: 542
     device_id: storage1
@@ -262,6 +264,7 @@ binary_sensor:
     modbus_controller_id: storage2ctlr
     name: "Ventilator"
     icon: "mdi:fan"
+    device_class: running
     register_type: coil
     address: 539
     device_id: storage2
@@ -270,6 +273,7 @@ binary_sensor:
     modbus_controller_id: storage2ctlr
     name: "Kompressor"
     icon: "mdi:engine"
+    device_class: running
     register_type: coil
     address: 542
     device_id: storage2
@@ -278,6 +282,7 @@ binary_sensor:
     modbus_controller_id: storage3ctlr
     name: "Ventilator"
     icon: "mdi:fan"
+    device_class: running
     register_type: coil
     address: 539
     device_id: storage3
@@ -286,6 +291,7 @@ binary_sensor:
     modbus_controller_id: storage3ctlr
     name: "Kompressor"
     icon: "mdi:engine"
+    device_class: running
     register_type: coil
     address: 542
     device_id: storage3
@@ -342,8 +348,7 @@ binary_sensor:
     device_id: storage1
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
-    name: "Tür offen"
-    icon: "mdi:door-open"
+    name: "Tür"
     device_class: door
     register_type: coil
     address: 530
@@ -399,8 +404,7 @@ binary_sensor:
     device_id: storage2
   - platform: modbus_controller
     modbus_controller_id: storage2ctlr
-    name: "Tür offen"
-    icon: "mdi:door-open"
+    name: "Tür"
     device_class: door
     register_type: coil
     address: 530
@@ -456,8 +460,7 @@ binary_sensor:
     device_id: storage3
   - platform: modbus_controller
     modbus_controller_id: storage3ctlr
-    name: "Tür offen"
-    icon: "mdi:door-open"
+    name: "Tür"
     device_class: door
     register_type: coil
     address: 530
