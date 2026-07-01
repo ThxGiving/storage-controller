@@ -20,6 +20,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    TypeDecorator,
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -29,6 +30,45 @@ from .db import Base
 
 def utcnow() -> datetime:
     return datetime.now(UTC)
+
+
+class UtcDateTime(TypeDecorator):
+    """DateTime column that guarantees UTC-aware values across the DB boundary.
+
+    This is the single, canonical place the whole backend handles stored times.
+    SQLite (via SQLAlchemy's ``DateTime``) keeps datetimes tz-naive, so a UTC
+    instant read back looks naive and serializes to JSON without an offset — the
+    frontend then misreads stored UTC as local time (the 2h summer offset bug).
+
+    The rule enforced here:
+      * on write — a naive value is assumed to already be UTC; an aware value is
+        converted to UTC; either way it is stored naive-UTC (identical on-disk
+        format to existing rows, so no data migration is needed);
+      * on read — the value is always returned tz-aware in UTC.
+
+    Because this holds for every ORM datetime, endpoints must NOT re-stamp times
+    sourced from the database. The only remaining ``_as_utc``-style helpers are
+    for non-ORM sources (in-memory diagnostics/HA state) that never pass here.
+    """
+
+    impl = DateTime
+    cache_ok = True
+
+    def process_bind_param(self, value: datetime | None, dialect):
+        if value is None:
+            return None
+        if value.tzinfo is not None:
+            value = value.astimezone(UTC)
+        return value.replace(tzinfo=None)
+
+    def process_result_value(self, value: datetime | None, dialect):
+        if value is None:
+            return None
+        return (
+            value.replace(tzinfo=UTC)
+            if value.tzinfo is None
+            else value.astimezone(UTC)
+        )
 
 
 class EntityRole(str, enum.Enum):
@@ -162,7 +202,7 @@ class AppSetting(Base):
     key: Mapped[str] = mapped_column(String(128), primary_key=True)
     value: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+        UtcDateTime, default=utcnow, onupdate=utcnow
     )
 
 
@@ -241,9 +281,9 @@ class StorageUnit(Base):
         Integer, default=10, nullable=False
     )
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+        UtcDateTime, default=utcnow, onupdate=utcnow
     )
 
     assignments: Mapped[list[EntityAssignment]] = relationship(
@@ -269,9 +309,9 @@ class EntityAssignment(Base):
     invert_state: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     value_mapping_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+        UtcDateTime, default=utcnow, onupdate=utcnow
     )
 
     storage_unit: Mapped[StorageUnit] = relationship(back_populates="assignments")
@@ -313,9 +353,9 @@ class MonitoringProfile(Base):
         Boolean, default=True, nullable=False
     )
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+        UtcDateTime, default=utcnow, onupdate=utcnow
     )
 
 
@@ -347,9 +387,9 @@ class SensorSample(Base):
     entity_id: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[str] = mapped_column(String(40), nullable=False)
 
-    event_timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    event_timestamp: Mapped[datetime] = mapped_column(UtcDateTime, nullable=False)
     received_timestamp: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, nullable=False
+        UtcDateTime, default=utcnow, nullable=False
     )
 
     raw_value: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -387,9 +427,9 @@ class StateSample(Base):
     entity_id: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[str] = mapped_column(String(40), nullable=False)
 
-    event_timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    event_timestamp: Mapped[datetime] = mapped_column(UtcDateTime, nullable=False)
     received_timestamp: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, nullable=False
+        UtcDateTime, default=utcnow, nullable=False
     )
 
     raw_state: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -423,27 +463,27 @@ class Incident(Base):
     type: Mapped[str] = mapped_column(String(40), nullable=False)
     state: Mapped[str] = mapped_column(String(30), nullable=False)
 
-    opened_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    recovering_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    opened_at: Mapped[datetime] = mapped_column(UtcDateTime, nullable=False)
+    confirmed_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+    recovering_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+    closed_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
 
     limit_value_c: Mapped[float | None] = mapped_column(Float, nullable=True)
     extreme_value_c: Mapped[float | None] = mapped_column(Float, nullable=True)
-    extreme_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    extreme_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
 
     defrost_overlap: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Documentation (HACCP)
-    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    acknowledged_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
     acknowledged_by: Mapped[str | None] = mapped_column(String(200), nullable=True)
     cause: Mapped[str | None] = mapped_column(Text, nullable=True)
     corrective_action: Mapped[str | None] = mapped_column(Text, nullable=True)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+        UtcDateTime, default=utcnow, onupdate=utcnow
     )
 
     events: Mapped[list[IncidentEvent]] = relationship(
@@ -463,7 +503,7 @@ class IncidentEvent(Base):
     incident_id: Mapped[int] = mapped_column(
         ForeignKey("incidents.id", ondelete="CASCADE"), nullable=False
     )
-    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    timestamp: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
     kind: Mapped[str] = mapped_column(String(40), nullable=False)  # transition|extreme|doc
     from_state: Mapped[str | None] = mapped_column(String(30), nullable=True)
     to_state: Mapped[str | None] = mapped_column(String(30), nullable=True)
@@ -494,12 +534,12 @@ class DefrostCycle(Base):
     )
     source_entity_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
-    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime] = mapped_column(UtcDateTime, nullable=False)
+    ended_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
     recovery_started_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
+        UtcDateTime, nullable=True
     )
-    recovered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    recovered_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
 
     initial_room_temperature_c: Mapped[float | None] = mapped_column(Float, nullable=True)
     peak_room_temperature_c: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -513,9 +553,9 @@ class DefrostCycle(Base):
     # directly observed — its timestamps are approximate, not precise.
     reconstructed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+        UtcDateTime, default=utcnow, onupdate=utcnow
     )
 
 
@@ -549,10 +589,10 @@ class DefrostLearnedModel(Base):
     valid_cycle_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     window_start: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
+        UtcDateTime, nullable=True
     )
     window_end: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
+        UtcDateTime, nullable=True
     )
 
     # Robust statistics (median for typical, p95 for maximum).
@@ -574,15 +614,15 @@ class DefrostLearnedModel(Base):
     drift_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     generated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow
+        UtcDateTime, default=utcnow
     )
     approved_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
+        UtcDateTime, nullable=True
     )
     approved_by: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+        UtcDateTime, default=utcnow, onupdate=utcnow
     )
 
 
@@ -610,7 +650,7 @@ class SensorAggregate(Base):
     )
     role: Mapped[str] = mapped_column(String(40), nullable=False)
     tier: Mapped[str] = mapped_column(String(10), nullable=False)  # "15min" | "hourly"
-    bucket_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    bucket_start: Mapped[datetime] = mapped_column(UtcDateTime, nullable=False)
 
     sample_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     valid_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -620,7 +660,7 @@ class SensorAggregate(Base):
     # "computed" (from raw samples) or "ha_statistics" (imported long-term stats).
     source: Mapped[str] = mapped_column(String(20), default="computed", nullable=False)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
 
 
 class MaintenanceRun(Base):
@@ -629,8 +669,8 @@ class MaintenanceRun(Base):
     __tablename__ = "maintenance_runs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
     aggregated_15min: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     aggregated_hourly: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     raw_deleted: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -675,12 +715,12 @@ class HistoryImport(Base):
         String(20), default=HistoryImportStatus.importing.value, nullable=False
     )
     # Raw recorder coverage actually imported.
-    raw_from: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    raw_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    raw_from: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+    raw_to: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
     raw_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     # Long-term hourly statistics coverage actually imported.
-    stats_from: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    stats_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    stats_from: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+    stats_to: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
     stats_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -689,9 +729,9 @@ class HistoryImport(Base):
     # restarting completed windows, and the UI show which date range failed.
     chunks_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_by: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
+    started_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
 
 
 class ReportStatus(str, enum.Enum):
@@ -737,7 +777,7 @@ class ReportBrandingSettings(Base):
         String(20), default=ReportDetailLevel.standard.value, nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+        UtcDateTime, default=utcnow, onupdate=utcnow
     )
 
 
@@ -759,8 +799,8 @@ class Report(Base):
 
     period_year: Mapped[int] = mapped_column(Integer, nullable=False)
     period_month: Mapped[int] = mapped_column(Integer, nullable=False)
-    period_start_utc: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    period_end_utc: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    period_start_utc: Mapped[datetime] = mapped_column(UtcDateTime, nullable=False)
+    period_end_utc: Mapped[datetime] = mapped_column(UtcDateTime, nullable=False)
 
     locale: Mapped[str] = mapped_column(String(10), default="en", nullable=False)
     timezone: Mapped[str] = mapped_column(String(64), default="Europe/Berlin", nullable=False)
@@ -778,15 +818,15 @@ class Report(Base):
     json_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
     checksum_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     failure_category: Mapped[str | None] = mapped_column(String(60), nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_by: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    generated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
+    generated_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
 
 
 class AuditEvent(Base):
@@ -794,7 +834,7 @@ class AuditEvent(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, index=True
+        UtcDateTime, default=utcnow, index=True
     )
     component: Mapped[str] = mapped_column(String(60), nullable=False)
     action: Mapped[str] = mapped_column(String(120), nullable=False)
@@ -878,10 +918,10 @@ class SmtpSettings(Base):
         Integer, default=20 * 1024 * 1024, nullable=False
     )
     site_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    last_test_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_test_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
     last_test_ok: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     last_test_error: Mapped[str | None] = mapped_column(Text, nullable=True)  # sanitized
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
 
 
 class ReportSchedule(Base):
@@ -911,12 +951,12 @@ class ReportSchedule(Base):
     catch_up_mode: Mapped[str] = mapped_column(
         String(10), default="one", nullable=False
     )  # one | none
-    next_run_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    last_run_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    next_run_utc: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+    last_run_utc: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
     last_result: Mapped[str | None] = mapped_column(String(30), nullable=True)
     created_by: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
 
 
 class ScheduleRun(Base):
@@ -937,7 +977,7 @@ class ScheduleRun(Base):
     )
     period_year: Mapped[int] = mapped_column(Integer, nullable=False)
     period_month: Mapped[int] = mapped_column(Integer, nullable=False)
-    scheduled_for_utc: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    scheduled_for_utc: Mapped[datetime] = mapped_column(UtcDateTime, nullable=False)
     state: Mapped[str] = mapped_column(
         String(20), default=ScheduleRunState.pending.value, nullable=False
     )
@@ -950,10 +990,10 @@ class ScheduleRun(Base):
     attempt_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     # Execution lock (single-process; stale locks recovered after a timeout).
     locked_by: Mapped[str | None] = mapped_column(String(80), nullable=True)
-    locked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    locked_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
 
 
 class EmailDelivery(Base):
@@ -985,15 +1025,15 @@ class EmailDelivery(Base):
     )
     attempt_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     next_attempt_utc: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
+        UtcDateTime, nullable=True
     )
     last_error_category: Mapped[str | None] = mapped_column(String(30), nullable=True)
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)  # sanitized
     per_recipient_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_manual_resend: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
+    sent_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
 
 
 # ── Phase 7: Backup jobs ───────────────────────────────────────────────────────
@@ -1016,7 +1056,7 @@ class BackupJob(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, nullable=False
+        UtcDateTime, default=utcnow, nullable=False
     )
     status: Mapped[str] = mapped_column(
         String(20), default=BackupStatus.completed.value, nullable=False

@@ -58,6 +58,14 @@ async def test_list_and_get_incident(app_client):
     assert body["storage_unit_name"] == "Kühlhaus 1"
     assert len(body["events"]) >= 1  # opened transition
 
+    # DB-sourced timestamps must serialize UTC-aware (Z / +00:00) — the
+    # UtcDateTime column type guarantees this so the frontend never misreads a
+    # stored UTC instant as local time. Covers incident + nested event times.
+    opened = body["opened_at"]
+    assert opened.endswith("Z") or "+00:00" in opened
+    evt_ts = body["events"][0]["timestamp"]
+    assert evt_ts.endswith("Z") or "+00:00" in evt_ts
+
 
 @pytest.mark.asyncio
 async def test_acknowledge_and_document(app_client):

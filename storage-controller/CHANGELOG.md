@@ -2,6 +2,16 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.9.9 — 2026-07-01
+
+### Fixed
+
+- **Abtau-Bänder im Graph um 2 Stunden versetzt** — im Kühlgerät-Detail lagen die Abtau-/Erholungs-Bänder gegenüber der Temperaturkurve verschoben (im Sommer +2 h). Ursache war eine uneinheitliche Zeitbehandlung: SQLite gibt Zeitstempel ohne Zeitzone zurück, und nur ein Teil der API-Endpoints stempelte sie als UTC — offset-lose Zeiten interpretiert der Browser als Lokalzeit.
+
+### Changed
+
+- **Einheitliche Zeitbehandlung an der Datenbankgrenze** — ein neuer `UtcDateTime`-Spaltentyp erzwingt zentral, dass *jeder* gespeicherte Zeitstempel UTC-aware aus der Datenbank kommt. Damit sind alle bislang betroffenen Ansichten (Vorfälle, Berichte, Wartung, Verlaufs-Import, Abtau-Lernen u. a.) auf einen Schlag korrekt, statt Endpoint für Endpoint nachgebessert zu werden.
+
 ## 0.9.8 — 2026-07-01
 
 ### Fixed

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from app import db as db_module
-from app.models import Quality, SampleSource, SensorSample
+from app.models import DefrostCycle, Quality, SampleSource, SensorSample
 
 
 async def _make_unit(client):
@@ -97,6 +97,40 @@ async def test_downsampling_for_long_ranges(app_client):
     assert body["downsampled"] is True
     assert body["bucket_seconds"] is not None
     assert len(body["points"]) <= 24 * 3600 // body["bucket_seconds"] + 2
+
+
+@pytest.mark.asyncio
+async def test_defrost_cycles_serialize_as_utc(app_client):
+    """Regression: defrost timestamps must carry a UTC designator so the chart
+    parses them as UTC — same as temperature points. A naive (offset-less)
+    string is parsed as local time in the browser, shifting defrost bands off
+    the temperature curve by the local UTC offset."""
+    unit = await _make_unit(app_client)
+    now = datetime.now(timezone.utc)
+    factory = db_module.get_session_factory()
+    async with factory() as session:
+        session.add(
+            DefrostCycle(
+                storage_unit_id=unit["id"],
+                started_at=now - timedelta(minutes=30),
+                ended_at=now - timedelta(minutes=10),
+                status="closed",
+            )
+        )
+        await session.commit()
+
+    resp = await app_client.get(
+        f"/api/storage-units/{unit['id']}/defrost-cycles?range=24h"
+    )
+    assert resp.status_code == 200
+    cycles = resp.json()
+    assert len(cycles) == 1
+    started = cycles[0]["started_at"]
+    ended = cycles[0]["ended_at"]
+    # UTC marker present (Z or +00:00), and round-trips to the stored instant.
+    assert started.endswith("Z") or "+00:00" in started
+    assert ended.endswith("Z") or "+00:00" in ended
+    assert datetime.fromisoformat(started.replace("Z", "+00:00")).tzinfo is not None
 
 
 @pytest.mark.asyncio
