@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<content>
+<evopacket>
+<info name="LIBPackage" version="20170331" release="XW270K_001000430024" size="434300" ext=".tar.gz"/>
+<action trans="F" reb="0" cmd="/bin/cp -f $ /opt/backup/LIBPackage.tar.gz"/>
+<evo vset="20170331-XW270K_001000430024"/>
+<desc>
+<it-IT>Librerie Dispositivi</it-IT>
+<en-GB>Device libraries</en-GB>
+<en-US>Device libraries</en-US>
+</desc>
+</evopacket>
+<evopacket>
+<info name="LIBInstall" version="20170331" release="json" size="2013" ext=".sh"/>
+<action trans="F" reb="0" cmd="/bin/sh $ json"/>
+<evo vset="20170331-json"/>
+<desc>
+<it-IT>Installer Librerie Dispositivi</it-IT>
+<en-GB>Device libraries installer</en-GB>
+<en-US>Device libraries installer</en-US>
+</desc>
+</evopacket>
+</content>

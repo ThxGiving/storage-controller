@@ -1,0 +1,915 @@
+H|10
+G|11
+1|Regolazione
+2|Defrost
+3|Altro
+4|Energy Saving
+5|Ausiliario
+6|Uscita Analogica
+7|Sonda
+8|Ingresso Digitale
+9|Allarme
+10|Ventilatore
+11|Configurazione
+D|125
+SEt|Set point
+dPo|Sbrinamento all'accensione
+Adr|Indirizzo seriale
+dSd|Ritardo sbrinamento dalla chiamata
+rEd|Visualizzazione su display remoto
+Hd1|Primo giorno settimanale festivo
+rES|Risoluzione (per C) : intero , decimale
+SAA|Set Point per resistenze antiappannanti
+CCo|Configurazione compressori
+rEL|Versione firmware
+Pr2|Accesso in Pr2
+Ld6|Orario di inizio 6 sbrinamento feriale
+ArP|Selezione sonda per regolatore ausiliario
+LAo|Corrente minima uscita analogica
+Pbr|Selezione sonda di regolazione
+Sd6|Orario di inizio 6 sbrinamento festivo
+APb|Banda proporzionale
+Prd|Visualizzazione valore sonda
+Sd2|Orario di inizio 2 sbrinamento festivo
+did|Ritardo ingresso digitale per allarme configurabile
+.TmDef|Tempo pressione tasto DEF/ES per attivazione
+tbA|Tacitazione rele' allarme
+_HES|_
+rrd|Abilita reg. con allarme porta aperta
+.enFF|Abilita funzione ventole umidita' (da tasto AUX)
+AoS|Set Point per uscita analogica
+P2P|Presenza sonda 2
+Hy|Isteresi
+.dsONF|Disabilita tasto On-OFF
+.TmSet|Tempo pressione tasto SET per programmazione
+odS|Ritardo attivazione uscite al power on
+Ld3|Orario di inizio 3 sbrinamento feriale
+Ld2|Orario di inizio 2 sbrinamento feriale
+Ld1|Orario di inizio 1 sbrinamento feriale
+Ld7|Orario di inizio 7 sbrinamento feriale
+ISE|Orario di inizio ciclo Energy Saving festivo
+Ld5|Orario di inizio 5 sbrinamento feriale
+Ld4|Orario di inizio 4 sbrinamento feriale
+Ld8|Orario di inizio 8 sbrinamento feriale
+o3|Calibrazione sonda ausiliaria
+dAF|Ritardo sbrinamento dopo il congelamento
+AFH|Isteresi Allarme temperatura / ventole / defrost
+LdE|Ritardo spegnimento luce dopo disattivazione
+oE|Calibrazione sonda evaporatore
+dSE|Durata ciclo Energy Saving festivo
+Fnd|Ritardo ventilatori dopo lo sbrinamento
+Fnc|Funzionamento ventilatori.
+idF|Intervallo fra i cicli di sbrinamento
+dAY|Giorno
+dAd|Ritardo visualizzazione temperatura dopo sbrinamento
+.LkEn|Abilitazione funzione di LOCK
+ALU|Allarme di massima temperatura
+CSd|Set temperatura allarme condensatore
+.8KEY|Selezione tastiera a 8 tasti
+dAo|Ritardo allarme temperatura al power-on
+tdF|Tipo di sbrinamento
+US|Set Point massimo
+HLP|Selezione sonda per funzione Minima/Massima temperat.
+oLt|Temporizzatore uscita relay LUCE
+CCt|Durata Ciclo continuo
+ot|Calibrazione sonda termostato
+.BlkBuz|Abilitazione blink del buzzer
+ILE|Orario di inizio ciclo Energy Saving feriale
+Hd3|Terzo giorno settimanale festivo
+Hd2|Secondo giorno settimanale festivo
+Lod|Visualizzazione su display
+SdF|Set point  per conteggio Smart Frost
+oAt|Temporizzatore uscita relay AUX
+nPS|Numero interventi pressostato
+AdE|Ritardo spegnimento AUX dopo disattivazione
+FSt|Temperatura blocco ventolilatori
+Hur|Ore
+CH|Tipo di azione (Caldo/Freddo)
+Ad2|Ritardo allarme temperatura (in funz. normale)
+HES|Incremento di temp. Durante il funz. notturno
+ALd|Ritardo allarme temperatura
+MdF|Durata (massima) 1 sbrinamento
+CF|Unita' misura temperatura : Celsius , Fahrenheit
+dtE|Temperatura fine sbrinamento 1 evaporatore
+.stFF|Stato funzione ventole umidita' (tasto AUX)
+oA4|Configurazione funzione uscita AUX4
+oA3|Configurazione funzione uscita AUX3
+oA2|Configurazione funzione uscita AUX2
+oA1|Configurazione funzione uscita AUX1
+dtS|Temperatura fine sbrinamento 2 evaporatore
+MdS|Durata (massima) 2 sbrinamento
+P3P|Presenza sonda 3
+Sd4|Orario di inizio 4 sbrinamento festivo
+Sd5|Orario di inizio 5 sbrinamento festivo
+ALL|Allarme minima temperatura
+Sd7|Orario di inizio 7 sbrinamento festivo
+Sd1|Orario di inizio 1 sbrinamento festivo
+dLE|Durata ciclo Energy Saving feriale
+Sd3|Orario di inizio 3 sbrinamento festivo
+LMP|Abilitazione luce con porta aperta
+Sd8|Orario di inizio 8 sbrinamento festivo
+dSP|Selezione sonda gestione defrost secondo evaporatore
+AC1|Ritardo partenza 2 compressore
+Odc|Controllo per porta aperta
+ALP|Selezione sonda gestione allarme temperatura
+Min|Minuti
+i1P|Polarita' ingresso digitale 1
+Ptb|Codice mappa parametri
+.dsAUX|Disabilita tasto AUX
+FAP|Selezione sonda per gestione ventilatori
+.INV|Inversione compressore-defrost
+CAo|Selezione temperatura per uscita analogica
+LS|Set Point minimo
+.Clk|Presenza orologio
+AC|Ritardo partenze ravvicinate
+EdA|Esclusione allarme temperatura dopo sbrinamento
+EdF|Modalita' di sbrinamento
+ESP|Selezione sonda per funzione Energy Saving
+i2P|Polarita' ingresso digitale 2
+doA|Ritardo allarme porta aperta
+ALc|Configurazione allarmi  : relativi / assoluti
+dFd|Visualizzazione durante lo sbrinamento
+i2F|Configurazione ingresso digitale configurabile
+Con|Tempo compressore ON con sonda guasta
+oP2|Polarita' uscita relay allarme
+AcH|Tipo di azione regolatore ausiliario (Caldo/Freddo)
+dFP|Selezione sonda gestione defrost primo evaporatore
+CoF|Tempo compressore OFF con sonda guasta
+dot|Esclusione allarme temperatura con porta aperta
+Fdt|Tempo sgocciolamento
+L|21
+l|T0C(0-4)|5
+0|rt
+1|it
+2|SEt
+3|dEF
+4|dEG
+l|T0A(0-2)|3
+0|rE
+1|rt
+2|in
+l|T15(0-6)|7
+0|Alr
+1|FAn
+2|LiG
+3|AUS
+4|onF
+5|dF2
+6|cP2
+l|T0F(0-3)|4
+0|C-n
+1|C-y
+2|O-n
+3|O-y
+l|T04(0-1)|2
+0|SE
+1|AL
+l|T18(0-144)|145
+0|00:00
+1|00:10
+2|00:20
+3|00:30
+4|00:40
+5|00:50
+6|01:00
+7|01:10
+8|01:20
+9|01:30
+10|01:40
+11|01:50
+12|02:00
+13|02:10
+14|02:20
+15|02:30
+16|02:40
+17|02:50
+18|03:00
+19|03:10
+20|03:20
+21|03:30
+22|03:40
+23|03:50
+24|04:00
+25|04:10
+26|04:20
+27|04:30
+28|04:40
+29|04:50
+30|05:00
+31|05:10
+32|05:20
+33|05:30
+34|05:40
+35|05:50
+36|06:00
+37|06:10
+38|06:20
+39|06:30
+40|06:40
+41|06:50
+42|07:00
+43|07:10
+44|07:20
+45|07:30
+46|07:40
+47|07:50
+48|08:00
+49|08:10
+50|08:20
+51|08:30
+52|08:40
+53|08:50
+54|09:00
+55|09:10
+56|09:20
+57|09:30
+58|09:40
+59|09:50
+60|10:00
+61|10:10
+62|10:20
+63|10:30
+64|10:40
+65|10:50
+66|11:00
+67|11:10
+68|11:20
+69|11:30
+70|11:40
+71|11:50
+72|12:00
+73|12:10
+74|12:20
+75|12:30
+76|12:40
+77|12:50
+78|13:00
+79|13:10
+80|13:20
+81|13:30
+82|13:40
+83|13:50
+84|14:00
+85|14:10
+86|14:20
+87|14:30
+88|14:40
+89|14:50
+90|15:00
+91|15:10
+92|15:20
+93|15:30
+94|15:40
+95|15:50
+96|16:00
+97|16:10
+98|16:20
+99|16:30
+100|16:40
+101|16:50
+102|17:00
+103|17:10
+104|17:20
+105|17:30
+106|17:40
+107|17:50
+108|18:00
+109|18:10
+110|18:20
+111|18:30
+112|18:40
+113|18:50
+114|19:00
+115|19:10
+116|19:20
+117|19:30
+118|19:40
+119|19:50
+120|20:00
+121|20:10
+122|20:20
+123|20:30
+124|20:40
+125|20:50
+126|21:00
+127|21:10
+128|21:20
+129|21:30
+130|21:40
+131|21:50
+132|22:00
+133|22:10
+134|22:20
+135|22:30
+136|22:40
+137|22:50
+138|23:00
+139|23:10
+140|23:20
+141|23:30
+142|23:40
+143|23:50
+144|nu
+l|T13(0-1)|2
+0|cL
+1|oP
+l|T0E(0-3)|4
+0|nP
+1|P1
+2|P2
+3|P3
+l|T08(0-1)|2
+0|in
+1|de
+l|T12(0-3)|4
+0|no
+1|FAn
+2|CPr
+3|F_C
+l|T07(0-1)|2
+0|°C
+1|°F
+l|T14(0-7)|8
+0|EAL
+1|bAL
+2|PAL
+3|dFr
+4|AUS
+5|ES
+6|OnF
+7|HdF
+l|T09(0-3)|4
+0|P1
+1|P2
+2|P3
+3|1R2
+l|T17(0-7)|8
+0|Sun
+1|Mon
+2|Tue
+3|Wed
+4|Thu
+5|Fri
+6|Sat
+7|nu
+l|T06(0-1)|2
+0|cL
+1|Ht
+l|T11(0-255)|256
+0|0
+1|1
+2|2
+3|3
+4|4
+5|5
+6|6
+7|7
+8|8
+9|9
+10|10
+11|11
+12|12
+13|13
+14|14
+15|15
+16|16
+17|17
+18|18
+19|19
+20|20
+21|21
+22|22
+23|23
+24|24
+25|25
+26|26
+27|27
+28|28
+29|29
+30|30
+31|31
+32|32
+33|33
+34|34
+35|35
+36|36
+37|37
+38|38
+39|39
+40|40
+41|41
+42|42
+43|43
+44|44
+45|45
+46|46
+47|47
+48|48
+49|49
+50|50
+51|51
+52|52
+53|53
+54|54
+55|55
+56|56
+57|57
+58|58
+59|59
+60|60
+61|61
+62|62
+63|63
+64|64
+65|65
+66|66
+67|67
+68|68
+69|69
+70|70
+71|71
+72|72
+73|73
+74|74
+75|75
+76|76
+77|77
+78|78
+79|79
+80|80
+81|81
+82|82
+83|83
+84|84
+85|85
+86|86
+87|87
+88|88
+89|89
+90|90
+91|91
+92|92
+93|93
+94|94
+95|95
+96|96
+97|97
+98|98
+99|99
+100|100
+101|101
+102|102
+103|103
+104|104
+105|105
+106|106
+107|107
+108|108
+109|109
+110|110
+111|111
+112|112
+113|113
+114|114
+115|115
+116|116
+117|117
+118|118
+119|119
+120|120
+121|121
+122|122
+123|123
+124|124
+125|125
+126|126
+127|127
+128|128
+129|129
+130|130
+131|131
+132|132
+133|133
+134|134
+135|135
+136|136
+137|137
+138|138
+139|139
+140|140
+141|141
+142|142
+143|143
+144|144
+145|145
+146|146
+147|147
+148|148
+149|149
+150|150
+151|151
+152|152
+153|153
+154|154
+155|155
+156|156
+157|157
+158|158
+159|159
+160|160
+161|161
+162|162
+163|163
+164|164
+165|165
+166|166
+167|167
+168|168
+169|169
+170|170
+171|171
+172|172
+173|173
+174|174
+175|175
+176|176
+177|177
+178|178
+179|179
+180|180
+181|181
+182|182
+183|183
+184|184
+185|185
+186|186
+187|187
+188|188
+189|189
+190|190
+191|191
+192|192
+193|193
+194|194
+195|195
+196|196
+197|197
+198|198
+199|199
+200|200
+201|201
+202|202
+203|203
+204|204
+205|205
+206|206
+207|207
+208|208
+209|209
+210|210
+211|211
+212|212
+213|213
+214|214
+215|215
+216|216
+217|217
+218|218
+219|219
+220|220
+221|221
+222|222
+223|223
+224|224
+225|225
+226|226
+227|227
+228|228
+229|229
+230|230
+231|231
+232|232
+233|233
+234|234
+235|235
+236|236
+237|237
+238|238
+239|239
+240|240
+241|241
+242|242
+243|243
+244|244
+245|245
+246|246
+247|247
+248|248
+249|249
+250|250
+251|251
+252|252
+253|253
+254|254
+255|nu
+l|T0B(0-2)|3
+0|rtc
+1|in
+2|Sd
+l|T05(0-143)|144
+0|00:00
+1|00:10
+2|00:20
+3|00:30
+4|00:40
+5|00:50
+6|01:00
+7|01:10
+8|01:20
+9|01:30
+10|01:40
+11|01:50
+12|02:00
+13|02:10
+14|02:20
+15|02:30
+16|02:40
+17|02:50
+18|03:00
+19|03:10
+20|03:20
+21|03:30
+22|03:40
+23|03:50
+24|04:00
+25|04:10
+26|04:20
+27|04:30
+28|04:40
+29|04:50
+30|05:00
+31|05:10
+32|05:20
+33|05:30
+34|05:40
+35|05:50
+36|06:00
+37|06:10
+38|06:20
+39|06:30
+40|06:40
+41|06:50
+42|07:00
+43|07:10
+44|07:20
+45|07:30
+46|07:40
+47|07:50
+48|08:00
+49|08:10
+50|08:20
+51|08:30
+52|08:40
+53|08:50
+54|09:00
+55|09:10
+56|09:20
+57|09:30
+58|09:40
+59|09:50
+60|10:00
+61|10:10
+62|10:20
+63|10:30
+64|10:40
+65|10:50
+66|11:00
+67|11:10
+68|11:20
+69|11:30
+70|11:40
+71|11:50
+72|12:00
+73|12:10
+74|12:20
+75|12:30
+76|12:40
+77|12:50
+78|13:00
+79|13:10
+80|13:20
+81|13:30
+82|13:40
+83|13:50
+84|14:00
+85|14:10
+86|14:20
+87|14:30
+88|14:40
+89|14:50
+90|15:00
+91|15:10
+92|15:20
+93|15:30
+94|15:40
+95|15:50
+96|16:00
+97|16:10
+98|16:20
+99|16:30
+100|16:40
+101|16:50
+102|17:00
+103|17:10
+104|17:20
+105|17:30
+106|17:40
+107|17:50
+108|18:00
+109|18:10
+110|18:20
+111|18:30
+112|18:40
+113|18:50
+114|19:00
+115|19:10
+116|19:20
+117|19:30
+118|19:40
+119|19:50
+120|20:00
+121|20:10
+122|20:20
+123|20:30
+124|20:40
+125|20:50
+126|21:00
+127|21:10
+128|21:20
+129|21:30
+130|21:40
+131|21:50
+132|22:00
+133|22:10
+134|22:20
+135|22:30
+136|22:40
+137|22:50
+138|23:00
+139|23:10
+140|23:20
+141|23:30
+142|23:40
+143|23:50
+l|T1C(0-144)|145
+0|00:00
+1|00:10
+2|00:20
+3|00:30
+4|00:40
+5|00:50
+6|01:00
+7|01:10
+8|01:20
+9|01:30
+10|01:40
+11|01:50
+12|02:00
+13|02:10
+14|02:20
+15|02:30
+16|02:40
+17|02:50
+18|03:00
+19|03:10
+20|03:20
+21|03:30
+22|03:40
+23|03:50
+24|04:00
+25|04:10
+26|04:20
+27|04:30
+28|04:40
+29|04:50
+30|05:00
+31|05:10
+32|05:20
+33|05:30
+34|05:40
+35|05:50
+36|06:00
+37|06:10
+38|06:20
+39|06:30
+40|06:40
+41|06:50
+42|07:00
+43|07:10
+44|07:20
+45|07:30
+46|07:40
+47|07:50
+48|08:00
+49|08:10
+50|08:20
+51|08:30
+52|08:40
+53|08:50
+54|09:00
+55|09:10
+56|09:20
+57|09:30
+58|09:40
+59|09:50
+60|10:00
+61|10:10
+62|10:20
+63|10:30
+64|10:40
+65|10:50
+66|11:00
+67|11:10
+68|11:20
+69|11:30
+70|11:40
+71|11:50
+72|12:00
+73|12:10
+74|12:20
+75|12:30
+76|12:40
+77|12:50
+78|13:00
+79|13:10
+80|13:20
+81|13:30
+82|13:40
+83|13:50
+84|14:00
+85|14:10
+86|14:20
+87|14:30
+88|14:40
+89|14:50
+90|15:00
+91|15:10
+92|15:20
+93|15:30
+94|15:40
+95|15:50
+96|16:00
+97|16:10
+98|16:20
+99|16:30
+100|16:40
+101|16:50
+102|17:00
+103|17:10
+104|17:20
+105|17:30
+106|17:40
+107|17:50
+108|18:00
+109|18:10
+110|18:20
+111|18:30
+112|18:40
+113|18:50
+114|19:00
+115|19:10
+116|19:20
+117|19:30
+118|19:40
+119|19:50
+120|20:00
+121|20:10
+122|20:20
+123|20:30
+124|20:40
+125|20:50
+126|21:00
+127|21:10
+128|21:20
+129|21:30
+130|21:40
+131|21:50
+132|22:00
+133|22:10
+134|22:20
+135|22:30
+136|22:40
+137|22:50
+138|23:00
+139|23:10
+140|23:20
+141|23:30
+142|23:40
+143|23:50
+144|24:00
+l|T10(0-1)|2
+0|rE
+1|Ab
+l|T0D(0-1)|2
+0|no
+1|Yes

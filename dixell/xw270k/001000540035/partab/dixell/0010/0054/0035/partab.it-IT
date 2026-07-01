@@ -1,0 +1,1066 @@
+H|10
+G|12
+1|Regolazione
+2|Sbrinamento
+3|Ventole
+4|Allarme
+5|Sonde
+6|Energy Saving
+7|Ingressi digitali
+8|Configurazione
+9|Luce
+10|Ausiliario
+11|Altro
+12|Bit di Configurazione
+D|148
+Hy|Isteresi
+LS|Set Point minimo
+US|Set Point massimo
+odS|Ritardo attivazione uscite al power on
+CCo|Configurazione compressori
+AC|Ritardo antipendolazione
+AC1|Ritardo partenza secondo compressore
+CCt|Durata congelamento
+Con|Tempo compressore ON con sonda guasta
+CoF|Tempo compressore OFF con sonda guasta
+CH|Modo di funzionamento del dispositivo                     
+CF|Unità misura temperatura : Celsius , Fahrenheit
+rES|Risoluzione (per °C) : intero , decimale  
+Lod|Local dispaly : visualizzazione di default
+rEd|Remote dispaly : visualizzazione di default
+tdF|Tipo di sbrinamento
+EdF|Modalità sbrinamento : orario,intervallo,Smart-def 
+SdF|Set point evaporatore per conteggio Smart Frost
+dtE|Temperatura fine sbrinamento primo evaporatore
+dtS|Temperatura fine sbrinamento secondo evaporatore
+idF|Intervallo fra i cicli di sbrinamento
+MdF|Tempo massimo 1° sbrinamento
+MdS|Tempo massimo 2° sbrinamento
+dFd|Visualizzazione durante lo sbrinamento                     
+dAd|Ritardo visualizzazione temperatura dopo sbrinamento
+dSd|Ritardo sbrinamento dalla chiamata
+Fdt|Tempo sgocciolamento
+dPo|Sbrinamento al power-on 
+dAF|Ritardo sbrinamento dopo il congelamento
+dFP|Selezione sonda gestione defrost1° evaporatore
+dSP|Selezione sonda gestione defrost 2° evaporatore 
+FnC|Modalità funzionamento ventilatori.
+Fnd|Ritardo ventilatori dopo lo sbrinamento
+FSt|Temperatura blocco ventole
+FAP|Selezione sonda per gestione ventilatori
+ALC|Configurazione allarmi  : relativi / assoluti
+ALU|Allarme di massima temperatura
+ALL|Allarme minima temperatura
+AFH|Isteresi Allarme temperatura / ventole / defrost
+ALd|Ritardo allarme temperatura (in funz. normale)
+dAo|Esclusione allarme temperatura al power-on
+EdA|Esclusione allarme temperatura a fine sbrinamento
+dot|Esclusione allarme temperatura dopo porta aperta 
+doA|Ritardo allarme porta aperta “dA” 
+rrd|Avvio compressore con allarme porta apertra 'dA'
+AL2|Allarme di bassa temperatura condensatore
+Au2|Allarme di alta temperatura condensatore
+ALH|Isteresi allarme di bassa  temperatura condensatore
+AtH|Isteresi allarme di alta temperatura condensatore
+Ad2|Ritardo allarme di  temperatura condensatore
+dA2|Esclusione allarme temp.condensatore al power-on
+CAP|Selezione sonda per allarme condensatore
+AC2|Stop regolazione in allarme condensatore
+tBA|Tacitazione relè allarme 
+nPS|Numero interventi pressostato  
+ALP|Selezione sonda gestione allarme temperatura
+ot|Calibrazione sonda termostato (sonda 1)
+oE|Calibrazione sonda evaporatore (sonda 2)
+o3|Calibrazione sonda ausiliaria (sonda 3)
+P2P|Presenza sonda P2
+P3P|Presenza sonda P3
+Lci|Limite inferiore scala  per sonda VI
+Uci|Limite superiore scala  per sonda VI
+Pbr|Selezione sonda di regolazione
+HLP|Selezione sonda per funzione Minima/Massima tempr. 
+ESP|Selezione sonda per funzione Energy Saving 
+HES|Incremento di temp. Durante il funz. notturno
+odc|Controllo per porta aperta : Ventole e compressore 
+i1P|Polarità ingresso digitale 1
+i2P|Polarità ingresso digitale 2
+i2F|Funzione ingresso digitale 2
+did|Ritardo ingresso digitale per allarme configurabile 
+oA1|Configurazione funzione uscita AUX1
+oA2|Configurazione funzione uscita AUX2
+oA3|Configurazione funzione uscita AUX3
+oA4|Configurazione funzione uscita AUX4
+LdE|Ritardo spegnimento luce dopo disattivazione
+AdE|Ritardo spegnimento AUX dopo disattivazione
+ACH|Modalità regolatote ausiliario : diretta inversa                
+SAA| Set Point attivazione automatica AUX
+ArP|Selezione sonda per regolatore ausiliario 
+oP2|Polarità uscita relay ALLARME : close, open
+Hur|Ora corrente
+Min|Minuti correnti
+dAY|Giorno settimanale corrente
+Hd1|Primo giorno settimanale festivo
+Hd2|Secondo giorno settimanale festivo
+Hd3|Terzo giorno settimanale festivo
+ILE|Orario di inizio ciclo Energy Saving feriale
+dLE|Durata ciclo Energy Saving feriale
+ISE|Orario di inizio ciclo Energy Saving festivo
+dSE|Durata ciclo Energy Saving festivo
+HES_|Incremento di temperatura durante ciclo di Energy Saving
+Ld1|Orario di inizio 1° sbrinamento feriale
+Ld2|Orario di inizio 2° sbrinamento feriale
+Ld3|Orario di inizio 3° sbrinamento feriale
+Ld4|Orario di inizio 4° sbrinamento feriale
+Ld5|Orario di inizio 5° sbrinamento feriale
+Ld6|Orario di inizio 6° sbrinamento feriale
+Ld7|Orario di inizio 7° sbrinamento feriale
+Ld8|Orario di inizio 8° sbrinamento feriale
+Sd1|Orario di inizio 1° sbrinamento festivo
+Sd2|Orario di inizio 2° sbrinamento festivo
+Sd3|Orario di inizio 3° sbrinamento festivo
+Sd4|Orario di inizio 4° sbrinamento festivo
+Sd5|Orario di inizio 5° sbrinamento festivo
+Sd6|Orario di inizio 6° sbrinamento festivo
+Sd7|Orario di inizio 7° sbrinamento festivo
+Sd8|Orario di inizio 8° sbrinamento festivo
+Lo1|Orario di inizio 1° fascia feriale uscita Luce
+Lo2|Orario di inizio 2° fascia feriale uscita Luce
+Lo3|Orario di inizio 3° fascia feriale uscita Luce 
+Lo4|Orario di inizio 4° fascia feriale uscita Luce 
+Lo5|Orario di inizio 5° fascia feriale uscita Luce 
+Lo6|Orario di inizio 6° fascia feriale uscita Luce 
+Lo7|Orario di inizio 7° fascia feriale uscita Luce 
+Lo8|Orario di inizio 8° fascia feriale uscita Luce 
+dLo|Durata fascia feriale uscita Luce 
+So1|Orario di inizio 1° fascia festiva uscita Luce 
+So2|Orario di inizio 2° fascia festiva uscita Luce 
+So3|Orario di inizio 3° fascia festiva uscita Luce 
+So4|Orario di inizio 4° fascia festiva uscita Luce 
+So5|Orario di inizio 5° fascia festiva uscita Luce 
+So6|Orario di inizio 6° fascia festiva uscita Luce 
+So7|Orario di inizio 7° fascia festiva uscita Luce 
+So8|Orario di inizio 8° fascia festiva uscita Luce 
+dSo|Durata fascia festiva uscita Luce 
+Adr|Indirizzo 1 RS485
+rEL|Codice release firmware 
+Ptb|Idenficazione mappa EEPROM
+Prd|Finestra visualizzazione sonde : P1 - P2 - P3
+Pr2|Ingresso livello parametri nascosti PR2 
+SEt|Set point
+.Tset|Tempo pressione tasto SET per programmazione SET
+.Tdef|Tempo pressione tasto DEF/ES x attivazione funzione
+.INV|Inversione compressore-defrost
+.LkEn|Abilitazione funzione di LOCK 
+.8KEY|Selezione tastiera a 8 tasti
+.BlkBuz|Abilitazione blink del buzzer
+.Clock|Presenza orologio
+.tLux|Funzione uscita LUCE a tempo abilitata 
+.dsAUX|Disabilita tasto AUX
+.dsONF|Disabilita tasto On-OFF
+.P1/VI|Tipo sonda pbr1 : NTC / VI
+.P2/VI|Tipo sonda pbr1 : NTC / VI
+.P3/VI|Tipo sonda pbr1 : NTC / VI
+.noLMP| Disabilita accensione luce da microporta
+.enFU%|Abilita funzione ventole umidità (da tasto AUX)
+L|23
+l|254-nu|256
+0|0
+1|1
+2|2
+3|3
+4|4
+5|5
+6|6
+7|7
+8|8
+9|9
+10|10
+11|11
+12|12
+13|13
+14|14
+15|15
+16|16
+17|17
+18|18
+19|19
+20|20
+21|21
+22|22
+23|23
+24|24
+25|25
+26|26
+27|27
+28|28
+29|29
+30|30
+31|31
+32|32
+33|33
+34|34
+35|35
+36|36
+37|37
+38|38
+39|39
+40|40
+41|41
+42|42
+43|43
+44|44
+45|45
+46|46
+47|47
+48|48
+49|49
+50|50
+51|51
+52|52
+53|53
+54|54
+55|55
+56|56
+57|57
+58|58
+59|59
+60|60
+61|61
+62|62
+63|63
+64|64
+65|65
+66|66
+67|67
+68|68
+69|69
+70|70
+71|71
+72|72
+73|73
+74|74
+75|75
+76|76
+77|77
+78|78
+79|79
+80|80
+81|81
+82|82
+83|83
+84|84
+85|85
+86|86
+87|87
+88|88
+89|89
+90|90
+91|91
+92|92
+93|93
+94|94
+95|95
+96|96
+97|97
+98|98
+99|99
+100|100
+101|101
+102|102
+103|103
+104|104
+105|105
+106|106
+107|107
+108|108
+109|109
+110|110
+111|111
+112|112
+113|113
+114|114
+115|115
+116|116
+117|117
+118|118
+119|119
+120|120
+121|121
+122|122
+123|123
+124|124
+125|125
+126|126
+127|127
+128|128
+129|129
+130|130
+131|131
+132|132
+133|133
+134|134
+135|135
+136|136
+137|137
+138|138
+139|139
+140|140
+141|141
+142|142
+143|143
+144|144
+145|145
+146|146
+147|147
+148|148
+149|149
+150|150
+151|151
+152|152
+153|153
+154|154
+155|155
+156|156
+157|157
+158|158
+159|159
+160|160
+161|161
+162|162
+163|163
+164|164
+165|165
+166|166
+167|167
+168|168
+169|169
+170|170
+171|171
+172|172
+173|173
+174|174
+175|175
+176|176
+177|177
+178|178
+179|179
+180|180
+181|181
+182|182
+183|183
+184|184
+185|185
+186|186
+187|187
+188|188
+189|189
+190|190
+191|191
+192|192
+193|193
+194|194
+195|195
+196|196
+197|197
+198|198
+199|199
+200|200
+201|201
+202|202
+203|203
+204|204
+205|205
+206|206
+207|207
+208|208
+209|209
+210|210
+211|211
+212|212
+213|213
+214|214
+215|215
+216|216
+217|217
+218|218
+219|219
+220|220
+221|221
+222|222
+223|223
+224|224
+225|225
+226|226
+227|227
+228|228
+229|229
+230|230
+231|231
+232|232
+233|233
+234|234
+235|235
+236|236
+237|237
+238|238
+239|239
+240|240
+241|241
+242|242
+243|243
+244|244
+245|245
+246|246
+247|247
+248|248
+249|249
+250|250
+251|251
+252|252
+253|253
+254|254
+255|nU
+l|Orario_23h50|144
+0|0.00
+1|0.10
+2|0.20
+3|0.30
+4|0.40
+5|0.50
+6|1.00
+7|1.10
+8|1.20
+9|1.30
+10|1.40
+11|1.50
+12|2.00
+13|2.10
+14|2.20
+15|2.30
+16|2.40
+17|2.50
+18|3.00
+19|3.10
+20|3.20
+21|3.30
+22|3.40
+23|3.50
+24|4.00
+25|4.10
+26|4.20
+27|4.30
+28|4.40
+29|4.50
+30|5.00
+31|5.10
+32|5.20
+33|5.30
+34|5.40
+35|5.50
+36|6.00
+37|6.10
+38|6.20
+39|6.30
+40|6.40
+41|6.50
+42|7.00
+43|7.10
+44|7.20
+45|7.30
+46|7.40
+47|7.50
+48|8.00
+49|8.10
+50|8.20
+51|8.30
+52|8.40
+53|8.50
+54|9.00
+55|9.10
+56|9.20
+57|9.30
+58|9.40
+59|9.50
+60|10.00
+61|10.10
+62|10.20
+63|10.30
+64|10.40
+65|10.50
+66|11.00
+67|11.10
+68|11.20
+69|11.30
+70|11.40
+71|11.50
+72|12.00
+73|12.10
+74|12.20
+75|12.30
+76|12.40
+77|12.50
+78|13.00
+79|13.10
+80|13.20
+81|13.30
+82|13.40
+83|13.50
+84|14.00
+85|14.10
+86|14.20
+87|14.30
+88|14.40
+89|14.50
+90|15.00
+91|15.10
+92|15.20
+93|15.30
+94|15.40
+95|15.50
+96|16.00
+97|16.10
+98|16.20
+99|16.30
+100|16.40
+101|16.50
+102|17.00
+103|17.10
+104|17.20
+105|17.30
+106|17.40
+107|17.50
+108|18.00
+109|18.10
+110|18.20
+111|18.30
+112|18.40
+113|18.50
+114|19.00
+115|19.10
+116|19.20
+117|19.30
+118|19.40
+119|19.50
+120|20.00
+121|20.10
+122|20.20
+123|20.30
+124|20.40
+125|20.50
+126|21.00
+127|21.10
+128|21.20
+129|21.30
+130|21.40
+131|21.50
+132|22.00
+133|22.10
+134|22.20
+135|22.30
+136|22.40
+137|22.50
+138|23.00
+139|23.10
+140|23.20
+141|23.30
+142|23.40
+143|23.50
+l|Probe|4
+0|nP
+1|P1
+2|P2
+3|P3
+l|Lod|4
+0|P1
+1|P2
+2|P3
+3|1r2
+l|Dey|8
+0|Sun
+1|Mon
+2|tuE
+3|Ued
+4|thu
+5|Fri
+6|Sat
+7|nu
+l|Orario_24h|145
+0|0.00
+1|0.10
+2|0.20
+3|0.30
+4|0.40
+5|0.50
+6|1.00
+7|1.10
+8|1.20
+9|1.30
+10|1.40
+11|1.50
+12|2.00
+13|2.10
+14|2.20
+15|2.30
+16|2.40
+17|2.50
+18|3.00
+19|3.10
+20|3.20
+21|3.30
+22|3.40
+23|3.50
+24|4.00
+25|4.10
+26|4.20
+27|4.30
+28|4.40
+29|4.50
+30|5.00
+31|5.10
+32|5.20
+33|5.30
+34|5.40
+35|5.50
+36|6.00
+37|6.10
+38|6.20
+39|6.30
+40|6.40
+41|6.50
+42|7.00
+43|7.10
+44|7.20
+45|7.30
+46|7.40
+47|7.50
+48|8.00
+49|8.10
+50|8.20
+51|8.30
+52|8.40
+53|8.50
+54|9.00
+55|9.10
+56|9.20
+57|9.30
+58|9.40
+59|9.50
+60|10.00
+61|10.10
+62|10.20
+63|10.30
+64|10.40
+65|10.50
+66|11.00
+67|11.10
+68|11.20
+69|11.30
+70|11.40
+71|11.50
+72|12.00
+73|12.10
+74|12.20
+75|12.30
+76|12.40
+77|12.50
+78|13.00
+79|13.10
+80|13.20
+81|13.30
+82|13.40
+83|13.50
+84|14.00
+85|14.10
+86|14.20
+87|14.30
+88|14.40
+89|14.50
+90|15.00
+91|15.10
+92|15.20
+93|15.30
+94|15.40
+95|15.50
+96|16.00
+97|16.10
+98|16.20
+99|16.30
+100|16.40
+101|16.50
+102|17.00
+103|17.10
+104|17.20
+105|17.30
+106|17.40
+107|17.50
+108|18.00
+109|18.10
+110|18.20
+111|18.30
+112|18.40
+113|18.50
+114|19.00
+115|19.10
+116|19.20
+117|19.30
+118|19.40
+119|19.50
+120|20.00
+121|20.10
+122|20.20
+123|20.30
+124|20.40
+125|20.50
+126|21.00
+127|21.10
+128|21.20
+129|21.30
+130|21.40
+131|21.50
+132|22.00
+133|22.10
+134|22.20
+135|22.30
+136|22.40
+137|22.50
+138|23.00
+139|23.10
+140|23.20
+141|23.30
+142|23.40
+143|23.50
+144|24.00
+l|CF|2
+0|°C
+1|°F
+l|OdC|4
+0|no
+1|FAn
+2|CPr
+3|F-C
+l|dFd|5
+0|rt
+1|it
+2|SEt
+3|dEF
+4|dEG
+l|EdF|3
+0|rtC
+1|in
+2|Sd
+l|rES|2
+0|in
+1|dE
+l|OAX|8
+0|Alr
+1|FAn
+2|LiG
+3|AUS
+4|OnF
+5|dF2
+6|CP2
+7|Cdn
+l|CCO|2
+0|SE
+1|AL
+l|IP|2
+0|CL
+1|OP
+l|CAP|3
+0|P1
+1|P2
+2|P3
+l|Orario_20min|121
+0|0.00
+1|0.10
+2|0.20
+3|0.30
+4|0.40
+5|0.50
+6|1.00
+7|1.10
+8|1.20
+9|1.30
+10|1.40
+11|1.50
+12|2.00
+13|2.10
+14|2.20
+15|2.30
+16|2.40
+17|2.50
+18|3.00
+19|3.10
+20|3.20
+21|3.30
+22|3.40
+23|3.50
+24|4.00
+25|4.10
+26|4.20
+27|4.30
+28|4.40
+29|4.50
+30|5.00
+31|5.10
+32|5.20
+33|5.30
+34|5.40
+35|5.50
+36|6.00
+37|6.10
+38|6.20
+39|6.30
+40|6.40
+41|6.50
+42|7.00
+43|7.10
+44|7.20
+45|7.30
+46|7.40
+47|7.50
+48|8.00
+49|8.10
+50|8.20
+51|8.30
+52|8.40
+53|8.50
+54|9.00
+55|9.10
+56|9.20
+57|9.30
+58|9.40
+59|9.50
+60|10.00
+61|10.10
+62|10.20
+63|10.30
+64|10.40
+65|10.50
+66|11.00
+67|11.10
+68|11.20
+69|11.30
+70|11.40
+71|11.50
+72|12.00
+73|12.10
+74|12.20
+75|12.30
+76|12.40
+77|12.50
+78|13.00
+79|13.10
+80|13.20
+81|13.30
+82|13.40
+83|13.50
+84|14.00
+85|14.10
+86|14.20
+87|14.30
+88|14.40
+89|14.50
+90|15.00
+91|15.10
+92|15.20
+93|15.30
+94|15.40
+95|15.50
+96|16.00
+97|16.10
+98|16.20
+99|16.30
+100|16.40
+101|16.50
+102|17.00
+103|17.10
+104|17.20
+105|17.30
+106|17.40
+107|17.50
+108|18.00
+109|18.10
+110|18.20
+111|18.30
+112|18.40
+113|18.50
+114|19.00
+115|19.10
+116|19.20
+117|19.30
+118|19.40
+119|19.50
+120|20.00
+l|CH|2
+0|CL
+1|Ht
+l|Orario_23h50_nu|145
+0|0.00
+1|0.10
+2|0.20
+3|0.30
+4|0.40
+5|0.50
+6|1.00
+7|1.10
+8|1.20
+9|1.30
+10|1.40
+11|1.50
+12|2.00
+13|2.10
+14|2.20
+15|2.30
+16|2.40
+17|2.50
+18|3.00
+19|3.10
+20|3.20
+21|3.30
+22|3.40
+23|3.50
+24|4.00
+25|4.10
+26|4.20
+27|4.30
+28|4.40
+29|4.50
+30|5.00
+31|5.10
+32|5.20
+33|5.30
+34|5.40
+35|5.50
+36|6.00
+37|6.10
+38|6.20
+39|6.30
+40|6.40
+41|6.50
+42|7.00
+43|7.10
+44|7.20
+45|7.30
+46|7.40
+47|7.50
+48|8.00
+49|8.10
+50|8.20
+51|8.30
+52|8.40
+53|8.50
+54|9.00
+55|9.10
+56|9.20
+57|9.30
+58|9.40
+59|9.50
+60|10.00
+61|10.10
+62|10.20
+63|10.30
+64|10.40
+65|10.50
+66|11.00
+67|11.10
+68|11.20
+69|11.30
+70|11.40
+71|11.50
+72|12.00
+73|12.10
+74|12.20
+75|12.30
+76|12.40
+77|12.50
+78|13.00
+79|13.10
+80|13.20
+81|13.30
+82|13.40
+83|13.50
+84|14.00
+85|14.10
+86|14.20
+87|14.30
+88|14.40
+89|14.50
+90|15.00
+91|15.10
+92|15.20
+93|15.30
+94|15.40
+95|15.50
+96|16.00
+97|16.10
+98|16.20
+99|16.30
+100|16.40
+101|16.50
+102|17.00
+103|17.10
+104|17.20
+105|17.30
+106|17.40
+107|17.50
+108|18.00
+109|18.10
+110|18.20
+111|18.30
+112|18.40
+113|18.50
+114|19.00
+115|19.10
+116|19.20
+117|19.30
+118|19.40
+119|19.50
+120|20.00
+121|20.10
+122|20.20
+123|20.30
+124|20.40
+125|20.50
+126|21.00
+127|21.10
+128|21.20
+129|21.30
+130|21.40
+131|21.50
+132|22.00
+133|22.10
+134|22.20
+135|22.30
+136|22.40
+137|22.50
+138|23.00
+139|23.10
+140|23.20
+141|23.30
+142|23.40
+143|23.50
+144|nu
+l|ALC|2
+0|rE
+1|Ab
+l|Fnc|4
+0|C_n
+1|C_Y
+2|O_n
+3|O_Y
+l|tdF|3
+0|rE
+1|rt
+2|in
+l|I2F|8
+0|EAL
+1|BAL
+2|PAL
+3|dFr
+4|AUS
+5|ES
+6|OnF
+7|HdF
+l|no_Yes|2
+0|no
+1|yes

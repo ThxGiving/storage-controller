@@ -1,0 +1,85 @@
+Index,Code,Group,Description,EEPROM Word,Bit Offset,Bit Width,Type,R/W
+0,HY,Regulation,Differential,16,8,8,unsigned integer,R/W
+1,LS,Regulation,Minimum set point,50,0,16,unsigned integer,R/W
+2,US,Regulation,Maximum set point,51,0,16,unsigned integer,R/W
+3,odS,Regulation,Outputs delay at start up,40,8,8,unsigned integer,R/W
+4,CCo,Regulation,Compressors setup,12,2,2,bit flag,R/W
+5,CCt,Regulation,Fast freezing duration,40,0,8,unsigned (hours),R/W
+6,Con,Regulation,Compressor ON time with faulty probe,17,0,8,unsigned integer,R/W
+7,CoF,Regulation,Compressor OFF time with faulty probe,18,8,8,unsigned integer,R/W
+8,CH,Regulation,Kind of action,10,8,1,"enum (0=Cool, 1=Heat)",R/W
+9,CF,Display,Temperature measurement unit,10,10,1,"enum (0=°C, 1=°F)",R/W
+10,Lod,Display,Probe displayed,11,8,2,bit flag,R/W
+11,dLY,Display,Display temperature delay,18,0,8,unsigned integer,R/W
+12,Pdn,Defrost,Delay time before defrost,19,8,8,unsigned (min),R/W
+13,EdF,Defrost,Defrost mode,11,10,2,"enum (0=Temp, 1=Time, 2=Both)",R/W
+14,SdF,Defrost,Smart Defrost set point,19,0,8,signed ×0.1 °C,R/W
+15,dtE,Defrost,First defrost end temperature,29,0,16,signed ×0.1 °C,R/W
+16,dtS,Defrost,Secondo defrost end temperature,30,0,16,signed ×0.1 °C,R/W
+17,IdF,Defrost,Delay between defrost cycles,41,8,8,unsigned (hours),R/W
+18,MdF,Defrost,First defrost maximum duration,20,8,8,unsigned (min),R/W
+19,MdS,Defrost,Second defrost maximum duration,20,0,8,unsigned (min),R/W
+20,dFd,Defrost,Visualization during defrost,13,12,4,bit flag,R/W
+21,dAd,Defrost,Temperature visualization delay after defrost,41,0,8,unsigned (min),R/W
+22,dSd,Defrost,Defrost delay from call,21,8,8,unsigned (min),R/W
+23,dod,Defrost,Time with defrost relay still active after defrost end,21,0,8,unsigned integer,R/W
+24,Fdt,Defrost,Dripping time,42,8,8,unsigned (min),R/W
+25,dPo,Defrost,Defrost at power-on,10,15,1,bit flag,R/W
+26,dAF,Defrost,Defrost delay after fast freezing,42,0,8,unsigned integer,R/W
+27,dFP,Defrost,First defrost probe selection,12,10,2,bit flag,R/W
+28,dSP,Defrost,Second defrost probe selection,11,12,2,bit flag,R/W
+29,Fnc,Fan,Fan operating mode,12,12,2,"enum (0=F-C off, 1=F always, 2=F-C on)",R/W
+30,Fnd,Fan,Fans delay after defrost,43,8,8,unsigned (min),R/W
+31,FSt,Fan,Fans stop temperature,31,0,16,signed ×0.1 °C,R/W
+32,FAP,Fan,Probe selection for fan,11,14,2,bit flag,R/W
+33,FSU,Fan,Kind of action of fan,11,0,2,bit flag,R/W
+34,dAO,Alarm,Temperature alarm exclusion at power-on,43,0,8,unsigned integer,R/W
+35,CSd,Alarm,Condenser temperature alarm,34,0,16,signed ×0.1 °C,R/W
+36,EdA,Alarm,Temperature alarms exclusion after defrost,44,8,8,unsigned integer,R/W
+37,dot,Alarm,Temperature alarms exclusion after door alarm,44,0,8,unsigned integer,R/W
+38,doA,Alarm,Door alarm delay,24,8,8,unsigned (min),R/W
+39,ot,Probes,First probe calibration,24,0,8,unsigned integer,R/W
+40,oE,Probes,Second probe  calibration,25,8,8,unsigned integer,R/W
+41,o3,Probes,Third probe calibration,25,0,8,unsigned integer,R/W
+42,o4,Probes,Fourth probe calibration,28,0,8,unsigned integer,R/W
+43,P2P,Probes,Second probe presence,10,2,1,"enum (0=Absent, 1=Present)",R/W
+44,P3P,Probes,Third probe presence,10,3,1,"enum (0=Absent, 1=Present)",R/W
+45,P4P,Probes,Fourth probe presence,10,6,1,"enum (0=Absent, 1=Present)",R/W
+46,Pbr,Probes,Regulation probe selection,11,2,2,bit flag,R/W
+47,HLP,Probes,Minimum/maximum temperature function probe selection,11,4,2,bit flag,R/W
+48,ESP,Probes,Energy Saving probe selection,11,6,2,bit flag,R/W
+49,HES,Regulation,Set point variation during Energy Saving,26,8,8,signed ×0.1 °C,R/W
+50,odc,Regulation,Open door control,12,8,2,bit flag,R/W
+51,LMP,Regulation,Light enabling with open door,10,0,1,bit flag,R/W
+52,i1P,Digital inputs,Digital input 1 polarity,10,4,1,"enum (0=NC oP, 1=NO CL)",R/W
+53,i2P,Digital inputs,Digital input 2 polarity,10,5,1,"enum (0=NC oP, 1=NO CL)",R/W
+54,i2F,Digital inputs,Digital input 2 function,13,0,4,bit flag,R/W
+55,did,Digital inputs,Digital input alarm delay,26,0,8,unsigned (min),R/W
+56,oA1,Configuration,AUX1 output configuration,14,8,4,bit flag,R/W
+57,oA2,Configuration,AUX2 output configuration,14,12,4,bit flag,R/W
+58,oA3,Configuration,AUX3 output configuration,14,0,4,bit flag,R/W
+59,oA4,Configuration,AUX4 output configuration,14,4,4,bit flag,R/W
+60,oA5,Configuration,AUX5 output configuration,15,8,4,bit flag,R/W
+61,LdE,Regulation,Time with light still active after deactivation,45,8,8,unsigned integer,R/W
+62,oLt,Regulation,Light output timer,27,8,8,unsigned integer,R/W
+63,oAt,Regulation,Output timer for auxiliary relay,27,0,8,unsigned integer,R/W
+64,SAA,Regulation,Set point for auxiliary relay,35,0,16,signed ×0.1 °C,R/W
+65,SAH,Regulation,Differential for auxiliary relay,36,0,16,unsigned ×0.1 °C,R/W
+66,OP2,Alarm,Alarm relay polarity,10,13,1,bit flag,R/W
+67,Ptb,Other,Eeprom map,52,0,16,unsigned integer,R/W
+68,SEt,Regulation,Set point,37,0,16,signed ×0.1 °C,R/W
+69,.Tset,Other,SET key pressing time to modify set point,8,0,2,bit flag,R/W
+70,.Tdef,Other,DEF key pressing time to active defrost,8,2,2,bit flag,R/W
+71,.INV,Other,Compressor/defrost reversal,8,4,1,bit flag,R/W
+72,.LKE,Other,Keyboard lock enabling,8,5,1,bit flag,R/W
+73,.8KEY,Other,Keyboard type selection,8,6,1,bit flag,R/W
+74,.BLKBUZ,Other,Buzzer blink enabling,8,7,1,bit flag,R/W
+75,.dsONF,Other,ON/OFF key disabling,9,11,1,bit flag,R/W
+76,.mAC1,Other,AC1 measurement unit (seconds or minutes),9,6,1,bit flag,R/W
+77,.ONF,Other,On Off state of the device,8,8,1,bit flag,R/W
+78,.LOC,Other,Keyboard  lock,8,9,1,bit flag,R/W
+79,.°tm,Other,Minimum temerature,8,11,1,bit flag,R/W
+80,.°tM,Other,Maximum temperature,8,11,1,bit flag,R/W
+81,.LUX,Other,State Light Output,8,13,1,bit flag,R/W
+82,.FHUM,Other,Humidity fans function status,8,14,1,bit flag,R/W
+83,.ES,Other,State Energy Saving,8,15,1,bit flag,R/W
