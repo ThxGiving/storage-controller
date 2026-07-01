@@ -569,7 +569,7 @@ sensor:
     id: kh1_evap
     icon: "mdi:coolant-temperature"
     register_type: holding
-    address: 257
+    address: 265
     value_type: S_WORD
     unit_of_measurement: "°C"
     accuracy_decimals: 1
@@ -599,7 +599,7 @@ sensor:
     id: kh2_evap
     icon: "mdi:coolant-temperature"
     register_type: holding
-    address: 257
+    address: 265
     value_type: S_WORD
     unit_of_measurement: "°C"
     accuracy_decimals: 1
@@ -629,7 +629,7 @@ sensor:
     id: kh3_evap
     icon: "mdi:coolant-temperature"
     register_type: holding
-    address: 257
+    address: 265
     value_type: S_WORD
     unit_of_measurement: "°C"
     accuracy_decimals: 1
