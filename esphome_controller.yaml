@@ -550,7 +550,7 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: storage1ctlr
-    name: "Raumtemperatur (P1)"
+    name: "Raumtemperatur (PR)"
     id: kh1_temp
     icon: "mdi:thermometer"
     register_type: holding
@@ -580,7 +580,7 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: storage2ctlr
-    name: "Raumtemperatur (P1)"
+    name: "Raumtemperatur (PR)"
     id: kh2_temp
     icon: "mdi:thermometer"
     register_type: holding
@@ -610,7 +610,7 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: storage3ctlr
-    name: "Raumtemperatur (P1)"
+    name: "Raumtemperatur (PR)"
     id: kh3_temp
     icon: "mdi:thermometer"
     register_type: holding
