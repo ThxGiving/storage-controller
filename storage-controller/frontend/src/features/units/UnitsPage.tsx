@@ -9,14 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatTemperature, formatNumber } from "@/lib/utils";
 import { UnitEditor } from "./UnitEditor";
-import { HistoryImportSection } from "./HistoryImportSection";
 
 export function UnitsPage() {
   const { t } = useTranslation(["storage-units", "common"]);
   const qc = useQueryClient();
   const [editorOpen, setEditorOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<StorageUnit | null>(null);
-  const [promptUnitId, setPromptUnitId] = React.useState<number | null>(null);
 
   const unitsQuery = useQuery({ queryKey: ["units"], queryFn: api.listUnits });
   const entitiesQuery = useQuery({
@@ -32,13 +30,9 @@ export function UnitsPage() {
 
   const createMut = useMutation({
     mutationFn: (input: StorageUnitInput) => api.createUnit(input),
-    onSuccess: (created: StorageUnit) => {
+    onSuccess: () => {
       invalidate();
       setEditorOpen(false);
-      // Continue the setup flow: offer history import for the new unit if it has
-      // a primary temperature sensor.
-      const hasSensor = created.assignments?.some((a) => a.role === "room_temperature");
-      setPromptUnitId(hasSensor ? created.id : null);
     },
   });
   const updateMut = useMutation({
@@ -111,10 +105,6 @@ export function UnitsPage() {
           />
         ))}
       </div>
-
-      {units.length > 0 && (
-        <HistoryImportSection units={units} promptUnitId={promptUnitId} />
-      )}
 
       <UnitEditor
         open={editorOpen}
@@ -193,7 +183,18 @@ function UnitCard({
 
         {warnings.length > 0 && (
           <div className="mt-auto rounded-md border border-warn/40 bg-warn/10 px-2.5 py-1.5 text-xs text-warn">
-            {t("storage-units:card.hints", { count: warnings.length })}: {warnings[0].warning}
+            {Object.entries(
+              warnings.reduce<Record<string, number>>((acc, w) => {
+                const msg = w.warning ?? "";
+                acc[msg] = (acc[msg] ?? 0) + 1;
+                return acc;
+              }, {}),
+            ).map(([msg, count]) => (
+              <div key={msg}>
+                {count > 1 ? `${count}× ` : ""}
+                {msg}
+              </div>
+            ))}
           </div>
         )}
       </CardContent>

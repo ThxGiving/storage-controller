@@ -33,6 +33,10 @@ const NUMERIC_ROLES = new Set<EntityRole>([
   "hysteresis",
 ]);
 
+const ROLE_STATE_KEYS: Partial<Record<EntityRole, { on: string; off: string }>> = {
+  door: { on: "dashboard:state.open", off: "dashboard:state.closed" },
+};
+
 /**
  * Compact row of assigned operational states. Numeric roles show their value;
  * on/off roles show an active/inactive indicator with a text label (not color
@@ -66,7 +70,10 @@ export function OperationalStateStrip({
         } else if (!available) {
           valueText = t("dashboard:state.unknown");
         } else {
-          valueText = active ? t("dashboard:state.on") : t("dashboard:state.off");
+          const stateKeys = ROLE_STATE_KEYS[r.role];
+          valueText = active
+            ? t(stateKeys?.on ?? "dashboard:state.on")
+            : t(stateKeys?.off ?? "dashboard:state.off");
         }
 
         return (

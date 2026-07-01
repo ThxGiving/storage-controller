@@ -351,7 +351,9 @@ export function UnitEditor({
               <div key={role} className="grid items-start gap-2 sm:grid-cols-[180px_1fr]">
                 <Label className="pt-2.5">
                   {t(`storage-units:roles.${role}`)}
-                  {role === "room_temperature" && <span className="text-danger"> *</span>}
+                  {assignments[role] && !entities.find((e) => e.entity_id === assignments[role]) && (
+                    <span className="text-danger"> *</span>
+                  )}
                 </Label>
                 <EntitySelect
                   value={assignments[role] ?? ""}

@@ -39,6 +39,8 @@
   "state": {
     "on": "On",
     "off": "Off",
+    "open": "Open",
+    "closed": "Closed",
     "unknown": "—"
   },
   "gauge": {

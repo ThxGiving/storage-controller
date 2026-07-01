@@ -14,6 +14,7 @@ import { getStoredPreference, setLanguagePreference } from "@/i18n";
 import { SUPPORTED_LOCALES, SYSTEM_LANGUAGE } from "@/i18n/locales";
 import { DefrostDiagnosticsCard } from "@/features/diagnostics/DefrostDiagnosticsCard";
 import { BackupRestoreCard } from "@/features/backup/BackupRestoreCard";
+import { HistoryImportSection } from "@/features/units/HistoryImportSection";
 
 export function SettingsPage() {
   const { t } = useTranslation(["settings", "common"]);
@@ -21,6 +22,7 @@ export function SettingsPage() {
   const [pref, setPref] = React.useState(getStoredPreference());
 
   const settingsQuery = useQuery({ queryKey: ["settings"], queryFn: api.getSettings });
+  const unitsQuery = useQuery({ queryKey: ["units"], queryFn: api.listUnits });
   const maintenanceQuery = useQuery({
     queryKey: ["maintenance"],
     queryFn: api.getMaintenanceStatus,
@@ -176,6 +178,8 @@ export function SettingsPage() {
           {save.isPending ? t("settings:saving") : t("settings:save")}
         </Button>
       </div>
+
+      <HistoryImportSection units={unitsQuery.data ?? []} />
 
       <BackupRestoreCard />
 
