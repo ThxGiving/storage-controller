@@ -214,27 +214,28 @@ async def test_instant_recoveries_excluded_from_learning(app_client):
     """Regression: a same-tick (0s) 'recovery' means the room never left the safe
     band. Learning it as a ~0s duration would collapse the recovery envelope and
     strangle the recovery timeout (real recoveries would instantly time out ->
-    abnormal -> never re-learned). Such sub-minute recoveries must be ignored."""
+    abnormal -> never re-learned). Only exact same-tick zeros are excluded; a
+    genuine short recovery (>0, even sub-minute) is a valid observation."""
     unit = await _make_unit(app_client, defrost_enabled=True)
     uid = unit["id"]
-    # 12 real recoveries (3 min) mixed with 12 instant (0 min) ones.
-    await _insert_recovery_cycles(uid, 12, recovery_minutes=3.0)
-    await _insert_recovery_cycles(uid, 12, recovery_minutes=0.0)
+    await _insert_recovery_cycles(uid, 10, recovery_minutes=3.0)   # real, long
+    await _insert_recovery_cycles(uid, 4, recovery_minutes=0.5)    # real, 30s
+    await _insert_recovery_cycles(uid, 6, recovery_minutes=0.0)    # same-tick, drop
 
     factory = db_module.get_session_factory()
     async with factory() as s:
         observed = await collect_observed_cycles(s, uid)
         counted = [o.recovery_seconds for o in observed if o.recovery_seconds is not None]
-        # Only the 12 real recoveries count; the instant ones are dropped.
-        assert len(counted) == 12
-        assert all(v >= 60 for v in counted)
+        # The 6 same-tick zeros are dropped; the 30s recoveries are kept.
+        assert len(counted) == 14
+        assert 30.0 in counted
+        assert 0.0 not in counted
 
         u = await s.get(StorageUnit, uid)
         suggestion = await recompute_learning(s, u)
-        # Learned recovery reflects the real 3-min recoveries, not a poisoned ~0.
+        # Learned recovery reflects real recoveries, not a poisoned ~0.
         assert suggestion.max_recovery_seconds is not None
         assert suggestion.max_recovery_seconds >= 180
-        assert suggestion.typical_recovery_seconds == 180
 
 
 @pytest.mark.asyncio

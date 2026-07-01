@@ -2,6 +2,12 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.9.11 — 2026-07-02
+
+### Changed
+
+- **Erholungs-Lernen präziser abgegrenzt** — statt pauschal alle Erholungen unter 1 Minute auszuschließen (0.9.10), werden jetzt nur noch die *tatsächlichen* Null-Fälle verworfen: same-tick-Abschlüsse (Erholungsdauer exakt 0 s), bei denen die Temperatur am Abtau-Ende schon im sicheren Band war. Echte, aber kurze Erholungen (z. B. 30 s) fließen wieder ins Lernen ein. Ohne diese Korrektur hätte ein Gerät, das durchweg schnell erholt, gar keine Erholungszeit gelernt und dauerhaft auf dem großzügigen Fallback-Timeout gelegen — seine `recovery_timeout`-Überwachung wäre praktisch inaktiv gewesen.
+
 ## 0.9.10 — 2026-07-01
 
 ### Fixed
