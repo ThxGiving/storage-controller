@@ -687,6 +687,45 @@ select:
       "P3": 3
       "P4": 4
 
+  # ── P2P: Verdampferfühler vorhanden (Adresse 772) ───────────────────────────
+  # 0 = Not Present, 1 = Present
+  - platform: modbus_controller
+    modbus_controller_id: storage1ctlr
+    name: "Verdampferfühler (P2P)"
+    icon: "mdi:thermometer-check"
+    address: 772
+    value_type: U_WORD
+    skip_updates: ${su_mechanical}
+    entity_category: config
+    device_id: storage1
+    optionsmap:
+      "Not Present": 0
+      "Present": 1
+  - platform: modbus_controller
+    modbus_controller_id: storage2ctlr
+    name: "Verdampferfühler (P2P)"
+    icon: "mdi:thermometer-check"
+    address: 772
+    value_type: U_WORD
+    skip_updates: ${su_mechanical}
+    entity_category: config
+    device_id: storage2
+    optionsmap:
+      "Not Present": 0
+      "Present": 1
+  - platform: modbus_controller
+    modbus_controller_id: storage3ctlr
+    name: "Verdampferfühler (P2P)"
+    icon: "mdi:thermometer-check"
+    address: 772
+    value_type: U_WORD
+    skip_updates: ${su_mechanical}
+    entity_category: config
+    device_id: storage3
+    optionsmap:
+      "Not Present": 0
+      "Present": 1
+
   # ── ALC: Alarmkonfigurations-Modus (P055, Adresse 822) ──────────────────────
   # 0 = rE (relativ: ALU/ALL sind Offsets zum Setpoint)
   # 1 = Ab (absolut: ALU/ALL sind absolute Temperaturen)
