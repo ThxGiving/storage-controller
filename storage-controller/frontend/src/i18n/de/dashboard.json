@@ -59,7 +59,14 @@
     "noSamples": "In diesem Zeitraum wurden noch keine Messwerte aufgezeichnet.",
     "loading": "Verlauf wird geladen…",
     "thresholds": "Grenzwerte",
-    "downsampledNote": "Großer Zeitraum – Werte werden zur Darstellung aggregiert."
+    "downsampledNote": "Großer Zeitraum – Werte werden zur Darstellung aggregiert.",
+    "legend": {
+      "defrost": "Abtauung",
+      "recovery": "Erholung nach Abtauung",
+      "upper": "Obergrenze",
+      "lower": "Untergrenze",
+      "setpoint": "Sollwert"
+    }
   },
   "range": {
     "24h": "24 Std.",

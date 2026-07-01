@@ -40,18 +40,33 @@ export function TemperatureChart({
     const markAreas: Array<Array<Record<string, unknown>>> = [];
     for (const c of defrostCycles) {
       const start = new Date(c.started_at).getTime();
-      const end = c.ended_at ? new Date(c.ended_at).getTime() : Date.now();
-      markAreas.push([
-        { xAxis: start, itemStyle: { color: "#38bdf820" } },
-        { xAxis: end },
-      ]);
+      // Only an in-progress phase may extend to "now"; a cycle that ended without
+      // a timestamp (e.g. a timed-out/abnormal recovery whose recovered_at was
+      // never set) must not paint an ever-growing band into the present.
+      const defrostEnd = c.ended_at
+        ? new Date(c.ended_at).getTime()
+        : c.status === "active"
+          ? Date.now()
+          : null;
+      if (defrostEnd != null) {
+        markAreas.push([
+          { xAxis: start, itemStyle: { color: "#38bdf820" } },
+          { xAxis: defrostEnd },
+        ]);
+      }
       if (c.recovery_started_at) {
         const rs = new Date(c.recovery_started_at).getTime();
-        const re = c.recovered_at ? new Date(c.recovered_at).getTime() : Date.now();
-        markAreas.push([
-          { xAxis: rs, itemStyle: { color: "#a78bfa20" } },
-          { xAxis: re },
-        ]);
+        const re = c.recovered_at
+          ? new Date(c.recovered_at).getTime()
+          : c.status === "recovering"
+            ? Date.now()
+            : null;
+        if (re != null) {
+          markAreas.push([
+            { xAxis: rs, itemStyle: { color: "#a78bfa20" } },
+            { xAxis: re },
+          ]);
+        }
       }
     }
     const axis = dark ? "#94a3b8" : "#475569";
@@ -139,12 +154,61 @@ export function TemperatureChart({
     };
   }, [points, lower, upper, setpoint, defrostCycles, i18n.language, t]);
 
+  const hasDefrost = defrostCycles.length > 0;
+  const hasRecovery = defrostCycles.some((c) => c.recovery_started_at);
+
   return (
-    <ReactECharts
-      option={option}
-      style={{ height, width: "100%" }}
-      opts={{ renderer: "svg" }}
-      notMerge
-    />
+    <div>
+      <ReactECharts
+        option={option}
+        style={{ height, width: "100%" }}
+        opts={{ renderer: "svg" }}
+        notMerge
+      />
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs text-muted-foreground">
+        {hasDefrost && (
+          <LegendItem swatch="band" color="#38bdf8" label={t("detail.legend.defrost")} />
+        )}
+        {hasRecovery && (
+          <LegendItem swatch="band" color="#a78bfa" label={t("detail.legend.recovery")} />
+        )}
+        {upper != null && (
+          <LegendItem swatch="dashed" color="#ef4444" label={t("detail.legend.upper")} />
+        )}
+        {lower != null && (
+          <LegendItem swatch="dashed" color="#3b82f6" label={t("detail.legend.lower")} />
+        )}
+        {setpoint != null && (
+          <LegendItem swatch="dotted" color="#10b981" label={t("detail.legend.setpoint")} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LegendItem({
+  swatch,
+  color,
+  label,
+}: {
+  swatch: "band" | "dashed" | "dotted";
+  color: string;
+  label: string;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {swatch === "band" ? (
+        <span
+          className="inline-block h-3 w-4 rounded-sm"
+          style={{ backgroundColor: `${color}40`, border: `1px solid ${color}` }}
+        />
+      ) : (
+        <span
+          className="inline-block h-0 w-4"
+          style={{ borderTop: `2px ${swatch} ${color}` }}
+        />
+      )}
+      {label}
+    </span>
   );
 }

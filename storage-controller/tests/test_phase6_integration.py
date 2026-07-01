@@ -163,6 +163,74 @@ async def test_retry_then_success(app_client, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_failed_scheduled_run_is_reactivated(app_client, monkeypatch):
+    """A scheduled run left in a terminal `failed` state (dead delivery) must be
+    re-armed by a later tick so the report still goes out once SMTP recovers."""
+    sender = _Sender("temp")
+    monkeypatch.setattr(delivery_mod, "send_message", sender)
+    uid = await _unit(app_client)
+    factory = db_module.get_session_factory()
+    await _setup_smtp(factory)
+    sid = await _schedule(factory, uid, recipients=["a@example.com"])
+    runner = SchedulerRunner(factory)
+    async with factory() as s:
+        sched = await s.get(ReportSchedule, sid)
+        run = await runner.run_now(s, sched, send=True)
+        delivery = await s.scalar(
+            select(EmailDelivery).where(EmailDelivery.schedule_run_id == run.id)
+        )
+        # Force the terminal failure the scheduler would otherwise never retry.
+        delivery.state = DeliveryState.failed.value
+        delivery.next_attempt_utc = None
+        run.state = ScheduleRunState.failed.value
+        run.finished_at = datetime.now(UTC)
+        await s.commit()
+
+    sender.behavior = "ok"  # SMTP recovers
+    await runner.tick(datetime.now(UTC))
+
+    async with factory() as s:
+        run = await s.scalar(select(ScheduleRun).where(ScheduleRun.schedule_id == sid))
+        assert run.state == ScheduleRunState.completed.value
+        count = await s.scalar(
+            select(func.count()).select_from(ScheduleRun).where(ScheduleRun.schedule_id == sid)
+        )
+        assert count == 1  # reactivated in place, not a duplicate run
+
+
+@pytest.mark.asyncio
+async def test_failed_scheduled_run_permanent_not_reactivated(app_client, monkeypatch):
+    """A permanent delivery failure (bad auth/recipient) is NOT retried — retrying
+    can't help and could e.g. lock the SMTP account."""
+    sender = _Sender("ok")
+    monkeypatch.setattr(delivery_mod, "send_message", sender)
+    uid = await _unit(app_client)
+    factory = db_module.get_session_factory()
+    await _setup_smtp(factory)
+    sid = await _schedule(factory, uid, recipients=["a@example.com"])
+    runner = SchedulerRunner(factory)
+    async with factory() as s:
+        sched = await s.get(ReportSchedule, sid)
+        run = await runner.run_now(s, sched, send=True)  # delivers ok (1 call)
+        delivery = await s.scalar(
+            select(EmailDelivery).where(EmailDelivery.schedule_run_id == run.id)
+        )
+        delivery.state = DeliveryState.failed.value
+        delivery.last_error_category = "authentication"
+        delivery.next_attempt_utc = None
+        run.state = ScheduleRunState.failed.value
+        run.finished_at = datetime.now(UTC)
+        await s.commit()
+
+    await runner.tick(datetime.now(UTC))
+
+    async with factory() as s:
+        run = await s.scalar(select(ScheduleRun).where(ScheduleRun.schedule_id == sid))
+        assert run.state == ScheduleRunState.failed.value  # left alone
+    assert sender.calls == 1  # no further send attempt
+
+
+@pytest.mark.asyncio
 async def test_pdf_csv_json_attachments(app_client, monkeypatch):
     sender = _Sender("ok")
     monkeypatch.setattr(delivery_mod, "send_message", sender)

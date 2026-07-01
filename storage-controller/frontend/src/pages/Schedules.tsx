@@ -17,6 +17,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { api } from "@/lib/api";
+import { formatDateTime } from "@/lib/utils";
 import type { Schedule, ScheduleInput, ScheduleRun, SmtpSettingsInput } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -285,7 +286,7 @@ function ScheduleSection() {
               </div>
             </div>
             <div className="text-xs text-muted-foreground">
-              <div>{t("schedules:nextRun")}: {s.next_run_utc ? new Date(s.next_run_utc).toLocaleString() : "—"}</div>
+              <div>{t("schedules:nextRun")}: {formatDateTime(s.next_run_utc)}</div>
               <div>
                 {t("schedules:recipients")}: {s.recipient_count} · {s.attachment_formats.join(", ").toUpperCase()}
                 {" · "}{s.locale.toUpperCase()}
@@ -494,7 +495,7 @@ function RunHistory({ schedule, onClose }: { schedule: Schedule; onClose: () => 
               <Badge tone="neutral">{t(`schedules:trigger.${r.trigger}`, r.trigger)}</Badge>
               <RunStateBadge state={r.state} />
               <span className="ml-auto text-xs text-muted-foreground">
-                {r.started_at ? new Date(r.started_at).toLocaleString() : ""}
+                {r.started_at ? formatDateTime(r.started_at) : ""}
               </span>
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
@@ -523,7 +524,7 @@ function RunHistory({ schedule, onClose }: { schedule: Schedule; onClose: () => 
                   <Send className="h-3.5 w-3.5" /> {t("schedules:run.send")}
                 </Button>
               )}
-              {r.delivery && ["failed", "partially_failed"].includes(r.delivery.state) && (
+              {r.delivery && ["failed", "partially_failed", "completed"].includes(r.delivery.state) && (
                 <Button size="sm" variant="outline" onClick={() => resend.mutate(r.id)}>
                   <RefreshCw className="h-3.5 w-3.5" /> {t("schedules:run.resend")}
                 </Button>

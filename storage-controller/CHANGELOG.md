@@ -2,6 +2,22 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.9.8 — 2026-07-01
+
+### Fixed
+
+- **Zeitplan-Uhrzeit falsch angezeigt** — „Nächster Lauf" zeigte die UTC-Zeit (z. B. 04:00 statt 06:00 Europe/Berlin). Zeitstempel der Zeitplan-API werden jetzt UTC-aware serialisiert, sodass der Browser korrekt in die lokale Zeit umrechnet.
+- **Geplanter Versand wurde nie erneut versucht** — ein Lauf, der in einem endgültigen Fehlerzustand endete, blockierte die Periode dauerhaft. Fehlgeschlagene Läufe werden jetzt reaktiviert und der Versand erneut angestoßen; permanente Fehler (falsches Passwort, abgelehnter Empfänger, Anhang zu groß) bleiben ausgenommen. Zusätzlich respektiert der Versand-Pfad jetzt das Retry-Backoff (kein Minutentakt mehr bei laufendem Retry).
+- **Falscher „recovery_timeout" bei Fühlerausfall** — fehlte während der Erholungsphase durchgehend ein gültiger Raumtemperatur-Messwert, wurde fälschlich eine Abtau-Anomalie gemeldet. Solche Cycles werden jetzt als `incomplete` geschlossen (kein falscher HACCP-Alarm); der harte Recovery-Max-Timeout bleibt erhalten.
+- **Graph: endlos durchlaufendes Band** — ein bis „jetzt" gezeichnetes Abtau-/Erholungs-Band wird nur noch für tatsächlich laufende Phasen gezeichnet (nicht mehr für abgeschlossene/abgebrochene Cycles ohne `recovered_at`).
+
+### Added
+
+- **Graph-Legende** in den Kühleinheit-Details — erklärt Abtauung, Erholung, Ober-/Untergrenze und Sollwert.
+- **„Erneut senden" für zugestellte Berichte** — im Verlauf lässt sich ein bereits erfolgreich versendeter Bericht erneut zustellen (z. B. wenn die E-Mail gelöscht wurde).
+
+---
+
 ## 0.9.7 — 2026-07-01
 
 ### Added

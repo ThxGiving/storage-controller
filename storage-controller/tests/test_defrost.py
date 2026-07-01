@@ -226,6 +226,28 @@ async def test_recovery_timeout(app_client):
 
 
 @pytest.mark.asyncio
+async def test_recovery_timeout_suppressed_when_room_data_missing(app_client):
+    """A room-sensor gap through the whole recovery window must NOT be reported as
+    a recovery_timeout defrost anomaly (that is a data-availability problem with
+    its own incident). The cycle closes as `incomplete` so it never hangs open."""
+    unit = await _make_unit(app_client)
+    uid = unit["id"]
+    eng = _engine(app_client)
+    await _feed(eng, [
+        _r(uid, T0, value=6.0, defrost_on=True),
+        _r(uid, T0 + timedelta(minutes=5), value=10.0, defrost_on=False),  # recovering
+        # sensor unavailable past the recovery limit — cannot judge recovery
+        _r(uid, T0 + timedelta(minutes=70), value=None, quality="unavailable", defrost_on=False),
+    ])
+    assert not any(
+        i.type == IncidentType.recovery_timeout.value for i in await _incidents(uid)
+    )
+    cycle = (await _cycles(uid))[0]
+    assert cycle.status == "incomplete"
+    assert cycle.recovered_at is None
+
+
+@pytest.mark.asyncio
 async def test_abnormal_defrost_auto_closes_after_recovery(app_client):
     """An abnormal_defrost incident is opened directly in active_violation; once the
     defrost is over and the room is back within limits the engine closes it itself

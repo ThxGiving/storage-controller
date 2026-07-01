@@ -59,7 +59,14 @@
     "noSamples": "No samples recorded in this period yet.",
     "loading": "Loading history…",
     "thresholds": "Thresholds",
-    "downsampledNote": "Long range — values are aggregated for display."
+    "downsampledNote": "Long range — values are aggregated for display.",
+    "legend": {
+      "defrost": "Defrost",
+      "recovery": "Recovery after defrost",
+      "upper": "Upper limit",
+      "lower": "Lower limit",
+      "setpoint": "Setpoint"
+    }
   },
   "range": {
     "24h": "24 h",

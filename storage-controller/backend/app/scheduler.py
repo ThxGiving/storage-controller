@@ -25,7 +25,12 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .delivery import attempt_delivery, get_or_create_delivery
+from .delivery import (
+    attempt_delivery,
+    get_or_create_delivery,
+    is_permanent_failure,
+    reopen_for_scheduled_retry,
+)
 from .models import (
     AuditEvent,
     DeliveryState,
@@ -177,6 +182,14 @@ class SchedulerRunner:
             )
         )
         if existing is not None:
+            # Idempotent per period — but a scheduled report must always eventually
+            # go out. A run that ended in a delivery/generation failure is otherwise
+            # never retried (next_attempt_utc is cleared and no new run is created),
+            # so re-arm it here. Only `failed` runs qualify: `completed`/`sending`
+            # already delivered or are in progress, `skipped` was intentionally
+            # dropped (catch-up disabled), `cancelled` was user-initiated.
+            if existing.state == ScheduleRunState.failed.value:
+                await self._reactivate_failed(session, existing, py, pm)
             return
         catch_up = (now - fire) > CATCHUP_GRACE
         if catch_up and sched.catch_up_mode == "none":
@@ -196,6 +209,25 @@ class SchedulerRunner:
                 trigger="catch_up" if catch_up else "scheduled",
             )
         )
+        await session.flush()
+
+    async def _reactivate_failed(
+        self, session: AsyncSession, run: ScheduleRun, py: int, pm: int
+    ) -> None:
+        """Re-arm a failed period run so the scheduled send is retried. The dead
+        delivery gets a fresh retry cycle; permanent failures are left alone."""
+        delivery = await session.scalar(
+            select(EmailDelivery).where(EmailDelivery.schedule_run_id == run.id)
+        )
+        if delivery is not None and is_permanent_failure(delivery):
+            return  # retrying can't help — needs a config/recipient fix first
+        if delivery is not None:
+            reopen_for_scheduled_retry(delivery)
+        run.state = ScheduleRunState.pending.value
+        run.locked_by = None
+        run.generation_error = None
+        run.finished_at = None
+        _audit(session, "schedule_run_reactivated", run.schedule_id, f"{py}-{pm:02d}")
         await session.flush()
 
     # -- run execution ---------------------------------------------------- #
@@ -314,9 +346,12 @@ class SchedulerRunner:
         run.state = ScheduleRunState.sending.value
         await session.commit()
 
-        # First delivery pass always attempts immediately; retries are gated by
-        # next_attempt_utc in _process_retries.
-        if delivery.state == DeliveryState.pending.value:
+        # Attempt only when the delivery is actually due: the first pass sets
+        # next_attempt_utc=now (fires immediately), later retries wait for their
+        # backoff so a still-`sending` run re-entered by tick() doesn't hammer SMTP.
+        if delivery.state == DeliveryState.pending.value and _due(
+            delivery.next_attempt_utc, datetime.now(UTC)
+        ):
             await attempt_delivery(
                 session, delivery, report, to_config(smtp),
                 max_bytes=smtp.max_attachment_bytes, site_name=smtp.site_name,

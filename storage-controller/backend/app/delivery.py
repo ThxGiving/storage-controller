@@ -89,6 +89,26 @@ def reopen_for_manual_resend(delivery: EmailDelivery) -> None:
     delivery.last_error_category = None
 
 
+def is_permanent_failure(delivery: EmailDelivery) -> bool:
+    """A delivery that failed for a reason retrying cannot fix (bad credentials,
+    rejected recipient, oversized attachment). Re-arming these would loop forever
+    and risk e.g. locking the SMTP account."""
+    return (
+        delivery.state == DeliveryState.failed.value
+        and (delivery.last_error_category or "") in _PERMANENT
+    )
+
+
+def reopen_for_scheduled_retry(delivery: EmailDelivery) -> None:
+    """Re-arm a dead scheduled delivery for a fresh retry cycle. Unlike a manual
+    resend this is driven by the scheduler, so it is not flagged as manual."""
+    delivery.state = DeliveryState.pending.value
+    delivery.attempt_count = 0
+    delivery.next_attempt_utc = datetime.now(UTC)
+    delivery.last_error = None
+    delivery.last_error_category = None
+
+
 async def attempt_delivery(
     session: AsyncSession,
     delivery: EmailDelivery,

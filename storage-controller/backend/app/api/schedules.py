@@ -44,6 +44,16 @@ def _user(request: Request) -> str | None:
     return request.headers.get("X-Remote-User-Name") or request.headers.get("X-Remote-User-Id")
 
 
+def _utc(dt: datetime | None) -> datetime | None:
+    """Tag naive datetimes as UTC. SQLite returns naive values even for
+    ``DateTime(timezone=True)`` columns, so without this the API serializes them
+    without an offset and browsers misread stored UTC as local time (e.g. a
+    06:00 Europe/Berlin run shows as 04:00)."""
+    if dt is None:
+        return None
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=UTC)
+
+
 def _loads(raw: str | None) -> list:
     try:
         v = json.loads(raw or "[]")
@@ -71,9 +81,9 @@ def _sched_out(s: ReportSchedule) -> ScheduleOut:
         recipient_count=len(to) + len(cc) + len(bcc),
         attachment_formats=[str(x) for x in _loads(s.attachment_formats_json)],
         run_day=s.run_day, run_time=s.run_time, catch_up_mode=s.catch_up_mode,
-        next_run_utc=s.next_run_utc
+        next_run_utc=_utc(s.next_run_utc)
         or next_run_utc(s.run_day, s.run_time, s.timezone, datetime.now(UTC)),
-        last_run_utc=s.last_run_utc, last_result=s.last_result,
+        last_run_utc=_utc(s.last_run_utc), last_result=s.last_result,
         run_now_period=f"{py:04d}-{pm:02d}",
     )
 
@@ -93,12 +103,12 @@ def _delivery_out(d: EmailDelivery | None) -> EmailDeliveryOut | None:
             per = None
     return EmailDeliveryOut(
         id=d.id, state=d.state, attempt_count=d.attempt_count,
-        next_attempt_utc=d.next_attempt_utc, last_error_category=d.last_error_category,
+        next_attempt_utc=_utc(d.next_attempt_utc), last_error_category=d.last_error_category,
         last_error=d.last_error,
         recipients_masked=[mask_email(a) for a in [*to, *cc, *bcc]],
         recipient_count=len(to) + len(cc) + len(bcc),
         per_recipient=per, size_bytes=d.size_bytes, is_manual_resend=d.is_manual_resend,
-        sent_at=d.sent_at,
+        sent_at=_utc(d.sent_at),
     )
 
 
@@ -110,10 +120,11 @@ async def _run_out(db: AsyncSession, run: ScheduleRun) -> ScheduleRunOut:
     return ScheduleRunOut(
         id=run.id, schedule_id=run.schedule_id, period_year=run.period_year,
         period_month=run.period_month, period_label=f"{run.period_year:04d}-{run.period_month:02d}",
-        scheduled_for_utc=run.scheduled_for_utc, state=run.state, trigger=run.trigger,
+        scheduled_for_utc=_utc(run.scheduled_for_utc), state=run.state, trigger=run.trigger,
         report_id=run.report_id, report_uuid=report.uuid if report else None,
         report_status=run.report_status, generation_error=run.generation_error,
-        attempt_count=run.attempt_count, started_at=run.started_at, finished_at=run.finished_at,
+        attempt_count=run.attempt_count,
+        started_at=_utc(run.started_at), finished_at=_utc(run.finished_at),
         delivery=_delivery_out(delivery),
     )
 

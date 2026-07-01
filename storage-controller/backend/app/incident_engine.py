@@ -605,13 +605,26 @@ class IncidentEngine:
                 if unit is not None:
                     await recompute_learning(session, unit, now)
             elif (now - rec_started).total_seconds() > ds.max_recovery_seconds:
-                cycle.status = DefrostStatus.abnormal.value
-                cycle.classification = DefrostClassification.recovery_timeout.value
-                cycle.triggering_rule = "recovery_timeout"
-                self._open_defrost_incident(
-                    session, r, open_by_type, IncidentType.recovery_timeout, now,
-                    "recovery_timeout", value=r.normalized_c if valid_room else None,
-                )
+                # The hard recovery limit is reached — the cycle must close either
+                # way so it never hangs open. What it means depends on the data:
+                in_window = False
+                if valid_room:
+                    # A valid reading proves the room is still above target past
+                    # the limit → a genuine recovery failure.
+                    cycle.status = DefrostStatus.abnormal.value
+                    cycle.classification = DefrostClassification.recovery_timeout.value
+                    cycle.triggering_rule = "recovery_timeout"
+                    self._open_defrost_incident(
+                        session, r, open_by_type, IncidentType.recovery_timeout, now,
+                        "recovery_timeout", value=r.normalized_c,
+                    )
+                else:
+                    # No valid room reading for the whole recovery window — we
+                    # cannot judge recovery. That is a sensor/connection gap
+                    # (surfaced on its own via sensor_unavailable /
+                    # home_assistant_disconnected), not a defrost anomaly. Close
+                    # the cycle as incomplete rather than raising a false timeout.
+                    cycle.status = DefrostStatus.incomplete.value
 
         # Suppression: a NEW high excursion may be reclassified as an expected
         # defrost excursion ONLY when an APPROVED learned model exists and the
