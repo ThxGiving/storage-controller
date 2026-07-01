@@ -2,6 +2,28 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.9.7 — 2026-07-01
+
+### Added
+
+- **ESPHome: P3-Kondensatorfühler** — Neue Entities für alle 3 Controller: Kondensatortemperatur (P3, Adresse 266), Kondensatorfühler P3P, Fühlertyp pbC (PTC/NTC), Fühlerauswahl Kondensator-Alarm AP2, Alarm-Grenzen AU2/AL2
+- **ESPHome: Tür- & Eingangs-Konfiguration** — Türeingang Polarität i1P (NC/NO) und Funktion i1F als konfigurierbare Select-Entities
+- **ESPHome: device_class** — Ventilator und Kompressor mit `device_class: running` (HA zeigt "Läuft"/"Steht")
+
+### Fixed
+
+- **Dashboard: Türstatus** — Tür-Sensor zeigt "Offen"/"Geschlossen" statt "Ein"/"Aus" (rollenspezifische State-Texte im OperationalStateStrip)
+- **Editor: Fehler-Markierung** — Rotes Sternchen erscheint jetzt an der tatsächlich fehlenden Entity, nicht immer an "Raumtemperatur"
+- **Karten-Banner:** Mehrere gleichartige Warnungen werden mit Anzahl-Präfix angezeigt (z. B. "2× Entity not found")
+- **ESPHome: Türname** — "Tür offen" → "Tür", statisches `door-open`-Icon entfernt (HA wechselt automatisch)
+- **tsconfig:** `baseUrl` entfernt (redundant mit `moduleResolution: bundler`)
+
+### Changed
+
+- **Verlauf-Import** aus Kühleinheiten-Ansicht in Einstellungen verschoben
+
+---
+
 ## 0.9.6 — 2026-06-30
 
 ### Fixed
