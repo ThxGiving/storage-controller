@@ -23,6 +23,14 @@ from datetime import datetime
 MIN_PRELIMINARY_CYCLES = 10
 MIN_HIGH_CONFIDENCE_CYCLES = 20
 
+# A "recovery" shorter than this is a same-tick completion — the room never
+# actually left the safe band, so it tells us nothing about how long recovery
+# takes. Counting these near-zero durations would collapse the learned recovery
+# envelope toward 0 and then strangle the recovery timeout (real recoveries
+# would instantly time out, be marked abnormal, and so never feed learning — a
+# self-reinforcing loop). Such cycles are excluded from recovery-time learning.
+MIN_RECOVERY_OBSERVATION_SECONDS = 60
+
 # Conservative default safety margin added on top of learned peaks (°C).
 DEFAULT_SAFETY_MARGIN_C = 2.0
 # Fractional head-room added on top of learned durations (p95 * (1 + fraction)).

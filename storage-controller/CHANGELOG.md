@@ -2,6 +2,14 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.9.10 — 2026-07-01
+
+### Fixed
+
+- **Erholung nach Abtauung fehlte bei Kühlräumen** — bei mildem Abtauen bleibt die Raumtemperatur im sicheren Band, sodass die Erholung im selben Auswerte-Tick als abgeschlossen galt (Dauer 0 s). Diese Null-Sekunden-„Erholungen" wurden mitgelernt und zogen die gelernte Erholungszeit gegen 0 (angezeigt als „typische Erholung 0 min"). Nach Freigabe eines solchen Modells riss der viel zu kurze Timeout jede echte Erholung → `recovery_timeout`/`abnormal`, `recovered_at` blieb leer → das Erholungs-Band wurde nicht gezeichnet. Und weil abnormale Zyklen nicht lernbar sind, korrigierte sich der Wert nie (selbstverstärkende Schleife). Erholungen unter 1 Minute fließen jetzt nicht mehr ins Erholungs-Lernen ein; damit spiegelt der gelernte Wert echte Rückkühlzeiten wider und der Timeout bleibt realistisch.
+
+> Hinweis: Bereits **freigegebene** Lernmodelle behalten den alten (zu kurzen) Wert. Betroffene Einheiten einmal über „Lernen zurücksetzen" neu lernen lassen, damit der korrigierte Wert übernommen wird.
+
 ## 0.9.9 — 2026-07-01
 
 ### Fixed

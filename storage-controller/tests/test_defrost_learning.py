@@ -18,6 +18,7 @@ from app.defrost_learning import (
 )
 from app.learning_service import (
     approve_suggestion,
+    collect_observed_cycles,
     get_active_model,
     recompute_learning,
     reset_learning,
@@ -180,6 +181,77 @@ async def test_service_recompute_approve_reset(app_client):
         await reset_learning(s, u, user="fenn")
         await s.commit()
         assert await get_active_model(s, uid) is None
+
+
+async def _insert_recovery_cycles(uid: int, n: int, *, recovery_minutes: float) -> None:
+    """Insert completed, learnable cycles with a fixed recovery duration."""
+    factory = db_module.get_session_factory()
+    async with factory() as s:
+        base = T0 + timedelta(days=1)  # keep clear of _insert_cycles timestamps
+        for i in range(n):
+            start = base + timedelta(hours=i)
+            end = start + timedelta(minutes=6)
+            s.add(
+                DefrostCycle(
+                    storage_unit_id=uid,
+                    source_entity_id="switch.kh_defrost",
+                    started_at=start,
+                    ended_at=end,
+                    recovery_started_at=end,
+                    recovered_at=end + timedelta(minutes=recovery_minutes),
+                    initial_room_temperature_c=5.0,
+                    peak_room_temperature_c=7.0,
+                    peak_evaporator_temperature_c=-12.0,
+                    status="completed",
+                    classification="expected_defrost",
+                )
+            )
+        await s.commit()
+
+
+@pytest.mark.asyncio
+async def test_instant_recoveries_excluded_from_learning(app_client):
+    """Regression: a same-tick (0s) 'recovery' means the room never left the safe
+    band. Learning it as a ~0s duration would collapse the recovery envelope and
+    strangle the recovery timeout (real recoveries would instantly time out ->
+    abnormal -> never re-learned). Such sub-minute recoveries must be ignored."""
+    unit = await _make_unit(app_client, defrost_enabled=True)
+    uid = unit["id"]
+    # 12 real recoveries (3 min) mixed with 12 instant (0 min) ones.
+    await _insert_recovery_cycles(uid, 12, recovery_minutes=3.0)
+    await _insert_recovery_cycles(uid, 12, recovery_minutes=0.0)
+
+    factory = db_module.get_session_factory()
+    async with factory() as s:
+        observed = await collect_observed_cycles(s, uid)
+        counted = [o.recovery_seconds for o in observed if o.recovery_seconds is not None]
+        # Only the 12 real recoveries count; the instant ones are dropped.
+        assert len(counted) == 12
+        assert all(v >= 60 for v in counted)
+
+        u = await s.get(StorageUnit, uid)
+        suggestion = await recompute_learning(s, u)
+        # Learned recovery reflects the real 3-min recoveries, not a poisoned ~0.
+        assert suggestion.max_recovery_seconds is not None
+        assert suggestion.max_recovery_seconds >= 180
+        assert suggestion.typical_recovery_seconds == 180
+
+
+@pytest.mark.asyncio
+async def test_only_instant_recoveries_learn_nothing(app_client):
+    """When every completed cycle recovered instantly, no recovery duration is
+    learned (-> None), so the engine keeps its generous fallback timeout instead
+    of a near-zero learned cap."""
+    unit = await _make_unit(app_client, defrost_enabled=True)
+    uid = unit["id"]
+    await _insert_recovery_cycles(uid, 12, recovery_minutes=0.0)
+
+    factory = db_module.get_session_factory()
+    async with factory() as s:
+        u = await s.get(StorageUnit, uid)
+        suggestion = await recompute_learning(s, u)
+        assert suggestion.max_recovery_seconds is None
+        assert suggestion.typical_recovery_seconds is None
 
 
 @pytest.mark.asyncio

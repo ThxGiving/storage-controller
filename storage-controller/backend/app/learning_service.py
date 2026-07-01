@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .defrost_learning import (
     DEFAULT_SAFETY_MARGIN_C,
+    MIN_RECOVERY_OBSERVATION_SECONDS,
     LearnedSuggestion,
     ObservedCycle,
     build_suggestion,
@@ -74,7 +75,10 @@ async def collect_observed_cycles(
         recovered = ensure_utc(c.recovered_at)
         if rec_started is not None and recovered is not None:
             rs = (recovered - rec_started).total_seconds()
-            recovery_seconds = rs if rs >= 0 else None
+            # Ignore same-tick / sub-minute completions: they mean "no recovery
+            # was needed", not "recovery took ~0s", and would poison the learned
+            # recovery envelope. See MIN_RECOVERY_OBSERVATION_SECONDS.
+            recovery_seconds = rs if rs >= MIN_RECOVERY_OBSERVATION_SECONDS else None
         observed.append(
             ObservedCycle(
                 started_at=started,
