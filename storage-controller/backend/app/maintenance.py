@@ -22,16 +22,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from .config import get_settings
 from .models import MaintenanceRun, SensorAggregate, SensorSample
 from .settings_store import get_maintenance_settings
+from .timeutil import ensure_utc
 
 log = logging.getLogger("maintenance")
 
 BUCKET_SECONDS = {"15min": 900, "hourly": 3600}
-
-
-def _as_utc(ts: datetime | None) -> datetime | None:
-    if ts is None:
-        return None
-    return ts if ts.tzinfo is not None else ts.replace(tzinfo=UTC)
 
 
 def floor_bucket(ts: datetime, seconds: int) -> datetime:
@@ -49,13 +44,13 @@ async def aggregate(session: AsyncSession, tier: str, now: datetime, max_rows: i
     last_complete = floor_bucket(now, secs)  # current (incomplete) bucket start
 
     # Start just after the newest already-aggregated bucket for this tier.
-    newest = _as_utc(
+    newest = ensure_utc(
         await session.scalar(
             select(func.max(SensorAggregate.bucket_start)).where(SensorAggregate.tier == tier)
         )
     )
     if newest is None:
-        earliest = _as_utc(await session.scalar(select(func.min(SensorSample.event_timestamp))))
+        earliest = ensure_utc(await session.scalar(select(func.min(SensorSample.event_timestamp))))
         if earliest is None:
             return 0
         start = floor_bucket(earliest, secs)
@@ -86,7 +81,7 @@ async def aggregate(session: AsyncSession, tier: str, now: datetime, max_rows: i
 
     buckets: dict[tuple[int, datetime], dict] = {}
     for aid, unit_id, role, ts, value, quality in rows:
-        b = floor_bucket(_as_utc(ts), secs)
+        b = floor_bucket(ensure_utc(ts), secs)
         acc = buckets.setdefault(
             (aid, b),
             {
@@ -103,7 +98,7 @@ async def aggregate(session: AsyncSession, tier: str, now: datetime, max_rows: i
 
     # Skip buckets already present (idempotent).
     existing = {
-        (aid, _as_utc(bs))
+        (aid, ensure_utc(bs))
         for aid, bs in (
             await session.execute(
                 select(SensorAggregate.entity_assignment_id, SensorAggregate.bucket_start).where(
@@ -153,7 +148,7 @@ async def cleanup_raw(
     # be covered by a 15-minute aggregate. Aggregation is contiguous from the
     # oldest sample, so it is sufficient that the newest 15-min aggregate bucket
     # reaches the bucket of the newest raw row being deleted.
-    max_old = _as_utc(
+    max_old = ensure_utc(
         await session.scalar(
             select(func.max(SensorSample.event_timestamp)).where(
                 SensorSample.event_timestamp < cutoff
@@ -163,7 +158,7 @@ async def cleanup_raw(
     if max_old is None:
         return 0
     need_bucket = floor_bucket(max_old, BUCKET_SECONDS["15min"])
-    newest15 = _as_utc(
+    newest15 = ensure_utc(
         await session.scalar(
             select(func.max(SensorAggregate.bucket_start)).where(SensorAggregate.tier == "15min")
         )

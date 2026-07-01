@@ -28,6 +28,7 @@ from ..models import (
     StorageUnit,
 )
 from ..state_series import MAX_TRUST_SECONDS, gap_ranges, in_gap, reconstruct
+from ..timeutil import ensure_utc
 from .model import DataQuality, DefrostSummary, IncidentSummary
 
 
@@ -41,12 +42,6 @@ def month_range_utc(year: int, month: int, tz: str) -> tuple[datetime, datetime]
     ny, nm = (year + 1, 1) if month == 12 else (year, month + 1)
     end_local = datetime(ny, nm, 1, tzinfo=zone)
     return start_local.astimezone(UTC), end_local.astimezone(UTC)
-
-
-def _utc(ts: datetime | None) -> datetime | None:
-    if ts is None:
-        return None
-    return ts if ts.tzinfo is not None else ts.replace(tzinfo=UTC)
 
 
 @dataclass
@@ -98,7 +93,7 @@ async def sample_metrics(
         m.data_quality = DataQuality(missing_entity=True, incomplete=True, coverage_percent=0.0)
         return m
 
-    samples = [(_utc(ts), v, q) for ts, v, q in rows]
+    samples = [(ensure_utc(ts), v, q) for ts, v, q in rows]
     valid_values = [v for _, v, q in samples if q == Quality.valid.value and v is not None]
     if valid_values:
         m.min_c = round(min(valid_values), 2)
@@ -362,8 +357,8 @@ async def incident_summaries(
     ).all()
     out: list[IncidentSummary] = []
     for inc in rows:
-        opened = _utc(inc.opened_at)
-        closed = _utc(inc.closed_at)
+        opened = ensure_utc(inc.opened_at)
+        closed = ensure_utc(inc.closed_at)
         # Overlaps the period?
         if (closed or end_utc) < start_utc:
             continue
@@ -413,10 +408,10 @@ async def defrost_summary(
     recoveries: list[float] = []
     completed = abnormal = reconstructed = 0
     for c in rows:
-        s, e = _utc(c.started_at), _utc(c.ended_at)
+        s, e = ensure_utc(c.started_at), ensure_utc(c.ended_at)
         if s and e and e > s:
             durations.append((e - s).total_seconds())
-        rs, rd = _utc(c.recovery_started_at), _utc(c.recovered_at)
+        rs, rd = ensure_utc(c.recovery_started_at), ensure_utc(c.recovered_at)
         if rs and rd and rd > rs:
             recoveries.append((rd - rs).total_seconds())
         if c.status == DefrostStatus.completed.value:
@@ -459,8 +454,8 @@ async def defrost_ranges(
     ).all()
     out: list[tuple[float, float]] = []
     for c in rows:
-        s = _utc(c.started_at)
-        e = _utc(c.ended_at) or _utc(c.recovered_at)
+        s = ensure_utc(c.started_at)
+        e = ensure_utc(c.ended_at) or ensure_utc(c.recovered_at)
         if s and e and e > s:
             out.append((s.timestamp(), e.timestamp()))
     return out

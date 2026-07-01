@@ -37,6 +37,7 @@ from .models import (
     StorageUnit,
 )
 from .normalization import normalize_bool, normalize_numeric, parse_bool_mapping
+from .timeutil import ensure_utc
 
 log = logging.getLogger("incident_engine")
 
@@ -306,7 +307,7 @@ class IncidentEngine:
                     )
                     quality = res.quality.value
                     normalized_c = res.normalized_value_c
-                    last_update = _utc(
+                    last_update = ensure_utc(
                         getattr(entity, "last_updated", None)
                         or getattr(entity, "last_changed", None)
                     )
@@ -494,7 +495,7 @@ class IncidentEngine:
                     .order_by(StateSample.event_timestamp.desc())
                     .limit(1)
                 )
-                prior_ts = _utc(prior_on.event_timestamp) if prior_on is not None else None
+                prior_ts = ensure_utc(prior_on.event_timestamp) if prior_on is not None else None
                 if (
                     prior_ts is not None
                     and (now - prior_ts).total_seconds() > RECONSTRUCT_THRESHOLD_SECONDS
@@ -548,7 +549,7 @@ class IncidentEngine:
         ):
             cycle.peak_evaporator_temperature_c = r.evaporator_c
 
-        started = _utc(cycle.started_at)
+        started = ensure_utc(cycle.started_at)
         in_window = False
 
         if cycle.status == DefrostStatus.active.value:
@@ -577,7 +578,7 @@ class IncidentEngine:
 
         if cycle.status == DefrostStatus.recovering.value:
             in_window = True
-            rec_started = _utc(cycle.recovery_started_at) or now
+            rec_started = ensure_utc(cycle.recovery_started_at) or now
             # Recovery target: the unit's upper safety limit, or — when none is
             # configured — a return to the pre-defrost baseline. Without this
             # fallback a freezer with only a lower limit could never complete a
@@ -846,9 +847,9 @@ class IncidentEngine:
         decision: Decision = decide(
             state=IncidentState(incident.state),
             now=now,
-            opened_at=_utc(incident.opened_at),
-            confirmed_at=_utc(incident.confirmed_at),
-            recovering_at=_utc(incident.recovering_at),
+            opened_at=ensure_utc(incident.opened_at),
+            confirmed_at=ensure_utc(incident.confirmed_at),
+            recovering_at=ensure_utc(incident.recovering_at),
             result=cond.result,
             violation_delay=cond.violation_delay,
             recovery_delay=cond.recovery_delay,
@@ -901,7 +902,3 @@ def _now() -> datetime:
     return datetime.now(UTC)
 
 
-def _utc(ts: datetime | None) -> datetime | None:
-    if ts is None:
-        return None
-    return ts if ts.tzinfo is not None else ts.replace(tzinfo=UTC)

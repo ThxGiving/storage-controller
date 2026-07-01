@@ -25,6 +25,7 @@ from ..models import (
 )
 from ..schemas import DefrostCycleOut, HistoryPoint, HistoryResponse
 from ..state_series import gap_ranges, in_gap, reconstruct, valid_seconds
+from ..timeutil import ensure_utc
 
 router = APIRouter(prefix="/api/storage-units", tags=["history"])
 
@@ -33,11 +34,6 @@ _RANGE_DELTAS = {
     "7d": timedelta(days=7),
     "30d": timedelta(days=30),
 }
-
-
-def _as_utc(ts: datetime) -> datetime:
-    """SQLite returns tz-naive datetimes; treat them as UTC."""
-    return ts if ts.tzinfo is not None else ts.replace(tzinfo=UTC)
 
 
 def _resolve_range(
@@ -95,8 +91,8 @@ async def unit_samples(
         for ts, val, q in rows
         if q == Quality.valid.value and val is not None
     ]
-    samples = [(_as_utc(ts), val, q) for ts, val, q in rows]
-    intervals = reconstruct(samples, _as_utc(start), _as_utc(end))
+    samples = [(ensure_utc(ts), val, q) for ts, val, q in rows]
+    intervals = reconstruct(samples, ensure_utc(start), ensure_utc(end))
     points, downsampled, bucket_seconds = _build_points(rows, start, end, max_points, intervals)
 
     min_c = min((v for _, v in valid), default=None)
@@ -107,7 +103,7 @@ async def unit_samples(
     # state-change sensor holds its last value between rows, so steady periods
     # count as covered — only explicit unavailable/unknown or silence beyond the
     # trust interval is missing.
-    span = (_as_utc(end) - _as_utc(start)).total_seconds()
+    span = (ensure_utc(end) - ensure_utc(start)).total_seconds()
     coverage = (valid_seconds(intervals) / span) if span > 0 else None
 
     return HistoryResponse(
@@ -153,7 +149,7 @@ async def unit_defrost_cycles(
             .order_by(DefrostCycle.started_at.asc())
         )
     ).all()
-    return [c for c in rows if c.ended_at is None or _as_utc(c.ended_at) >= start]
+    return [c for c in rows if c.ended_at is None or ensure_utc(c.ended_at) >= start]
 
 
 def _build_points(
@@ -179,22 +175,22 @@ def _build_points(
         for ts, val, q in rows:
             if q != Quality.valid.value or val is None:
                 continue
-            e = _as_utc(ts).timestamp()
+            e = ensure_utc(ts).timestamp()
             # Break the line only if a genuine gap lies between the two samples.
             if prev_epoch is not None and _straddles_gap(gaps, prev_epoch, e):
-                points.append(HistoryPoint(t=_as_utc(ts), v=None, q=None))
-            points.append(HistoryPoint(t=_as_utc(ts), v=val, q=Quality.valid.value))
+                points.append(HistoryPoint(t=ensure_utc(ts), v=None, q=None))
+            points.append(HistoryPoint(t=ensure_utc(ts), v=val, q=Quality.valid.value))
             prev_epoch = e
         return points, False, None
 
-    start = _as_utc(start)
+    start = ensure_utc(start)
     total_seconds = max((end - start).total_seconds(), 1.0)
     bucket_seconds = max(int(total_seconds / max_points), 1)
     buckets: dict[int, list[float]] = {}
     for ts, val, q in rows:
         if q != Quality.valid.value or val is None:
             continue
-        idx = int((_as_utc(ts) - start).total_seconds() // bucket_seconds)
+        idx = int((ensure_utc(ts) - start).total_seconds() // bucket_seconds)
         buckets.setdefault(idx, []).append(val)
 
     points = []

@@ -33,17 +33,12 @@ from .models import (
     DefrostStatus,
     StorageUnit,
 )
+from .timeutil import ensure_utc
 
 log = logging.getLogger("learning")
 
 # Bound the learning window so old, no-longer-representative cycles age out.
 MAX_LEARNING_CYCLES = 200
-
-
-def _utc(ts: datetime | None) -> datetime | None:
-    if ts is None:
-        return None
-    return ts if ts.tzinfo is not None else ts.replace(tzinfo=UTC)
 
 
 async def collect_observed_cycles(
@@ -67,16 +62,16 @@ async def collect_observed_cycles(
 
     observed: list[ObservedCycle] = []
     for c in rows:
-        started = _utc(c.started_at)
-        ended = _utc(c.ended_at)
+        started = ensure_utc(c.started_at)
+        ended = ensure_utc(c.ended_at)
         if started is None or ended is None:
             continue
         defrost_seconds = (ended - started).total_seconds()
         if defrost_seconds <= 0:
             continue
         recovery_seconds: float | None = None
-        rec_started = _utc(c.recovery_started_at)
-        recovered = _utc(c.recovered_at)
+        rec_started = ensure_utc(c.recovery_started_at)
+        recovered = ensure_utc(c.recovered_at)
         if rec_started is not None and recovered is not None:
             rs = (recovered - rec_started).total_seconds()
             recovery_seconds = rs if rs >= 0 else None

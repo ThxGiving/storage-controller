@@ -44,6 +44,7 @@ from .models import (
 )
 from .normalization import BoolMapping, normalize_bool, normalize_numeric, parse_bool_mapping
 from .settings_store import get_collector_settings
+from .timeutil import ensure_utc
 
 log = logging.getLogger("collector")
 
@@ -62,13 +63,6 @@ class AssignmentTarget:
     plausible_max_c: float | None
     numeric: bool
     bool_mapping: BoolMapping = field(default_factory=BoolMapping)
-
-
-def _as_utc(ts: datetime | None) -> datetime | None:
-    """Coerce a (possibly tz-naive, e.g. from SQLite) datetime to UTC-aware."""
-    if ts is None:
-        return None
-    return ts if ts.tzinfo is not None else ts.replace(tzinfo=UTC)
 
 
 def _fmt(value: float | bool | None) -> str | None:
@@ -90,7 +84,7 @@ def _parse_ts(value: Any) -> datetime | None:
     if not value:
         return None
     try:
-        return _as_utc(datetime.fromisoformat(str(value).replace("Z", "+00:00")))
+        return ensure_utc(datetime.fromisoformat(str(value).replace("Z", "+00:00")))
     except ValueError:
         return None
 
@@ -176,7 +170,7 @@ class Collector:
                     )
                 ).first()
                 if row is not None:
-                    last_ts[assignment.id] = _as_utc(row[0])
+                    last_ts[assignment.id] = ensure_utc(row[0])
                     last_value[assignment.id] = row[1]
                     last_quality[assignment.id] = row[2]
                 else:

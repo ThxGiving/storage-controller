@@ -43,6 +43,7 @@ from ..schemas import (
 )
 from ..settings_store import get_timezone_name
 from ..status_logic import compute_status
+from ..timeutil import ensure_utc
 from ..timezone import resolve_timezone
 from .deps import get_manager
 
@@ -50,12 +51,6 @@ router = APIRouter(prefix="/api", tags=["dashboard"])
 
 _NUMERIC = {r.value for r in NUMERIC_ROLES}
 _SPARK_POINTS = 48
-
-
-def _as_utc(ts: datetime | None) -> datetime | None:
-    if ts is None:
-        return None
-    return ts if ts.tzinfo is not None else ts.replace(tzinfo=UTC)
 
 
 def _role_value(role: str, entity, invert: bool) -> DashboardRoleValue:
@@ -113,8 +108,8 @@ def _defrost_of(
     return DashboardDefrost(
         id=cycle.id,
         status=cycle.status,
-        started_at=_as_utc(cycle.started_at),
-        recovery_started_at=_as_utc(cycle.recovery_started_at),
+        started_at=ensure_utc(cycle.started_at),
+        recovery_started_at=ensure_utc(cycle.recovery_started_at),
         peak_room_temperature_c=cycle.peak_room_temperature_c,
         peak_evaporator_temperature_c=cycle.peak_evaporator_temperature_c,
         max_expected_duration_seconds=max_defrost,
@@ -146,7 +141,7 @@ async def _spark(db: AsyncSession, unit_id: int) -> list[DashboardSpark]:
     if len(rows) <= _SPARK_POINTS:
         return [
             DashboardSpark(
-                t=_as_utc(ts),
+                t=ensure_utc(ts),
                 v=v if (q == Quality.valid.value and v is not None) else None,
             )
             for ts, v, q in rows
@@ -156,7 +151,7 @@ async def _spark(db: AsyncSession, unit_id: int) -> list[DashboardSpark]:
     for ts, v, q in rows:
         if q != Quality.valid.value or v is None:
             continue
-        idx = int((_as_utc(ts) - start).total_seconds() // bucket)
+        idx = int((ensure_utc(ts) - start).total_seconds() // bucket)
         grouped.setdefault(idx, []).append(v)
     out: list[DashboardSpark] = []
     for idx in range(_SPARK_POINTS + 1):
@@ -208,8 +203,8 @@ async def dashboard(
                     id=inc.id,
                     type=inc.type,
                     state=inc.state,
-                    opened_at=_as_utc(inc.opened_at),
-                    confirmed_at=_as_utc(inc.confirmed_at),
+                    opened_at=ensure_utc(inc.opened_at),
+                    confirmed_at=ensure_utc(inc.confirmed_at),
                     extreme_value_c=inc.extreme_value_c,
                     defrost_overlap=inc.defrost_overlap,
                     acknowledged=acknowledged,
@@ -241,7 +236,7 @@ async def dashboard(
         undocumented_incidents=undoc_count,
     )
     out_units: list[DashboardUnit] = []
-    last_sample_at: datetime | None = _as_utc(connection.last_event_at)
+    last_sample_at: datetime | None = ensure_utc(connection.last_event_at)
 
     for unit in units_db:
         by_role = {a.role: a for a in unit.assignments}
@@ -260,7 +255,7 @@ async def dashboard(
                 room_exists = True
                 normalized_c = room_value.numeric_c
                 quality = room_value.quality
-                last_update = _as_utc(entity.last_updated or entity.last_changed)
+                last_update = ensure_utc(entity.last_updated or entity.last_changed)
                 if last_update and (last_sample_at is None or last_update > last_sample_at):
                     last_sample_at = last_update
 

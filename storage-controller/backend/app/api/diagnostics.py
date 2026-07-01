@@ -46,6 +46,7 @@ from ..schemas import (
     RecentEventsResponse,
     ValueMappingOut,
 )
+from ..timeutil import ensure_utc
 from .deps import get_manager
 
 router = APIRouter(prefix="/api/diagnostics", tags=["diagnostics"])
@@ -81,12 +82,6 @@ def _mapping_out(m: BoolMapping) -> ValueMappingOut:
         invert=m.invert,
         configured=m.configured,
     )
-
-
-def _as_utc(ts: datetime | None) -> datetime | None:
-    if ts is None:
-        return None
-    return ts if ts.tzinfo is not None else ts.replace(tzinfo=UTC)
 
 
 def _trace_out(t: EventTrace) -> EventTraceOut:
@@ -189,7 +184,7 @@ async def defrost_diagnostics(
                 normalized_bool=res.normalized_bool,
                 normalization_reason=res.reason,
                 value_mapping=_mapping_out(mapping),
-                last_state_change=_as_utc(
+                last_state_change=ensure_utc(
                     getattr(entity, "last_changed", None) if entity else None
                 ),
                 last_event_received=last_event.timestamp if last_event else None,
@@ -197,8 +192,8 @@ async def defrost_diagnostics(
                 last_engine_evaluation=manager.last_incident_eval_at,
                 engine_state=engine_state,
                 active_cycle_id=open_cycle.id if open_cycle else None,
-                last_cycle_started=_as_utc(last_cycle.started_at) if last_cycle else None,
-                last_cycle_ended=_as_utc(last_cycle.ended_at) if last_cycle else None,
+                last_cycle_started=ensure_utc(last_cycle.started_at) if last_cycle else None,
+                last_cycle_ended=ensure_utc(last_cycle.ended_at) if last_cycle else None,
                 last_completed_cycle_id=last_completed,
                 last_cycle_reconstructed=bool(last_cycle.reconstructed) if last_cycle else False,
                 last_ignored_reason=last_ignored.result if last_ignored else None,
@@ -269,8 +264,8 @@ async def entity_diagnostic(
         exists=entity is not None,
         available=bool(getattr(entity, "available", False)) if entity else False,
         raw_state=raw_state,
-        last_changed=_as_utc(getattr(entity, "last_changed", None) if entity else None),
-        last_updated=_as_utc(getattr(entity, "last_updated", None) if entity else None),
+        last_changed=ensure_utc(getattr(entity, "last_changed", None) if entity else None),
+        last_updated=ensure_utc(getattr(entity, "last_updated", None) if entity else None),
         numeric_c=num.normalized_value_c,
         numeric_quality=num.quality.value,
         normalized_bool=bool_res.normalized_bool,

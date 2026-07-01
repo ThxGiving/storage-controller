@@ -26,10 +26,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base
-
-
-def utcnow() -> datetime:
-    return datetime.now(UTC)
+from .timeutil import utcnow  # re-exported: the canonical "now" (see timeutil)
 
 
 class UtcDateTime(TypeDecorator):
@@ -46,9 +43,10 @@ class UtcDateTime(TypeDecorator):
         format to existing rows, so no data migration is needed);
       * on read — the value is always returned tz-aware in UTC.
 
-    Because this holds for every ORM datetime, endpoints must NOT re-stamp times
-    sourced from the database. The only remaining ``_as_utc``-style helpers are
-    for non-ORM sources (in-memory diagnostics/HA state) that never pass here.
+    Because this holds for every ORM datetime, DB-sourced times need no further
+    stamping. The shared ``ensure_utc`` helper (see :mod:`app.timeutil`) is only
+    needed for non-ORM sources (in-memory diagnostics/HA state) that never pass
+    through this column type.
     """
 
     impl = DateTime

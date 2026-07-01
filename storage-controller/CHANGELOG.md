@@ -10,7 +10,7 @@ All notable changes to the Refrigeration Logbook App are documented here.
 
 ### Changed
 
-- **Einheitliche Zeitbehandlung an der Datenbankgrenze** — ein neuer `UtcDateTime`-Spaltentyp erzwingt zentral, dass *jeder* gespeicherte Zeitstempel UTC-aware aus der Datenbank kommt. Damit sind alle bislang betroffenen Ansichten (Vorfälle, Berichte, Wartung, Verlaufs-Import, Abtau-Lernen u. a.) auf einen Schlag korrekt, statt Endpoint für Endpoint nachgebessert zu werden.
+- **Einheitliche Zeitbehandlung an der Datenbankgrenze** — ein neuer `UtcDateTime`-Spaltentyp erzwingt zentral, dass *jeder* gespeicherte Zeitstempel UTC-aware aus der Datenbank kommt. Damit sind alle bislang betroffenen Ansichten (Vorfälle, Berichte, Wartung, Verlaufs-Import, Abtau-Lernen u. a.) auf einen Schlag korrekt, statt Endpoint für Endpoint nachgebessert zu werden. Festgelegte Konvention: alle `datetime` im Backend sind UTC; Lokalzeit existiert nur am Anzeige-Rand (Browser) und bei Zeitplan-Eingaben (mit explizitem `timezone`-Feld). Neun duplizierte Hilfsfunktionen wurden zu drei Primitiven zusammengeführt (`utcnow`, `ensure_utc`, `UtcDateTime` in `app/timeutil.py`).
 
 ## 0.9.8 — 2026-07-01
 
