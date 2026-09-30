@@ -1,6 +1,14 @@
 # Current status
 
-_Last updated: 2026-06-25 (release 0.4.0, Phase 6)._
+_Last updated: 2026-10-01 (release 0.9.12)._
+
+## 0.9.12 — Home Assistant incident events
+
+- Confirmed incidents are fired as `storage_controller_incident` events (`active`, then `closed`) so HA automations can notify; the App remains the single source of truth for incident decisions (delays, defrost grace, learned recovery).
+- Outbox on the `incidents` table (`ha_notified_active_at` / `ha_notified_closed_at`, migration `0013_ha_incident_events`); delivery retried each evaluation tick while connected; pre-existing incidents backfilled as delivered.
+- New module `app/ha_events.py`, `HomeAssistantRestClient.fire_event`, `HAConnectionManager._incident_tick`.
+- Tests: `tests/test_ha_events.py` (10). Full suite: 474 passed, 2 failed — the two failures (`test_phase6_integration::test_failed_scheduled_run_*`) also fail on `main` without this change (pre-existing, not investigated here).
+- Not yet verified on a real instance: event arrival in HA after an actual confirmed incident.
 
 ## Phases
 

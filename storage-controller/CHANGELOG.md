@@ -2,6 +2,13 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.9.12 — 2026-10-01
+
+### Added
+
+- **Vorfälle als Home-Assistant-Ereignis** — bestätigte Vorfälle werden als Ereignis `storage_controller_incident` an Home Assistant gemeldet (`"event": "active"`), beim Schließen folgt `"event": "closed"`. Damit kann eine HA-Automation Push-Nachrichten oder E-Mails verschicken, während die App entscheidet, *ob* überhaupt ein Vorfall vorliegt: Verzögerung, Abtau-Schonfrist und gelernte Erholungszeiten gelten genau wie im Logbuch. Kurze Überschreitungen, die sich vor der Bestätigung erledigen, werden nie gemeldet. Anlass war ein Fehlalarm einer einfachen HA-Automation direkt nach einer Abtauung.
+- **Zustellung mit Wiederholung** — die Vorfall-Tabelle dient als Postausgang (`ha_notified_active_at` / `ha_notified_closed_at`, Migration `0013`): ein Übergang gilt erst als gemeldet, wenn Home Assistant das Ereignis angenommen hat; sonst wird es beim nächsten Auswerte-Takt erneut versucht. Bestehende Vorfälle werden bei der Migration als bereits gemeldet markiert (keine Flut alter Alarme).
+
 ## 0.9.11 — 2026-07-02
 
 ### Changed

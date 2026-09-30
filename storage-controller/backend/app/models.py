@@ -472,6 +472,12 @@ class Incident(Base):
 
     defrost_overlap: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
+    # Home Assistant event outbox (0.9.12): set once the "active" / "closed"
+    # transition has been delivered as a ``storage_controller_incident`` event.
+    # NULL = not (yet) delivered; the publisher retries until HA accepts it.
+    ha_notified_active_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+    ha_notified_closed_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+
     # Documentation (HACCP)
     acknowledged_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
     acknowledged_by: Mapped[str | None] = mapped_column(String(200), nullable=True)
