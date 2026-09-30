@@ -162,6 +162,12 @@ async def test_retry_then_success(app_client, monkeypatch):
         assert sender.calls == 2
 
 
+# Fixed mid-month clock for the reactivation tests: "Run now" reports the previous
+# month relative to *now*, while a scheduler tick looks at the period of the latest
+# *scheduled* fire. On the 1st of a month before the fire time those differ, which
+# made these tests fail with the real clock (e.g. 2026-10-01 01:30).
+MID_MONTH = datetime(2026, 7, 15, 12, 0, tzinfo=UTC)
+
 @pytest.mark.asyncio
 async def test_failed_scheduled_run_is_reactivated(app_client, monkeypatch):
     """A scheduled run left in a terminal `failed` state (dead delivery) must be
@@ -175,7 +181,7 @@ async def test_failed_scheduled_run_is_reactivated(app_client, monkeypatch):
     runner = SchedulerRunner(factory)
     async with factory() as s:
         sched = await s.get(ReportSchedule, sid)
-        run = await runner.run_now(s, sched, send=True)
+        run = await runner.run_now(s, sched, send=True, now=MID_MONTH)
         delivery = await s.scalar(
             select(EmailDelivery).where(EmailDelivery.schedule_run_id == run.id)
         )
@@ -187,7 +193,7 @@ async def test_failed_scheduled_run_is_reactivated(app_client, monkeypatch):
         await s.commit()
 
     sender.behavior = "ok"  # SMTP recovers
-    await runner.tick(datetime.now(UTC))
+    await runner.tick(MID_MONTH + timedelta(minutes=5))
 
     async with factory() as s:
         run = await s.scalar(select(ScheduleRun).where(ScheduleRun.schedule_id == sid))
@@ -211,7 +217,7 @@ async def test_failed_scheduled_run_permanent_not_reactivated(app_client, monkey
     runner = SchedulerRunner(factory)
     async with factory() as s:
         sched = await s.get(ReportSchedule, sid)
-        run = await runner.run_now(s, sched, send=True)  # delivers ok (1 call)
+        run = await runner.run_now(s, sched, send=True, now=MID_MONTH)  # delivers ok (1 call)
         delivery = await s.scalar(
             select(EmailDelivery).where(EmailDelivery.schedule_run_id == run.id)
         )
@@ -222,7 +228,7 @@ async def test_failed_scheduled_run_permanent_not_reactivated(app_client, monkey
         run.finished_at = datetime.now(UTC)
         await s.commit()
 
-    await runner.tick(datetime.now(UTC))
+    await runner.tick(MID_MONTH + timedelta(minutes=5))
 
     async with factory() as s:
         run = await s.scalar(select(ScheduleRun).where(ScheduleRun.schedule_id == sid))
