@@ -98,6 +98,8 @@ class HAConnectionManager:
         # Optional sample collector (Phase 3) and incident engine (Phase 4).
         self._collector = None
         self._incident_engine = None
+        # Optional Home Assistant incident-event publisher (0.9.12).
+        self._event_publisher = None
 
     # -- public API -------------------------------------------------------- #
 
@@ -106,6 +108,9 @@ class HAConnectionManager:
 
     def set_incident_engine(self, engine) -> None:
         self._incident_engine = engine
+
+    def set_event_publisher(self, publisher) -> None:
+        self._event_publisher = publisher
 
     @property
     def configured(self) -> bool:
@@ -162,15 +167,29 @@ class HAConnectionManager:
                 break  # stop requested
             except TimeoutError:
                 pass
+            await self._incident_tick()
+
+    async def _incident_tick(self) -> None:
+        """One evaluation tick: run the incident engine, then announce
+        confirmed/closed incidents to Home Assistant."""
+        try:
+            await self._incident_engine.run(
+                self.get_entity, connected=self._status == STATUS_CONNECTED
+            )
+            self._last_incident_eval_at = datetime.now(UTC)
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            log.warning("incident_engine: evaluation error: %s", type(exc).__name__)
+        # Undelivered transitions stay in the outbox and are retried next tick;
+        # while disconnected there is nobody to deliver to.
+        if self._event_publisher is not None and self._status == STATUS_CONNECTED:
             try:
-                await self._incident_engine.run(
-                    self.get_entity, connected=self._status == STATUS_CONNECTED
-                )
-                self._last_incident_eval_at = datetime.now(UTC)
+                await self._event_publisher.publish_pending()
             except asyncio.CancelledError:
                 raise
             except Exception as exc:  # noqa: BLE001
-                log.warning("incident_engine: evaluation error: %s", type(exc).__name__)
+                log.warning("ha_events: publish error: %s", type(exc).__name__)
 
     async def stop(self) -> None:
         self._stop.set()

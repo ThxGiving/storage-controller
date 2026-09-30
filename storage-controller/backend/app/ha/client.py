@@ -17,10 +17,19 @@ log = logging.getLogger("ha_client")
 
 
 class HomeAssistantRestClient:
-    def __init__(self, base_url: str, token: str | None, *, timeout: float = 10.0) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        token: str | None,
+        *,
+        timeout: float = 10.0,
+        transport: httpx.AsyncBaseTransport | None = None,
+    ) -> None:
         self._base_url = base_url.rstrip("/")
         self._token = token
         self._timeout = timeout
+        # Injectable for tests (httpx.MockTransport); None = real network.
+        self._transport = transport
 
     @property
     def configured(self) -> bool:
@@ -74,3 +83,13 @@ class HomeAssistantRestClient:
             resp.raise_for_status()
             result = resp.json()
             return result if isinstance(result, list) else []
+
+    async def fire_event(self, event_type: str, data: dict[str, Any]) -> None:
+        """Fire a Home Assistant event (``POST /api/events/<event_type>``).
+
+        Raises on transport errors and non-2xx responses so callers can retry.
+        """
+        url = f"{self._base_url}/events/{quote(event_type)}"
+        async with httpx.AsyncClient(timeout=self._timeout, transport=self._transport) as client:
+            resp = await client.post(url, headers=self._headers(), json=data)
+            resp.raise_for_status()

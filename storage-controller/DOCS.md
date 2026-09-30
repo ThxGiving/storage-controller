@@ -38,6 +38,42 @@ automatically with exponential backoff. Connection health is exposed as an
 application status (`connected` / `reconnecting` / `disconnected` /
 `authentication_error`) and does **not** make the container unhealthy.
 
+### Incident events for Home Assistant automations
+
+The App fires a Home Assistant event `storage_controller_incident` when an
+incident is **confirmed** (`"event": "active"`, i.e. after the violation delay
+and the defrost grace logic) and again when it is **closed**
+(`"event": "closed"`). Excursions that clear before they are confirmed are never
+sent. The App decides *whether* something is an incident; Home Assistant decides
+*how* to notify.
+
+Delivery is retried: each transition is marked as delivered only after Home
+Assistant accepted it, so events are not lost while Home Assistant restarts.
+Incidents that existed before 0.9.12 are not re-sent.
+
+Event data: `event`, `incident_id`, `type` (e.g. `temperature_high`,
+`sensor_unavailable`, `abnormal_defrost`, `recovery_timeout`, `door_open`,
+`controller_alarm`), `state`, `storage_unit_id`, `storage_unit`, `opened_at`,
+`confirmed_at`, `closed_at`, `limit_c`, `extreme_c`, `extreme_at`,
+`defrost_overlap`, `duration_seconds`.
+
+Example automation:
+
+```yaml
+triggers:
+  - trigger: event
+    event_type: storage_controller_incident
+    event_data:
+      event: active
+actions:
+  - action: notify.mobile_app_phone
+    data:
+      title: "{{ trigger.event.data.storage_unit }}: {{ trigger.event.data.type }}"
+      message: >-
+        Extreme {{ trigger.event.data.extreme_c }} °C,
+        limit {{ trigger.event.data.limit_c }} °C
+```
+
 ## Ingress
 
 The web application works under a dynamic path prefix

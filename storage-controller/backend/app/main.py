@@ -46,6 +46,7 @@ from .diagnostics import DiagnosticsRecorder
 from .errors import AppError, app_error_handler
 from .ha.client import HomeAssistantRestClient
 from .ha.manager import HAConnectionManager
+from .ha_events import IncidentEventPublisher
 from .incident_engine import IncidentEngine
 from .logging_config import configure_logging
 from .maintenance import MaintenanceRunner
@@ -190,6 +191,10 @@ async def lifespan(app: FastAPI):
     incident_engine = IncidentEngine(get_session_factory())
     incident_engine.diagnostics = diagnostics
     manager.set_incident_engine(incident_engine)
+    # Home Assistant incident events (0.9.12): confirmed/closed incidents are
+    # fired as `storage_controller_incident` events for HA automations.
+    event_publisher = IncidentEventPublisher(get_session_factory(), rest)
+    manager.set_event_publisher(event_publisher)
 
     # Maintenance runner (Phase 4.5): aggregation, retention, storage, WAL.
     maintenance = MaintenanceRunner(get_session_factory())
