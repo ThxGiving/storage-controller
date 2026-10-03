@@ -181,9 +181,14 @@ export const api = {
       method: "POST",
     }),
 
-  listIncidents: (params?: { state?: "all" | "open" | "closed"; storage_unit_id?: number }) => {
+  listIncidents: (params?: {
+    state?: "all" | "open" | "closed";
+    storage_unit_id?: number;
+    confirmed?: boolean;
+  }) => {
     const q = new URLSearchParams();
     if (params?.state) q.set("state", params.state);
+    if (params?.confirmed != null) q.set("confirmed", String(params.confirmed));
     if (params?.storage_unit_id != null) q.set("storage_unit_id", String(params.storage_unit_id));
     const qs = q.toString();
     return request<Incident[]>(`api/incidents${qs ? `?${qs}` : ""}`);

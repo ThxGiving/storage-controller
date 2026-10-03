@@ -42,6 +42,33 @@ async def _open_incident(client, unit_id):
     return inc.id
 
 
+async def _confirm(client, unit_id, minutes=15):
+    eng = client._app.state.incident_engine  # type: ignore[attr-defined]
+    now = T0 + timedelta(minutes=minutes)
+    reading = UnitReading(
+        storage_unit_id=unit_id, now=now, connected=True, has_room=True, room_exists=True,
+        quality="valid", normalized_c=9.0, last_update=now, defrost_on=None,
+        lower=0.0, upper=8.0, warning_margin=0.5, violation_delay=900,
+        recovery_delay=300, offline_delay=600,
+    )
+    await eng.evaluate_readings([reading], connected=True)
+
+
+@pytest.mark.asyncio
+async def test_list_filters_by_confirmation(app_client):
+    unit = await _make_unit(app_client)
+    iid = await _open_incident(app_client, unit["id"])
+
+    ids = lambda r: [i["id"] for i in r.json()]  # noqa: E731
+    assert iid in ids(await app_client.get("/api/incidents"))
+    assert iid in ids(await app_client.get("/api/incidents?confirmed=false"))
+    assert iid not in ids(await app_client.get("/api/incidents?confirmed=true"))
+
+    await _confirm(app_client, unit["id"])
+    assert iid in ids(await app_client.get("/api/incidents?confirmed=true"))
+    assert iid not in ids(await app_client.get("/api/incidents?confirmed=false"))
+
+
 @pytest.mark.asyncio
 async def test_list_and_get_incident(app_client):
     unit = await _make_unit(app_client)
@@ -100,7 +127,14 @@ async def test_dashboard_includes_active_incident(app_client):
     resp = await app_client.get("/api/dashboard")
     body = resp.json()
     assert body["summary"]["open_incidents"] >= 1
-    assert body["summary"]["undocumented_incidents"] >= 1
+    # Still pending (not confirmed): nothing to acknowledge or document yet.
+    assert body["summary"]["undocumented_incidents"] == 0
+    assert body["summary"]["unacknowledged_incidents"] == 0
+
+    await _confirm(app_client, unit["id"])
+    body = (await app_client.get("/api/dashboard")).json()
+    assert body["summary"]["undocumented_incidents"] == 1
+    assert body["summary"]["unacknowledged_incidents"] == 1
     u = next(u for u in body["units"] if u["id"] == unit["id"])
     assert len(u["active_incidents"]) >= 1
     assert u["active_incidents"][0]["type"] == "temperature_high"

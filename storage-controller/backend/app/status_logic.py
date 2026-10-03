@@ -7,7 +7,10 @@ single source of truth for both the dashboard and the unit cards.
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from .models import Quality
+from .timeutil import ensure_utc
 
 STATUS_NORMAL = "normal"
 STATUS_NEAR_LIMIT = "near_limit"
@@ -16,6 +19,28 @@ STATUS_UNAVAILABLE = "unavailable"
 STATUS_STALE = "stale"
 STATUS_DISCONNECTED = "disconnected"
 STATUS_CONFIG_ERROR = "configuration_error"
+
+# A sensor counts as stale ("no current data") only after this long without a
+# new reading. Integrations such as ESPHome drop unchanged values, so Home
+# Assistant's timestamps do not move while a cold room holds a steady
+# temperature; in practice that lasted up to ~25 min. The unit's offline delay
+# still applies when it is longer.
+STALE_MIN_SECONDS = 45 * 60
+
+
+def stale_after_seconds(offline_delay_seconds: int) -> int:
+    return max(offline_delay_seconds, STALE_MIN_SECONDS)
+
+
+def entity_last_seen(entity: object) -> datetime | None:
+    """Newest of last_reported / last_updated / last_changed (UTC)."""
+    stamps = [
+        ensure_utc(getattr(entity, attr, None))
+        for attr in ("last_reported", "last_updated", "last_changed")
+    ]
+    stamps = [s for s in stamps if s is not None]
+    return max(stamps) if stamps else None
+
 
 _BAD_QUALITY = {Quality.unavailable.value, Quality.unknown.value, Quality.invalid.value}
 

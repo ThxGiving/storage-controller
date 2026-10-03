@@ -65,8 +65,29 @@ def test_recovering_holds_before_recovery_delay():
 
 def test_recovering_reviolation():
     rec = T0 + timedelta(minutes=20)
-    d = _decide(IncidentState.recovering, EvalResult.ACTIVE, recovering=rec, now=rec + timedelta(minutes=1))
+    confirmed = T0 + timedelta(minutes=15)
+    d = _decide(IncidentState.recovering, EvalResult.ACTIVE, confirmed=confirmed, recovering=rec,
+                now=rec + timedelta(minutes=1))
     assert d.state == IncidentState.active_violation
+    assert d.confirmed_at == confirmed
+
+
+def test_unconfirmed_reviolation_returns_to_pending():
+    # Door opening: crossed at T0, dipped below at +1 min, crossed again at +3 min.
+    rec = T0 + timedelta(minutes=1)
+    d = _decide(IncidentState.recovering, EvalResult.ACTIVE, recovering=rec,
+                now=T0 + timedelta(minutes=3))
+    assert d.state == IncidentState.pending_violation
+    assert d.confirmed_at is None
+    assert d.recovering_at is None
+
+
+def test_unconfirmed_reviolation_confirms_once_delay_elapsed_since_first_crossing():
+    rec = T0 + timedelta(minutes=14)
+    d = _decide(IncidentState.recovering, EvalResult.ACTIVE, recovering=rec,
+                now=T0 + timedelta(minutes=16))
+    assert d.state == IncidentState.active_violation
+    assert d.confirmed_at == T0 + timedelta(minutes=16)
 
 
 def test_unknown_holds_in_every_state():

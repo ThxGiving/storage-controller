@@ -70,3 +70,19 @@ def test_stale():
 
 def test_disconnected_takes_priority_over_range():
     assert _status(connected=False, normalized_c=99.0) == STATUS_DISCONNECTED
+
+
+def test_entity_last_seen_prefers_newest_timestamp():
+    from datetime import UTC, datetime
+    from types import SimpleNamespace
+
+    from app.status_logic import entity_last_seen, stale_after_seconds
+
+    t = datetime(2026, 10, 3, 12, 0, tzinfo=UTC)
+    e = SimpleNamespace(last_changed=t, last_updated=t.replace(minute=5),
+                        last_reported=t.replace(minute=30))
+    assert entity_last_seen(e) == t.replace(minute=30)
+    assert entity_last_seen(SimpleNamespace(last_changed=None, last_updated=t)) == t
+    assert entity_last_seen(SimpleNamespace()) is None
+    assert stale_after_seconds(600) == 45 * 60
+    assert stale_after_seconds(7200) == 7200

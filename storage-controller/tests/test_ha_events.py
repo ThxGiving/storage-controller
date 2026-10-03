@@ -184,6 +184,37 @@ async def test_unconfirmed_excursion_is_never_announced(app_client):
 
 
 @pytest.mark.asyncio
+async def test_flapping_excursion_is_not_announced_before_violation_delay(app_client):
+    """Repeated door openings: the temperature dips below the limit between
+    openings. Each new crossing must not confirm the incident immediately."""
+    uid = await _make_unit(app_client)
+    fake = FakeEvents()
+    pub = _publisher(fake)
+
+    await _feed(app_client, uid, [(0, 9.0), (1, 7.0), (3, 9.5), (4, 7.0), (6, 10.0), (7, 7.0)])
+    assert await pub.publish_pending() == 0
+    await _feed(app_client, uid, [(13, 7.0)])  # recovery delay elapsed -> closed silently
+    assert await pub.publish_pending() == 0
+    assert fake.events == []
+    assert (await _incidents())[0].state == IncidentState.closed.value
+    assert (await _incidents())[0].confirmed_at is None
+
+
+@pytest.mark.asyncio
+async def test_flapping_excursion_confirms_after_violation_delay(app_client):
+    uid = await _make_unit(app_client)
+    fake = FakeEvents()
+    pub = _publisher(fake)
+
+    # Keeps re-crossing within the recovery delay for longer than 15 min.
+    await _feed(app_client, uid, [(0, 9.0), (4, 7.0), (8, 9.0), (12, 7.0), (14, 9.0)])
+    assert await pub.publish_pending() == 0
+    await _feed(app_client, uid, [(15, 9.0)])
+    assert await pub.publish_pending() == 1
+    assert fake.events[0][1]["opened_at"] == T0.isoformat()
+
+
+@pytest.mark.asyncio
 async def test_failed_delivery_is_retried_on_next_run(app_client):
     uid = await _make_unit(app_client)
     await _feed(app_client, uid, [(0, 9.0), (15, 9.2)])
