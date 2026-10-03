@@ -37,6 +37,7 @@ from .models import (
     StorageUnit,
 )
 from .normalization import normalize_bool, normalize_numeric, parse_bool_mapping
+from .status_logic import entity_last_seen, stale_after_seconds
 from .timeutil import ensure_utc
 
 log = logging.getLogger("incident_engine")
@@ -199,7 +200,8 @@ def _conditions(r: UnitReading) -> list[_Cond]:
         invalid = EvalResult.ACTIVE if r.quality == Quality.invalid.value else EvalResult.CLEAR
         if r.quality == Quality.valid.value and r.last_update is not None:
             age = (r.now - r.last_update).total_seconds()
-            stale = EvalResult.ACTIVE if age > max(r.offline_delay, 60) else EvalResult.CLEAR
+            too_old = age > stale_after_seconds(r.offline_delay)
+            stale = EvalResult.ACTIVE if too_old else EvalResult.CLEAR
         else:
             stale = EvalResult.CLEAR
 
@@ -307,10 +309,7 @@ class IncidentEngine:
                     )
                     quality = res.quality.value
                     normalized_c = res.normalized_value_c
-                    last_update = ensure_utc(
-                        getattr(entity, "last_updated", None)
-                        or getattr(entity, "last_changed", None)
-                    )
+                    last_update = entity_last_seen(entity)
 
             defrost_on: bool | None = None
             defrost_entity_id: str | None = None

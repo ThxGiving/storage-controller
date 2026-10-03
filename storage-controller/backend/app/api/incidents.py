@@ -35,6 +35,9 @@ def _ingress_user(request: Request) -> str | None:
 async def list_incidents(
     state: str = Query(default="all"),  # all | open | closed
     storage_unit_id: int | None = Query(default=None),
+    # true = only incidents that passed the violation delay; false = only
+    # excursions that cleared before confirmation; omitted = both.
+    confirmed: bool | None = Query(default=None),
     limit: int = Query(default=200, ge=1, le=2000),
     db: AsyncSession = Depends(get_db),
 ) -> list[Incident]:
@@ -45,6 +48,10 @@ async def list_incidents(
         stmt = stmt.where(Incident.state == "closed")
     if storage_unit_id is not None:
         stmt = stmt.where(Incident.storage_unit_id == storage_unit_id)
+    if confirmed is True:
+        stmt = stmt.where(Incident.confirmed_at.is_not(None))
+    elif confirmed is False:
+        stmt = stmt.where(Incident.confirmed_at.is_(None))
     return list((await db.scalars(stmt)).all())
 
 

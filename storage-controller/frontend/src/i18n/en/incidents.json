@@ -1,7 +1,7 @@
 {
   "title": "Incidents",
   "subtitle": "Temperature deviations and technical conditions.",
-  "filter": { "all": "All", "open": "Open", "closed": "Closed" },
+  "filter": { "all": "All", "open": "Open", "closed": "Closed", "showUnconfirmed": "Show unconfirmed" },
   "empty": "No incidents in this view.",
   "types": {
     "temperature_high": "Temperature too high",
@@ -28,7 +28,7 @@
     "status": "Status",
     "documentation": "Documentation"
   },
-  "badge": { "defrostOverlap": "during defrost", "unacknowledged": "to document" },
+  "badge": { "defrostOverlap": "during defrost", "unacknowledged": "to document", "unconfirmed": "not confirmed" },
   "detail": {
     "back": "Back to incidents",
     "opened": "Opened",

@@ -1,7 +1,7 @@
 {
   "title": "Vorfälle",
   "subtitle": "Temperaturabweichungen und technische Zustände.",
-  "filter": { "all": "Alle", "open": "Offen", "closed": "Geschlossen" },
+  "filter": { "all": "Alle", "open": "Offen", "closed": "Geschlossen", "showUnconfirmed": "Auch unbestätigte anzeigen" },
   "empty": "Keine Vorfälle in dieser Ansicht.",
   "types": {
     "temperature_high": "Temperatur zu hoch",
@@ -28,7 +28,7 @@
     "status": "Status",
     "documentation": "Dokumentation"
   },
-  "badge": { "defrostOverlap": "während Abtauung", "unacknowledged": "zu dokumentieren" },
+  "badge": { "defrostOverlap": "während Abtauung", "unacknowledged": "zu dokumentieren", "unconfirmed": "nicht bestätigt" },
   "detail": {
     "back": "Zurück zu den Vorfällen",
     "opened": "Geöffnet",

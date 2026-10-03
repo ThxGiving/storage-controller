@@ -24,6 +24,9 @@ class HAEntity(BaseModel):
     available: bool = True
     last_changed: datetime | None = None
     last_updated: datetime | None = None
+    # Last time the integration reported a value, even an unchanged one
+    # (HA >= 2024.4). Not every integration re-reports unchanged values.
+    last_reported: datetime | None = None
 
 
 class ConnectionStatus(BaseModel):

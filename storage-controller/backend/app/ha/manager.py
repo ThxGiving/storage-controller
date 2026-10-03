@@ -60,6 +60,7 @@ def parse_entity(
         available=available,
         last_changed=_parse_dt(state.get("last_changed")),
         last_updated=_parse_dt(state.get("last_updated")),
+        last_reported=_parse_dt(state.get("last_reported")),
     )
 
 

@@ -17,6 +17,8 @@ type Filter = "all" | "open" | "closed";
 export function IncidentsPage() {
   const { t } = useTranslation("incidents");
   const [filter, setFilter] = React.useState<Filter>("open");
+  // Excursions that cleared before the violation delay are hidden by default.
+  const [showUnconfirmed, setShowUnconfirmed] = React.useState(false);
   const [selectedId, setSelectedId] = React.useState<number | null>(null);
 
   const unitsQuery = useQuery({ queryKey: ["units"], queryFn: api.listUnits });
@@ -24,8 +26,9 @@ export function IncidentsPage() {
     unitsQuery.data?.find((u) => u.id === id)?.name ?? (id == null ? "—" : `#${id}`);
 
   const incidentsQuery = useQuery({
-    queryKey: ["incidents", filter],
-    queryFn: () => api.listIncidents({ state: filter }),
+    queryKey: ["incidents", filter, showUnconfirmed],
+    queryFn: () =>
+      api.listIncidents({ state: filter, confirmed: showUnconfirmed ? undefined : true }),
     refetchInterval: 15000,
   });
 
@@ -42,6 +45,16 @@ export function IncidentsPage() {
           <h1 className="text-xl font-semibold">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
+        <div className="flex flex-wrap items-center gap-3">
+        <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={showUnconfirmed}
+            onChange={(e) => setShowUnconfirmed(e.target.checked)}
+            className="h-3.5 w-3.5 accent-primary"
+          />
+          {t("filter.showUnconfirmed")}
+        </label>
         <div role="radiogroup" className="inline-flex rounded-lg border border-border bg-muted/50 p-0.5">
           {(["open", "closed", "all"] as Filter[]).map((f) => (
             <button
@@ -56,6 +69,7 @@ export function IncidentsPage() {
               {t(`filter.${f}`)}
             </button>
           ))}
+        </div>
         </div>
       </div>
 
@@ -104,7 +118,9 @@ export function IncidentsPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-2.5">
-                      {inc.acknowledged_at && inc.corrective_action ? (
+                      {inc.confirmed_at == null ? (
+                        <span className="text-xs text-muted-foreground">{t("badge.unconfirmed")}</span>
+                      ) : inc.acknowledged_at && inc.corrective_action ? (
                         <CheckCircle2 className="h-4 w-4 text-ok" aria-label="documented" />
                       ) : (
                         <Badge tone="warn">{t("badge.unacknowledged")}</Badge>

@@ -7,6 +7,11 @@ All notable changes to the Refrigeration Logbook App are documented here.
 ### Fixed
 
 - **Vorfall bei Türöffnungen sofort bestätigt** — fiel die Temperatur nach einer Überschreitung kurz unter die Grenze und stieg dann wieder darüber (typisch: mehrere Türöffnungen hintereinander im Service), sprang der noch *unbestätigte* Vorfall direkt in „aktiv“ — die Verzögerung bis zur Bestätigung wurde übersprungen. In der Praxis meldete die App so nach 1,5–3 Minuten statt nach den eingestellten 20–30 Minuten (seit 0.9.12 auch als Push/E-Mail über Home Assistant). Ein unbestätigter Vorfall kehrt jetzt nach „ausstehend“ zurück; die Verzögerung zählt weiter ab der ersten Überschreitung, und erst wenn sie abgelaufen ist, wird bestätigt. Bereits bestätigte Vorfälle verhalten sich unverändert.
+- **„Keine aktuellen Daten“ bei ruhiger Temperatur** — ESPHome (und andere Integrationen) melden unveränderte Werte nicht erneut, Home Assistant aktualisiert dann keinen Zeitstempel. Hielt ein Kühlraum die Temperatur 10 Minuten exakt (beobachtet: bis ~25 min), entstand ein Vorfall „Keine aktuellen Daten“, nach 20 Minuten sogar bestätigt und gemeldet. Ein Fühler gilt jetzt erst nach 45 Minuten ohne neuen Wert als veraltet (bzw. nach der Offline-Verzögerung, falls länger); zusätzlich wird `last_reported` von Home Assistant berücksichtigt, wo die Integration ihn liefert.
+
+### Changed
+
+- **Vorfallliste zeigt standardmäßig nur bestätigte Vorfälle** — Überschreitungen, die sich vor Ablauf der Verzögerung erledigt haben (z. B. Türöffnungen), blähten die Liste auf (rund 180 von 200 Einträgen in einer Woche) und standen alle auf „zu dokumentieren“. Sie sind jetzt ausgeblendet und über „Auch unbestätigte anzeigen“ weiter einsehbar; ihre Dokumentations-Spalte zeigt „nicht bestätigt“. Das Dashboard zählt nur noch bestätigte Vorfälle als „unquittiert“/„undokumentiert“. API: `GET /api/incidents?confirmed=true|false`. Berichte bleiben unverändert.
 
 ## 0.9.12 — 2026-10-01
 

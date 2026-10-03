@@ -42,7 +42,7 @@ from ..schemas import (
     DashboardUnit,
 )
 from ..settings_store import get_timezone_name
-from ..status_logic import compute_status
+from ..status_logic import compute_status, entity_last_seen, stale_after_seconds
 from ..timeutil import ensure_utc
 from ..timezone import resolve_timezone
 from .deps import get_manager
@@ -193,10 +193,13 @@ async def dashboard(
         documented = bool(inc.cause or inc.corrective_action)
         acknowledged = inc.acknowledged_at is not None
         open_count += 1
-        if not acknowledged:
-            unack_count += 1
-        if not documented:
-            undoc_count += 1
+        # Only confirmed incidents need acknowledgement/documentation; a pending
+        # excursion may still clear on its own before the violation delay.
+        if inc.confirmed_at is not None:
+            if not acknowledged:
+                unack_count += 1
+            if not documented:
+                undoc_count += 1
         if inc.storage_unit_id is not None:
             incidents_by_unit.setdefault(inc.storage_unit_id, []).append(
                 DashboardIncident(
@@ -255,16 +258,17 @@ async def dashboard(
                 room_exists = True
                 normalized_c = room_value.numeric_c
                 quality = room_value.quality
-                last_update = ensure_utc(entity.last_updated or entity.last_changed)
+                last_update = entity_last_seen(entity)
                 if last_update and (last_sample_at is None or last_update > last_sample_at):
                     last_sample_at = last_update
 
-        # Staleness: connected + valid but no update within the offline delay.
+        # Staleness: connected + valid but no new reading for a while.
         is_stale = bool(
             connected
             and quality == Quality.valid.value
             and last_update is not None
-            and (now - last_update).total_seconds() > max(unit.offline_delay_seconds, 60)
+            and (now - last_update).total_seconds()
+            > stale_after_seconds(unit.offline_delay_seconds)
         )
 
         status = compute_status(

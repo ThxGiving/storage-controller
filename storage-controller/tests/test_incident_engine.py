@@ -213,3 +213,33 @@ async def test_restart_during_incident_continues_not_duplicates(app_client):
     incs = await _incidents(uid)
     assert len(incs) == 1
     assert incs[0].state == IncidentState.active_violation.value
+
+
+@pytest.mark.asyncio
+async def test_steady_temperature_is_not_stale(app_client):
+    # ESPHome drops unchanged values, so HA's timestamp stands still while the
+    # room holds a steady temperature (observed up to ~25 min). Not a fault.
+    unit = await _make_unit(app_client)
+    uid = unit["id"]
+    eng = _engine(app_client)
+    for minutes in (0, 15, 30, 40):
+        await eng.evaluate_readings(
+            [_reading(uid, T0 + timedelta(minutes=minutes), value=4.0, last_update=T0)],
+            connected=True,
+        )
+    assert [i for i in await _incidents(uid) if i.type == IncidentType.sensor_stale.value] == []
+
+
+@pytest.mark.asyncio
+async def test_stale_after_long_silence(app_client):
+    unit = await _make_unit(app_client)
+    uid = unit["id"]
+    eng = _engine(app_client)
+    for minutes in (46, 56):
+        await eng.evaluate_readings(
+            [_reading(uid, T0 + timedelta(minutes=minutes), value=4.0, last_update=T0)],
+            connected=True,
+        )
+    stale = [i for i in await _incidents(uid) if i.type == IncidentType.sensor_stale.value]
+    assert len(stale) == 1
+    assert stale[0].state == IncidentState.active_violation.value
