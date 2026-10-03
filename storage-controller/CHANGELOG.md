@@ -2,6 +2,12 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.9.13 — 2026-10-03
+
+### Fixed
+
+- **Vorfall bei Türöffnungen sofort bestätigt** — fiel die Temperatur nach einer Überschreitung kurz unter die Grenze und stieg dann wieder darüber (typisch: mehrere Türöffnungen hintereinander im Service), sprang der noch *unbestätigte* Vorfall direkt in „aktiv“ — die Verzögerung bis zur Bestätigung wurde übersprungen. In der Praxis meldete die App so nach 1,5–3 Minuten statt nach den eingestellten 20–30 Minuten (seit 0.9.12 auch als Push/E-Mail über Home Assistant). Ein unbestätigter Vorfall kehrt jetzt nach „ausstehend“ zurück; die Verzögerung zählt weiter ab der ersten Überschreitung, und erst wenn sie abgelaufen ist, wird bestätigt. Bereits bestätigte Vorfälle verhalten sich unverändert.
+
 ## 0.9.12 — 2026-10-01
 
 ### Added

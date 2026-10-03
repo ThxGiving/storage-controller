@@ -74,8 +74,15 @@ def decide(
 
     if state == IncidentState.recovering:
         if result == EvalResult.ACTIVE:
-            # Re-violation: back to active.
-            return Decision(IncidentState.active_violation, confirmed_at or now, None, None, True)
+            if confirmed_at is None:
+                # Never confirmed (e.g. repeated door openings): back to pending.
+                # The violation delay keeps counting from the first crossing, so
+                # a flapping excursion is not confirmed before the delay elapsed.
+                if now - opened_at >= timedelta(seconds=violation_delay):
+                    return Decision(IncidentState.active_violation, now, None, None, True)
+                return Decision(IncidentState.pending_violation, None, None, None, True)
+            # Re-violation of a confirmed incident: back to active.
+            return Decision(IncidentState.active_violation, confirmed_at, None, None, True)
         if result == EvalResult.CLEAR:
             if recovering_at is not None and now - recovering_at >= timedelta(
                 seconds=recovery_delay
