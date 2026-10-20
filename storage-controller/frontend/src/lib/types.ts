@@ -9,7 +9,8 @@ export type EntityRole =
   | "light"
   | "controller"
   | "door"
-  | "alarm";
+  | "alarm"
+  | "connectivity";
 
 export const ENTITY_ROLES: EntityRole[] = [
   "room_temperature",
@@ -23,6 +24,7 @@ export const ENTITY_ROLES: EntityRole[] = [
   "controller",
   "door",
   "alarm",
+  "connectivity",
 ];
 
 export const MANDATORY_ROLES: EntityRole[] = ["room_temperature"];

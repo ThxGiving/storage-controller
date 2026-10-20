@@ -23,7 +23,8 @@
     "light": "Light",
     "controller": "Controller",
     "door": "Door",
-    "alarm": "Alarm"
+    "alarm": "Alarm",
+    "connectivity": "Controller connection"
   },
   "editor": {
     "titleNew": "New storage unit",

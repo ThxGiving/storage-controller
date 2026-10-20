@@ -22,6 +22,7 @@ const STRIP_ROLES: EntityRole[] = [
   "light",
   "door",
   "alarm",
+  "connectivity",
 ];
 
 export function StorageUnitStatusCard({

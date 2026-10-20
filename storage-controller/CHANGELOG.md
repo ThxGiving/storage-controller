@@ -2,6 +2,16 @@
 
 All notable changes to the Refrigeration Logbook App are documented here.
 
+## 0.9.14 — 2026-10-20
+
+### Added
+
+- **Reglerverbindung als optionale Rolle** (`connectivity`) — einer Einheit kann jetzt eine Entität zugeordnet werden, die anzeigt, ob die App tatsächlich noch Werte vom Regler bekommt. Zwei Varianten: eine **An/Aus-Entität** (z. B. ESPHome-`binary_sensor` „Modbus verbunden“; verbunden bei `on`) oder ein **Sensor mit dem Zeitpunkt der letzten erfolgreichen Abfrage** (ISO-Zeit wie `2026-10-20T19:36:28+0200`, auch `+02:00`/`Z`; verbunden, solange der Zeitpunkt höchstens die Offline-Verzögerung alt ist, mindestens 2 Minuten). Im Dashboard erscheint sie als Chip „Verbunden/Getrennt“.
+
+### Fixed
+
+- **„Keine aktuellen Daten“ trotz laufender Abfrage** — ESPHome meldet unveränderte Werte nicht erneut. Am 2026-10-20 hielt die Tiefkühlzelle 55 Minuten exakt −20,2 °C, obwohl das Modbus-Gateway alle 30 s abfragte; die 45-Minuten-Regel aus 0.9.13 schlug an (Alarm-Mail, 10 Minuten später Entwarnung). Mit zugeordneter Reglerverbindung entscheidet jetzt die Verbindung: solange sie besteht, wird ein konstanter Wert nie als veraltet gemeldet. Bricht sie ab (`off`, Zeitstempel zu alt oder unlesbar, Entität nicht verfügbar), entsteht ein Vorfall „Sensor nicht verfügbar“ mit der normalen Offline-/Erholungsverzögerung — dieselbe Meldung wie bei einem ausgefallenen Fühler, Benachrichtigungen und Home-Assistant-Ereignisse funktionieren unverändert. Ohne Reglerverbindung bleibt die 45-Minuten-Regel wie bisher.
+
 ## 0.9.13 — 2026-10-03
 
 ### Fixed

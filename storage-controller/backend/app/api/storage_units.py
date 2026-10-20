@@ -25,6 +25,7 @@ from ..errors import (
 )
 from ..ha.manager import HAConnectionManager
 from ..models import AuditEvent, EntityAssignment, EntityRole, StorageUnit
+from ..normalization import normalize_bool
 from ..schemas import (
     AssignmentCurrentValue,
     EntityAssignmentIn,
@@ -32,6 +33,7 @@ from ..schemas import (
     StorageUnitOut,
     StorageUnitUpdate,
 )
+from ..status_logic import parse_link_timestamp
 from .deps import get_manager
 
 log = logging.getLogger("api")
@@ -249,6 +251,11 @@ async def current_values(
                 float(str(entity.state))
             except (TypeError, ValueError):
                 warning = "Entity does not provide a numeric temperature"
+        elif role == EntityRole.connectivity and (
+            normalize_bool(entity.state).normalized_bool is None
+            and parse_link_timestamp(entity.state) is None
+        ):
+            warning = "Entity provides neither on/off nor a timestamp"
         out.append(
             AssignmentCurrentValue(
                 role=role,

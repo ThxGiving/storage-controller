@@ -66,3 +66,32 @@ async def test_dashboard_empty(app_client):
     body = resp.json()
     assert body["summary"]["total"] == 0
     assert body["units"] == []
+
+
+@pytest.mark.asyncio
+async def test_dashboard_connectivity_chip_from_last_read_timestamp(app_client):
+    from datetime import UTC, datetime, timedelta
+
+    resp = await app_client.post(
+        "/api/storage-units",
+        json={
+            "name": "Kühlhaus 2",
+            "assignments": [
+                {"role": "room_temperature", "entity_id": ROOM},
+                {"role": "connectivity", "entity_id": "sensor.kh2_letzte_abfrage"},
+            ],
+        },
+    )
+    assert resp.status_code == 201
+    fresh = (datetime.now(UTC) - timedelta(seconds=30)).strftime("%Y-%m-%dT%H:%M:%S%z")
+    set_entities(
+        app_client,
+        [
+            {"entity_id": ROOM, "state": "-20.2", "attributes": {"unit_of_measurement": "°C"}},
+            {"entity_id": "sensor.kh2_letzte_abfrage", "state": fresh, "attributes": {}},
+        ],
+    )
+    unit = (await app_client.get("/api/dashboard")).json()["units"][0]
+    link = next(r for r in unit["roles"] if r["role"] == "connectivity")
+    assert link["bool_value"] is True
+    assert link["quality"] == "valid"

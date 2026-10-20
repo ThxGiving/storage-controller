@@ -37,7 +37,7 @@ from .models import (
     StorageUnit,
 )
 from .normalization import normalize_bool, normalize_numeric, parse_bool_mapping
-from .status_logic import entity_last_seen, stale_after_seconds
+from .status_logic import entity_last_seen, link_connected, link_max_age_seconds, room_is_stale
 from .timeutil import ensure_utc
 
 log = logging.getLogger("incident_engine")
@@ -134,6 +134,8 @@ class UnitReading:
     # Door / alarm (Phase 7). None = entity not assigned; True/False = known state.
     door_open: bool | None = None
     alarm_active: bool | None = None
+    # Controller link (0.9.14). None = no connectivity entity assigned.
+    link_up: bool | None = None
 
 
 @dataclass
@@ -192,18 +194,20 @@ def _conditions(r: UnitReading) -> list[_Cond]:
     if not r.connected:
         unavailable = invalid = stale = EvalResult.UNKNOWN
     else:
+        # A lost controller link means the room value is frozen, not current:
+        # reported as sensor_unavailable so existing notifications cover it.
         unavailable = (
             EvalResult.ACTIVE
             if r.quality in (Quality.unavailable.value, Quality.unknown.value)
+            or r.link_up is False
             else EvalResult.CLEAR
         )
         invalid = EvalResult.ACTIVE if r.quality == Quality.invalid.value else EvalResult.CLEAR
-        if r.quality == Quality.valid.value and r.last_update is not None:
-            age = (r.now - r.last_update).total_seconds()
-            too_old = age > stale_after_seconds(r.offline_delay)
-            stale = EvalResult.ACTIVE if too_old else EvalResult.CLEAR
-        else:
-            stale = EvalResult.CLEAR
+        too_old = room_is_stale(
+            connected=r.connected, quality=r.quality, last_seen=r.last_update,
+            now=r.now, offline_delay_seconds=r.offline_delay, link_up=r.link_up,
+        )
+        stale = EvalResult.ACTIVE if too_old else EvalResult.CLEAR
 
     od, rd = r.offline_delay, r.recovery_delay
     conds.append(_Cond(IncidentType.sensor_unavailable, unavailable, None, None, od, rd))
@@ -360,6 +364,14 @@ class IncidentEngine:
                         mapping=parse_bool_mapping(alarm_assignment.value_mapping_json),
                     ).normalized_bool
 
+            link_up: bool | None = None
+            link_assignment = by_role.get(EntityRole.connectivity.value)
+            if link_assignment is not None:
+                link_up = link_connected(
+                    get_entity(link_assignment.entity_id), link_assignment,
+                    now=now, max_age_seconds=link_max_age_seconds(unit.offline_delay_seconds),
+                )
+
             learned: LearnedEnvelope | None = None
             if unit.defrost_evaluation_enabled and defrost is not None:
                 model = await get_active_model(session, unit.id)
@@ -401,6 +413,7 @@ class IncidentEngine:
                     defrost=defrost_settings,
                     door_open=door_open,
                     alarm_active=alarm_active,
+                    link_up=link_up,
                 )
             )
         return readings

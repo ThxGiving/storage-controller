@@ -6,6 +6,7 @@ import {
   Droplets,
   Fan,
   Lightbulb,
+  Plug,
   Snowflake,
   Thermometer,
   Gauge,
@@ -22,6 +23,7 @@ const ROLE_ICON: Partial<Record<EntityRole, LucideIcon>> = {
   light: Lightbulb,
   door: DoorOpen,
   alarm: Bell,
+  connectivity: Plug,
   evaporator_temperature: Thermometer,
   setpoint: Gauge,
   hysteresis: Gauge,
@@ -35,6 +37,7 @@ const NUMERIC_ROLES = new Set<EntityRole>([
 
 const ROLE_STATE_KEYS: Partial<Record<EntityRole, { on: string; off: string }>> = {
   door: { on: "dashboard:state.open", off: "dashboard:state.closed" },
+  connectivity: { on: "dashboard:state.connected", off: "dashboard:state.disconnected" },
 };
 
 /**
