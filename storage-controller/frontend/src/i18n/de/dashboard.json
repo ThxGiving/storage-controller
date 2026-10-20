@@ -41,6 +41,8 @@
     "off": "Aus",
     "open": "Offen",
     "closed": "Geschlossen",
+    "connected": "Verbunden",
+    "disconnected": "Getrennt",
     "unknown": "—"
   },
   "gauge": {

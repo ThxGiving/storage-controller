@@ -86,3 +86,55 @@ def test_entity_last_seen_prefers_newest_timestamp():
     assert entity_last_seen(SimpleNamespace()) is None
     assert stale_after_seconds(600) == 45 * 60
     assert stale_after_seconds(7200) == 7200
+
+
+def test_parse_link_timestamp_formats():
+    from datetime import UTC, datetime
+
+    from app.status_logic import parse_link_timestamp
+
+    t = datetime(2026, 10, 20, 17, 36, 28, tzinfo=UTC)
+    assert parse_link_timestamp("2026-10-20T19:36:28+0200") == t  # ESPHome strftime %z
+    assert parse_link_timestamp("2026-10-20T19:36:28+02:00") == t
+    assert parse_link_timestamp("2026-10-20T17:36:28Z") == t
+    for bad in (None, "", "on", "-20.2", "unavailable", "garbage", "2026-13-40T00:00:00Z"):
+        assert parse_link_timestamp(bad) is None
+
+
+def test_link_connected_binary_and_timestamp():
+    from datetime import UTC, datetime, timedelta
+    from types import SimpleNamespace
+
+    from app.status_logic import link_connected
+
+    now = datetime(2026, 10, 20, 17, 36, 28, tzinfo=UTC)
+    plain = SimpleNamespace(invert_state=False, value_mapping_json=None)
+
+    def up(state, assignment=plain):
+        return link_connected(SimpleNamespace(state=state), assignment, now=now,
+                              max_age_seconds=600)
+
+    assert up("on") is True
+    assert up("off") is False
+    assert up("unavailable") is False
+    assert up("unknown") is False
+    assert up("off", SimpleNamespace(invert_state=True, value_mapping_json=None)) is True
+    assert up((now - timedelta(seconds=30)).isoformat()) is True
+    assert up((now - timedelta(minutes=11)).isoformat()) is False
+    assert up("not a time") is False
+    assert link_connected(None, plain, now=now, max_age_seconds=600) is False
+
+
+def test_room_is_stale_follows_link():
+    from datetime import UTC, datetime, timedelta
+
+    from app.status_logic import room_is_stale
+
+    now = datetime(2026, 10, 20, 17, 36, 28, tzinfo=UTC)
+    base = dict(connected=True, quality="valid", last_seen=now - timedelta(minutes=55),
+                now=now, offline_delay_seconds=600)
+    assert room_is_stale(**base, link_up=None) is True  # no link entity: 45-min rule
+    assert room_is_stale(**base, link_up=True) is False  # gateway still polling
+    assert room_is_stale(**base, link_up=False) is False  # reported as unavailable instead
+    base["last_seen"] = now - timedelta(minutes=30)
+    assert room_is_stale(**base, link_up=None) is False

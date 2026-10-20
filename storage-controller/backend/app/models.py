@@ -81,6 +81,8 @@ class EntityRole(str, enum.Enum):
     controller = "controller"
     door = "door"
     alarm = "alarm"
+    # Controller link (e.g. ESPHome Modbus "connected" binary_sensor), on = connected.
+    connectivity = "connectivity"
 
 
 MANDATORY_ROLES = {EntityRole.room_temperature}

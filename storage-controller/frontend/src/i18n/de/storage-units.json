@@ -23,7 +23,8 @@
     "light": "Licht",
     "controller": "Regler",
     "door": "Tür",
-    "alarm": "Alarm"
+    "alarm": "Alarm",
+    "connectivity": "Reglerverbindung"
   },
   "editor": {
     "titleNew": "Neue Kühleinheit",

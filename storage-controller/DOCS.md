@@ -38,6 +38,35 @@ automatically with exponential backoff. Connection health is exposed as an
 application status (`connected` / `reconnecting` / `disconnected` /
 `authentication_error`) and does **not** make the container unhealthy.
 
+### Controller connection ("No current data")
+
+Integrations such as ESPHome do not re-report an unchanged value, so Home
+Assistant's timestamps stand still while a cold room holds a steady temperature.
+Without further information the App therefore reports `sensor_stale` only after
+45 minutes without a new reading (or the offline delay, if longer).
+
+A storage unit can optionally be given a **controller connection** entity
+(role `connectivity`). It then replaces that time-based rule:
+
+- **On/off entity** (`binary_sensor`, `switch`, `input_boolean`, …): connected
+  while it is `on` (invert / value mapping of the assignment apply), e.g. an
+  ESPHome Modbus "connected" binary sensor.
+- **Last-read timestamp**: a `sensor` (text or `device_class: timestamp`) whose
+  state is the ISO 8601 time of the last successful read of this unit's
+  controller, e.g. `2026-10-20T19:36:28+0200` (`+02:00` and `Z` work too).
+  Connected while that time is at most the unit's offline delay old (minimum
+  2 minutes).
+
+While connected, an unchanged room temperature is never `sensor_stale`. While
+not connected — `off`, a too-old or unparseable timestamp, `unavailable` /
+`unknown`, or an entity missing in Home Assistant — a `sensor_unavailable`
+incident opens and is confirmed after the offline delay, exactly like an
+unavailable room sensor (so existing notifications cover it); it closes after
+the recovery delay once the link is back. A Home Assistant disconnect is
+handled separately as before. With a timestamp entity the link counts as lost
+once the timestamp is older than the offline delay, so confirmation follows
+roughly two offline delays after the last successful read.
+
 ### Incident events for Home Assistant automations
 
 The App fires a Home Assistant event `storage_controller_incident` when an

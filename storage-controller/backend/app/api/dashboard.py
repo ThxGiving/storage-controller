@@ -42,7 +42,14 @@ from ..schemas import (
     DashboardUnit,
 )
 from ..settings_store import get_timezone_name
-from ..status_logic import compute_status, entity_last_seen, stale_after_seconds
+from ..status_logic import (
+    compute_status,
+    entity_last_seen,
+    link_connected,
+    link_max_age_seconds,
+    parse_link_timestamp,
+    room_is_stale,
+)
 from ..timeutil import ensure_utc
 from ..timezone import resolve_timezone
 from .deps import get_manager
@@ -262,14 +269,23 @@ async def dashboard(
                 if last_update and (last_sample_at is None or last_update > last_sample_at):
                     last_sample_at = last_update
 
+        # Controller link (optional): replaces the time-based staleness rule.
+        link_up: bool | None = None
+        link_assignment = by_role.get(EntityRole.connectivity.value)
+        if link_assignment is not None:
+            link_up = link_connected(
+                manager.get_entity(link_assignment.entity_id), link_assignment,
+                now=now, max_age_seconds=link_max_age_seconds(unit.offline_delay_seconds),
+            )
+
         # Staleness: connected + valid but no new reading for a while.
-        is_stale = bool(
-            connected
-            and quality == Quality.valid.value
-            and last_update is not None
-            and (now - last_update).total_seconds()
-            > stale_after_seconds(unit.offline_delay_seconds)
+        is_stale = room_is_stale(
+            connected=connected, quality=quality, last_seen=last_update, now=now,
+            offline_delay_seconds=unit.offline_delay_seconds, link_up=link_up,
         )
+        if link_up is False and quality == Quality.valid.value:
+            # The last value is frozen while the controller does not answer.
+            quality = Quality.unavailable.value
 
         status = compute_status(
             connected=connected,
@@ -293,6 +309,14 @@ async def dashboard(
             rv = _role_value(
                 role, manager.get_entity(assignment.entity_id), assignment.invert_state
             )
+            if (
+                role == EntityRole.connectivity.value
+                and rv.bool_value is None
+                and parse_link_timestamp(rv.raw) is not None
+            ):
+                # "Last successful read" timestamp: show the derived link state.
+                rv.bool_value = link_up
+                rv.quality = Quality.valid.value
             roles.append(rv)
             if role == EntityRole.setpoint.value:
                 setpoint_c = rv.numeric_c

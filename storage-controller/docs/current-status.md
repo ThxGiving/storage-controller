@@ -1,6 +1,19 @@
 # Current status
 
-_Last updated: 2026-10-01 (release 0.9.12)._
+_Last updated: 2026-10-20 (release 0.9.14)._
+
+## 0.9.14 — controller connection role (branch `fix/stale-connectivity`, not yet released)
+
+- New optional entity role `connectivity` (stored as a string, no migration). Two kinds: on/off entity (connected while `on`, invert/value mapping honoured) or a sensor whose state is the ISO time of the last successful controller read (`%Y-%m-%dT%H:%M:%S%z`, `+02:00`, `Z`; connected while ≤ `link_max_age_seconds(offline_delay)` = max(offline delay, 120 s) old).
+- With a link entity assigned, `sensor_stale` is never raised (link up: constant value is current; link down: reported as `sensor_unavailable` instead, offline/recovery delay). Without one, the 0.9.13 45-min rule is unchanged. `if not r.connected` (HA disconnect) handling unchanged.
+- Shared helpers in `status_logic.py`: `parse_link_timestamp`, `link_connected`, `link_max_age_seconds`, `room_is_stale` — used by the incident engine and the dashboard (`is_stale`; link down shows status `unavailable`; timestamp link chip shows the derived connected state).
+- Trigger: 2026-10-20 false `sensor_stale` alarm on unit 2 (−20.2 °C constant 18:41–19:36 while the Modbus gateway polled every 30 s).
+- Tests: backend 494 passed, frontend 56 passed.
+- Pending after install: assign `binary_sensor.kuche_kuhlhaus_N_modbus_verbunden` (or the planned `sensor.kuche_kuhlhaus_N_letzte_abfrage`) to units 1–3; temperature limits are still evaluated on the last (frozen) value while the link is down.
+
+## 0.9.13 — false stale incidents, unconfirmed excursions
+
+- Stale needs 45 min without a new reading (or the offline delay if longer) and honours `last_reported`; incident list hides unconfirmed excursions by default; re-violation of an unconfirmed incident no longer skips the violation delay.
 
 ## 0.9.12 — Home Assistant incident events
 
